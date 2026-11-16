@@ -16,14 +16,18 @@ if(process.platform==='win32'){
   execFileSync('git',['-C',upstream,'checkout-index','--all','--force'],{stdio:'pipe'});
 }
 const data=fs.readFileSync(patch,'utf8');
+// A Windows checkout may rewrite patch LF to CRLF independently from source;
+// Git apply needs raw unified-diff LF, so normalize in disposable CI metadata.
+const usablePatch=path.join(upstream,'.git','yenra-owner-overlay.normalized.patch');
+fs.writeFileSync(usablePatch,data.replace(/\r\n/g,'\n'),'utf8');
 const names=[...data.matchAll(/^diff --git a\/([^\r\n]+) b\/([^\r\n]+)/gm)].map(x=>x[1]);
 if(names.length!==27)throw Error('expected exactly 27 YENRA DSH source paths; got '+names.length);
 for(const name of names){
  if(!/^(?:apps\/(?:desktop|desktop-host)\/|packages\/client\/(?:ui-conversation|ui-layout)\/)/.test(name))
    throw Error('unexpected third-party path in DSH overlay: '+name);
 }
-execFileSync('git',['-C',upstream,'apply','--check','--whitespace=nowarn',patch],{stdio:'pipe'});
-execFileSync('git',['-C',upstream,'apply','--whitespace=nowarn',patch],{stdio:'pipe'});
+execFileSync('git',['-C',upstream,'apply','--check','--whitespace=nowarn',usablePatch],{stdio:'pipe'});
+execFileSync('git',['-C',upstream,'apply','--whitespace=nowarn',usablePatch],{stdio:'pipe'});
 const actual=execFileSync('git',['-C',upstream,'diff','--name-only'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
 if(actual.length!==27)throw Error('DSH overlay apply result differs from 27 expected paths: '+actual.length);
 console.log(JSON.stringify({source:'official DSH pinned + owner integration patch',base,ownerModifiedFiles:names.length,appliedFiles:actual.length,ok:true},null,2));

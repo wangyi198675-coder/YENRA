@@ -1,3 +1,4 @@
 # Frozen v18 source comparisons use exact bytes; no Git line-ending rewrites.
 ui/** -text
 social-adapters/** -text
+patches/** -text
