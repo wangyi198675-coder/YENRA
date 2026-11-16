@@ -32,6 +32,7 @@ $manifests = @(
  'ui/chatwoot-embed/desktop-integration-candidate/cordis.patch.yml',
  'ui/desktop-candidate/package.json','ui/desktop-candidate/cordis.patch.yml',
  'social-adapters/chatwoot-bridge/package.json',
+ 'social-adapters/oss-candidates/existing-host-generic-mapping.mjs',
  'social-adapters/kt-dedupe-native/package.json',
  'social-adapters/kt-dedupe-native/package-lock.json',
  'ui/personal-chrome/package.json','ui/private-themes/package.json',
