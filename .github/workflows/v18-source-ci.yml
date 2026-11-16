@@ -1,0 +1,82 @@
+name: YENRA v18 source and reproducibility gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-source-audit:
+    name: Public-source and single-host architecture guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Reject secret, personal fixture, runtime and binary paths
+        run: node scripts/ci/audit-public-source.mjs
+      - name: Reject second Electron, Agent, chat database or model gateway dependencies
+        run: node scripts/ci/check-architecture.mjs
+      - name: Parse all imported JavaScript modules
+        run: node scripts/ci/check-source-syntax.mjs
+
+  source-regressions:
+    name: Four-channel and UI offline source regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: social-adapters/kt-dedupe-native/package-lock.json
+      - name: Install locked KT dependencies (no lifecycle scripts)
+        run: npm ci --prefix social-adapters/kt-dedupe-native --ignore-scripts
+      - name: Run isolated mocked ACK, inbound, selection, KT and native-toggle regressions
+        run: |
+          node --test             ui/chatwoot-embed/qa/native-contact-public-source.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-platform-ack.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-inbound-projection.test.mjs             social-adapters/chatwoot-bridge/test/selection.test.mjs             social-adapters/kt-dedupe-native/kt-country-number-disambiguation.test.mjs
+
+  plugin-build:
+    name: Locked TypeScript plugin bundles (not Electron installer)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - name: Install Chatwoot UI plugin exactly from lockfile
+        run: pnpm -C ui/chatwoot-embed install --frozen-lockfile --ignore-scripts
+      - name: Bundle Chatwoot UI TypeScript source
+        run: pnpm -C ui/chatwoot-embed run bundle
+      - name: Install desktop overlay exactly from lockfile
+        run: pnpm -C ui/chatwoot-embed/desktop-integration-candidate install --frozen-lockfile --ignore-scripts
+      - name: Bundle desktop overlay TypeScript source
+        run: pnpm -C ui/chatwoot-embed/desktop-integration-candidate run bundle
+
+  frozen-v18-provenance:
+    name: v18 frozen-source SHA verification (release blocker)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Compare public sources to owner v18 frozen hashes
+        run: node scripts/ci/verify-v18-source-snapshot.mjs

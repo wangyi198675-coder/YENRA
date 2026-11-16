@@ -1,0 +1,45 @@
+{
+  "name": "@local/yenra-typography-fix",
+  "version": "1.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Connect YENRA contact, chat and AI typography to the native global font settings.",
+  "exports": {
+    ".": "./host-v101.js",
+    "./client": "./client-v101.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "host-v100.js",
+    "client-v100.js",
+    "host-v101.js",
+    "client-v101.js",
+    "typography.js",
+    "index.js",
+    "client-entry.js",
+    "build.mjs",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme",
+        "@deepseek-ai/dsh-client-ui-settings-general",
+        "@yenra/desktop-ui-candidate"
+      ]
+    }
+  },
+  "main": "host-v101.js"
+}

@@ -1,0 +1,4 @@
+# Upgrade-only composition: target the existing Desktop row, never add a second shell.
+# A fresh isolated profile must first compose the original row explicitly.
+- id: yenra-desktop-candidate
+  name: '@yenra/desktop-ui-candidate'

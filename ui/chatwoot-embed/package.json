@@ -1,0 +1,50 @@
+{
+  "name": "@yenra/chatwoot-embed",
+  "version": "0.3.0-route.1",
+  "private": true,
+  "description": "Optional Chatwoot inbox seat and native Config for the existing YENRA Desktop; preserves its original contact Brain.",
+  "type": "module",
+  "main": "lib/index.js",
+  "files": [
+    "lib/*.js",
+    "cordis.patch.yml",
+    "tools/yenra-native-sso.rb",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown --config tsdown.config.ts",
+    "qa:headers": "node qa/probe-chatwoot-headers.mjs",
+    "test": "node --test qa/compatibility.test.mjs qa/route-integration.test.mjs"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.4",
+    "@deepseek-ai/schemastery": "~3.18.5",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "tsdown": "0.22.2"
+  }
+}

@@ -1,0 +1,5 @@
+# Isolated candidate bundle entry — NOT installed in any profile.
+# It only adds this package as one more official Cordis plugin row.
+- insert:
+    - id: yenra-chatwoot-embed
+      name: '@yenra/chatwoot-embed'

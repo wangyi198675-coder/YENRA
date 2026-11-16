@@ -1,0 +1,1917 @@
+/* Graphite Glow V2 composition. DSH owns AppFrame, Theme, Conversation and Composer;
+ * ChatScope owns social surfaces. No second shell, channel store, Sender or AI UI.
+ */
+.yenra-v2 {
+
+  width:100%;height:100%;min-height:0;min-width:0;
+  display:flex;flex-direction:column;container-type:inline-size;
+  background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);
+  font-family:var(--dsw-font-family,"Segoe UI",system-ui,sans-serif);
+}
+.yenra-v2 *, .yenra-v2 *::before, .yenra-v2 *::after{box-sizing:border-box}
+.yenra-v2 button,.yenra-v2 input{font:inherit}
+/* Bridge ChatScope typography to the official DSH font, not a second font stack. */
+.v2-social :is(.cs-conversation-header,.cs-conversation-list,.cs-chat-container,.cs-message-list,.cs-message-input,.cs-input-toolbox,.cs-button){font-family:var(--dsw-font-family,inherit)}
+.yenra-v2 :is(button,input,[tabindex]):focus-visible{outline:2px solid var(--dsw-alias-link);outline-offset:2px}
+.v2-topbar{display:flex;align-items:center;gap:18px;flex:none;min-height:60px;
+  padding:0 18px;background:var(--dsw-alias-bg-layer-1);border-bottom:1px solid var(--dsw-alias-border-l2)}
+.v2-top-title{display:flex;flex-direction:column;gap:2px;white-space:nowrap}
+.v2-top-overline{font-size:max(10px,calc(13px + (var(--dsh-content-font-size, 10px) - 10px) * .75));font-weight:760;letter-spacing:.15em}
+.v2-top-sub{font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));letter-spacing:.045em;color:var(--dsw-alias-label-tertiary)}
+.v2-modes{display:flex;gap:4px;border-radius:11px;background:var(--dsw-alias-bg-layer-1);padding:4px}
+.v2-mode{background:transparent;color:var(--dsw-alias-label-secondary);border:0;border-radius:8px;
+  cursor:pointer;height:36px;padding:0 16px;font-weight:650;font-size:max(10px,calc(12px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-mode-current{background:var(--dsw-alias-button-ghost-active-fill);color:var(--dsw-alias-label-primary)}
+.v2-mode:hover:not(.v2-mode-current){background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.v2-top-actions{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0}
+.v2-disconnect{color:var(--dsw-alias-label-secondary);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);padding:5px 10px;
+  border-radius:999px;font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));white-space:nowrap}
+.v2-top-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-2);
+  color:var(--dsw-alias-label-primary);padding:7px 10px;font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));cursor:pointer;white-space:nowrap}
+.v2-top-action:hover{background:var(--dsw-alias-bg-layer-3)}
+.v2-brain-toggle{font-weight:650}
+/* The roster toggle belongs to global navigation, never an unselected contact header. */
+.v2-roster-toggle{flex:none;width:36px;height:36px;padding:0}
+.v2-roster-toggle + .v2-modes{margin-left:0}
+.v2-workspace{position:relative;flex:1;min-width:0;min-height:0;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(355px,385px);overflow:hidden}
+.v2-workspace[data-brain-open=false]{grid-template-columns:minmax(0,1fr)}
+.v2-social{min-height:0;min-width:0;overflow:hidden;border-right:1px solid var(--dsw-alias-border-l2)}
+.v2-social .cs-main-container{height:100%;background:var(--dsw-alias-bg-base);border:0;min-width:0;min-height:0}
+.v2-social .cs-main-container--responsive > .cs-sidebar.v2-roster{flex:0 0 174px;min-width:174px;max-width:174px;width:174px;
+  background:var(--dsw-alias-bg-layer-1);border:0;border-right:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary)}
+.v2-roster{position:relative}
+.v2-roster-header{padding:17px 14px 10px}
+.v2-roster-headline{display:flex;justify-content:space-between;align-items:center;gap:5px;margin-bottom:14px}
+.v2-roster-headline strong{font-size:max(10px,calc(16px + (var(--dsh-content-font-size, 10px) - 10px) * .75));letter-spacing:.015em}
+.v2-roster-headline span{font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-secondary)}
+.v2-search{width:100%;padding:10px 11px;font-size:max(10px,calc(12px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);
+  border:1px solid var(--dsw-alias-border-l2);border-radius:9px}
+.v2-search:disabled{cursor:not-allowed;opacity:1}
+.v2-search::placeholder{color:var(--dsw-alias-label-secondary)}
+.v2-filters{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px}
+.v2-filters button{font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));cursor:pointer;color:var(--dsw-alias-label-secondary);
+  border:0;background:transparent;padding:6px 9px;border-radius:7px}
+.v2-filters button[data-active=true]{background:var(--dsw-alias-button-ghost-active-fill);color:var(--dsw-alias-label-primary)}
+.v2-filters button:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.v2-social .cs-conversation-list{flex:0 0 auto;min-height:0;padding:0}
+.v2-roster-empty{padding:16px 15px;text-align:center;display:flex;flex-direction:column;align-items:center;
+  gap:10px;color:var(--dsw-alias-label-secondary);font-size:max(10px,calc(12px + (var(--dsh-content-font-size, 10px) - 10px) * .75));line-height:1.6}
+.v2-roster-empty small{font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));line-height:1.6;color:var(--dsw-alias-label-tertiary)}
+.v2-empty-glyph{display:grid;place-items:center;border:1px solid var(--dsw-alias-border-l2);
+  color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2);border-radius:50%;width:35px;height:35px;font-size:max(10px,calc(21px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-roster-channels{margin:8px 14px 16px;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2);border-radius:11px}
+.v2-channel-status{display:flex;justify-content:space-between;gap:6px;font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));
+  color:var(--dsw-alias-label-secondary);padding:7px 0}
+.v2-channel-status:not(:last-child){border-bottom:1px solid var(--dsw-alias-border-l2)}
+.v2-channel-status span:last-child{color:var(--dsw-alias-label-secondary)}
+.v2-workspace[data-contacts=compact] .v2-social .cs-main-container--responsive > .cs-sidebar.v2-roster{flex:0 0 62px;min-width:62px;max-width:62px;width:62px}
+.v2-workspace[data-contacts=compact] :is(.v2-roster-header,.v2-roster-channels){display:none}
+.v2-workspace[data-contacts=compact] .v2-roster-empty{padding:24px 9px}
+.v2-workspace[data-contacts=compact] .v2-roster-empty>:not(.v2-empty-glyph){display:none}
+.v2-social .cs-chat-container{display:flex;flex:1 1 0%;flex-direction:column;min-height:0;min-width:0;
+  background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);overflow:hidden}
+.v2-social .cs-conversation-header{order:1;flex:none;min-width:0;min-height:66px;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);
+  padding:0 15px;border-bottom:1px solid var(--dsw-alias-border-l2)}
+.v2-social .cs-conversation-header__user-name{font-size:max(10px,calc(14px + (var(--dsh-content-font-size, 10px) - 10px) * .75));font-weight:700;color:var(--dsw-alias-label-primary);background:transparent}
+.v2-social .cs-conversation-header__info{font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-secondary);background:transparent}
+.v2-social .cs-conversation-header__actions{display:flex;align-items:center;gap:5px}
+.v2-header-btn{display:inline-flex;align-items:center;gap:6px;height:32px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md);
+  background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);cursor:pointer;font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));padding:7px 9px;white-space:nowrap}
+.v2-header-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}
+.v2-header-btn:disabled{opacity:.5;cursor:not-allowed}
+.v2-social .cs-message-list{order:2;flex:1 1 auto;min-height:0;min-width:0;overflow-y:auto;
+  background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary)}
+.v2-social-empty{max-width:485px;margin:max(36px,10vh) auto;padding:24px;text-align:center;
+  color:var(--dsw-alias-label-secondary);line-height:1.65}
+.v2-social-empty h2{font-size:max(10px,calc(17px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-primary);font-weight:700;margin:10px 0}
+.v2-social-empty p{font-size:max(10px,calc(12px + (var(--dsh-content-font-size, 10px) - 10px) * .75));line-height:1.75;margin:0 0 18px}
+.v2-empty-symbol{font-size:max(10px,calc(38px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-secondary);line-height:1}
+.v2-data-note{display:flex;align-items:center;flex-direction:column;gap:3px;border:1px solid var(--dsw-alias-border-l2);
+  background:var(--dsw-alias-bg-layer-1);border-radius:11px;padding:12px;color:var(--dsw-alias-label-secondary);font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-data-note span:first-child{font-weight:650;color:var(--dsw-alias-label-primary)}
+.v2-social .cs-input-toolbox.v2-social-tools{order:3;display:flex;align-items:center;gap:5px;
+  flex-wrap:wrap;padding:9px 13px 5px;border-top:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary)}
+.v2-social-tools button{border:1px solid var(--dsw-alias-border-l2);border-radius:8px;color:var(--dsw-alias-label-secondary);
+  background:var(--dsw-alias-bg-layer-2);white-space:nowrap;font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));padding:7px 8px}
+.v2-social-tools button:disabled{cursor:not-allowed;opacity:.63}
+.v2-social .cs-message-input{order:4;flex:none;margin:6px 14px 13px;
+  border-radius:13px;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary)}
+.v2-social .cs-message-input__content-editor{color:var(--dsw-alias-label-primary);font-size:max(10px,calc(13px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-social .cs-message-input__content-editor[data-placeholder]:empty::before{color:var(--dsw-alias-label-secondary)}
+.v2-social .cs-button--send{opacity:.25;color:var(--dsw-alias-label-secondary)}
+.v2-brain{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--dsw-alias-bg-layer-1);
+  border-left:1px solid var(--dsw-alias-border-l2);overflow:hidden}
+.v2-brain-head{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  flex:none;padding:13px 14px;background:var(--dsw-alias-bg-layer-1);border-bottom:1px solid var(--dsw-alias-border-l2)}
+.v2-brain-label{display:flex;align-items:center;gap:10px}
+.v2-brain-mark{display:grid;place-items:center;width:32px;height:32px;background:transparent;color:var(--dsw-alias-brand-primary);
+  border-radius:11px;font-size:max(10px,calc(16px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-brain-label strong{display:block;font-size:max(10px,calc(13px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-primary)}
+.v2-brain-label small{display:block;font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-secondary);margin-top:3px}
+.v2-brain-controls{display:flex;gap:5px}
+.v2-brain-controls button{display:grid;place-items:center;flex:none;width:32px;height:32px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);
+  padding:0;font-size:max(10px,calc(12px + (var(--dsh-content-font-size, 10px) - 10px) * .75));border-radius:var(--dsw-radius-md);cursor:pointer}
+.v2-brain-controls button:disabled{cursor:not-allowed;opacity:.5}
+.v2-brain-context{display:flex;gap:5px;align-items:center;justify-content:space-between;flex:none;
+  padding:10px 13px;color:var(--dsw-alias-label-secondary);border-bottom:1px solid var(--dsw-alias-border-l2);font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-brain-context span:first-child{border:1px solid var(--dsw-alias-border-l2);border-radius:999px;padding:4px 7px}
+.v2-advice{flex:0 1 auto;max-height:min(43%,292px);overflow-y:auto;min-height:0;
+  padding:13px 12px;border-bottom:1px solid var(--dsw-alias-border-l2);scrollbar-width:thin}
+.v2-advice-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.v2-advice-title strong{font-size:max(10px,calc(13px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-advice-title span{font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-tertiary)}
+.v2-advice-card{display:flex;align-items:flex-start;gap:9px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);
+  border-radius:11px;padding:10px;margin-bottom:6px;min-width:0}
+.v2-advice-index{font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-secondary);margin-top:3px}
+.v2-advice-card>div{flex:1;min-width:0}
+.v2-advice-card strong{font-size:max(10px,calc(12px + (var(--dsh-content-font-size, 10px) - 10px) * .75));font-weight:680}
+.v2-advice-card p{font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));line-height:1.5;margin:5px 0 0;color:var(--dsw-alias-label-tertiary)}
+.v2-advice-card button{border:1px solid var(--dsw-alias-border-l2);border-radius:7px;background:var(--dsw-alias-bg-layer-2);
+  color:var(--dsw-alias-label-tertiary);padding:5px 8px;font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));cursor:not-allowed;opacity:.6}
+.v2-brain-conversation-label{flex:none;display:flex;align-items:center;justify-content:space-between;
+  padding:10px 13px;border-bottom:1px solid var(--dsw-alias-border-l2);gap:7px;font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-brain-conversation-label strong{font-weight:700}
+.v2-brain-conversation-label span{font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-tertiary)}
+.v2-native-conversation{display:flex;flex:1 1 0%;flex-direction:column;min-height:0;min-width:0;overflow:hidden;
+  background:var(--dsw-alias-bg-layer-1)}
+.v2-native-embed{display:flex;flex:1 1 0%;flex-direction:column;height:100%;min-height:0;min-width:0;overflow:hidden}
+/* Suppress ONLY internal memory execution receipts inside contact Brain; preserve normal DSH cards. */
+.v2-native-chat-pane div:has(> [data-slot="conversation.chat.commandview"] [data-yenra-internal-memory-command]){display:none!important}
+.v2-brain-pending{padding:24px 16px;color:var(--dsw-alias-label-secondary);font-size:max(10px,calc(12px + (var(--dsh-content-font-size, 10px) - 10px) * .75));line-height:1.7}
+.v2-footer{display:flex;flex:none;justify-content:space-between;gap:8px;padding:7px 14px;
+  background:var(--dsw-alias-bg-layer-1);border-top:1px solid var(--dsw-alias-border-l2);color:var(--dsw-alias-label-secondary);font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+@container (max-width:1130px){
+  .v2-top-title{display:none}
+  .v2-topbar{gap:8px;padding:0 10px}
+  .v2-disconnect{display:none}
+  /* A full roster must stay in normal ChatScope flex flow; covering the chat
+     with an absolute drawer broke the actual 1280px Desktop. */
+}
+@container (max-width:980px){
+  .v2-workspace[data-brain-open=true]{grid-template-columns:minmax(0,1fr)}
+  /* Two drawers must never obstruct one another: opening Brain hides the roster drawer. */
+  .v2-workspace[data-brain-open=true] .v2-social .cs-sidebar{display:none}
+  .v2-brain{position:absolute;top:0;bottom:0;right:0;width:min(430px,96%);z-index:19;
+    box-shadow:-20px 0 55px var(--dsw-alias-bg-mask-3)}
+}
+@container (max-width:700px){
+  .v2-top-action:not(.v2-brain-toggle){display:none}
+  .v2-topbar{min-height:52px}
+  .v2-workspace[data-contacts=compact] .cs-sidebar{flex-basis:62px;min-width:62px;max-width:62px;width:62px}
+  .v2-header-btn span{display:none}
+  .v2-social-tools button{font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));padding:6px 5px}
+}
+@media (max-height:680px){
+  .v2-advice{max-height:35%}
+  .v2-advice-card{padding:7px}
+}
+@media (prefers-reduced-motion:reduce){
+  .yenra-v2 *{transition:none!important;animation:none!important}
+}
+
+/* YENRA V2 fidelity corrections: visual only; all controls remain OSS ChatScope/DSH. */
+.v2-top-title{display:flex;align-items:center;flex:none;min-width:165px;white-space:nowrap}
+/* Exact user-approved logo image; blend away only the white bitmap backing. */
+.v2-top-lockup{display:block;width:165px;height:36px;object-fit:contain;object-position:left center;mix-blend-mode:multiply}
+[data-ds-dark-theme] .v2-top-lockup{filter:invert(1);mix-blend-mode:screen}
+.v2-modes{margin-left:clamp(5px,3.1vw,45px)}
+.v2-disconnect{font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));background:var(--dsw-alias-bg-layer-2);border:0;color:var(--dsw-alias-label-primary)}
+.v2-disconnect>span{color:var(--dsw-alias-label-secondary);padding-right:3px}
+.v2-icon-toggle{min-width:36px;min-height:36px;display:grid;place-items:center;padding:0}
+.v2-brain-toggle{font-size:max(10px,calc(12px + (var(--dsh-content-font-size, 10px) - 10px) * .75));height:36px;padding:0 10px;border-color:var(--dsw-alias-border-l2)}
+.v2-social .cs-conversation-header__content{min-width:0}
+.v2-roster-empty{padding:16px 13px;align-items:flex-start;text-align:left;gap:6px}
+.v2-roster-empty .v2-empty-glyph{display:none}
+.v2-roster-empty>span:not(.v2-empty-glyph){color:var(--dsw-alias-label-secondary);font-weight:650}
+.v2-roster-empty small{font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));line-height:1.5}
+.v2-social-empty{max-width:405px;padding:18px;margin:max(24px,6vh) auto}
+.v2-social-empty h2{font-size:max(10px,calc(14px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-social-empty p{font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));color:var(--dsw-alias-label-secondary)}
+.v2-social .cs-input-toolbox.v2-social-tools{position:relative;z-index:5;overflow:visible;
+  padding:6px 12px;min-height:46px;flex-wrap:wrap;gap:6px}
+.v2-social-tools .yenra-composer-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:5px;min-width:0}
+.v2-social-tools .yenra-emoji-anchor,
+.v2-social-tools .yenra-composer-tool-status,
+.v2-social-tools .yenra-media-menu{position:relative;flex:none}
+.v2-social-tools .yenra-emoji-anchor .cs-button,
+.v2-social-tools .yenra-composer-tool-status>summary,
+.v2-social-tools .yenra-media-menu>summary,
+.v2-social-tools .v2-local-attach{min-height:28px;display:inline-flex;align-items:center;gap:4px;justify-content:center;
+  padding:4px 8px;border:1px solid var(--dsw-alias-border-l2);border-radius:8px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);
+  white-space:nowrap;font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));line-height:16px;list-style:none;cursor:pointer}
+.v2-social-tools .yenra-emoji-anchor .cs-button:hover,
+.v2-social-tools .yenra-composer-tool-status>summary:hover,
+.v2-social-tools .yenra-media-menu>summary:hover,
+.v2-social-tools .v2-local-attach:hover{background:var(--dsw-alias-bg-layer-3);color:var(--dsw-alias-label-primary)}
+.v2-social-tools .yenra-composer-tool-status>summary::-webkit-details-marker,
+.v2-social-tools .yenra-media-menu>summary::-webkit-details-marker{display:none}
+.v2-social-tools .yenra-composer-tool-hint{display:none}
+.v2-social-tools .yenra-emoji-pop{position:absolute;z-index:70;bottom:calc(100% + 12px);left:0;
+  border:1px solid var(--dsw-alias-border-l2);border-radius:12px;background:var(--dsw-alias-bg-layer-2);box-shadow:0 18px 45px var(--dsw-alias-bg-mask-3)}
+.v2-social-tools .yenra-composer-tool-pop{position:absolute;z-index:70;bottom:calc(100% + 12px);left:0;
+  display:flex;flex-direction:column;gap:6px;padding:12px;width:min(295px,65vw);min-width:210px;
+  border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);box-shadow:0 14px 42px var(--dsw-alias-bg-mask-3);
+  border-radius:10px;color:var(--dsw-alias-label-primary);line-height:1.5;font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-social-tools .yenra-composer-tool-pop strong{color:var(--dsw-alias-label-primary)}
+.v2-social-tools .yenra-media-sheet{position:absolute;right:0;bottom:calc(100% + 12px);top:auto;
+  z-index:70;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l2);border-radius:11px;
+  width:min(325px,72vw);box-shadow:0 18px 44px var(--dsw-alias-bg-mask-3)}
+.v2-local-file{display:flex;flex:none;align-items:center;justify-content:space-between;gap:8px;
+  padding:6px 12px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));border-top:1px solid var(--dsw-alias-border-l2)}
+.v2-local-file span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2-local-file button{flex:none;background:transparent;border:0;color:var(--dsw-alias-label-secondary);cursor:pointer;font-size:max(10px,calc(17px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-social .cs-message-input{margin:4px 12px 10px;min-height:63px}
+.v2-social .cs-message-input__content-editor{min-height:30px}
+.v2-advice[data-expanded=false]{flex:0 0 auto;max-height:none;overflow:visible;padding:9px 13px}
+.v2-advice[data-expanded=true]{flex:0 1 auto;max-height:43%;overflow:auto}
+.v2-advice-title{margin-bottom:0;min-height:22px}
+.v2-advice-title strong{font-size:max(10px,calc(12px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-advice-controls{display:flex;align-items:center;gap:6px}
+.v2-advice-controls button{border:0;background:transparent;color:var(--dsw-alias-label-primary);font-size:max(10px,calc(10px + (var(--dsh-content-font-size, 10px) - 10px) * .75));cursor:pointer;padding:4px 3px}
+.v2-advice-controls button:disabled{opacity:.45;cursor:not-allowed}
+.v2-advice-list{margin-top:10px}
+.v2-brain-conversation-label{font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));min-height:43px}
+.v2-native-conversation{position:relative}
+.v2-footer{height:25px;min-height:25px;align-items:center;font-size:max(10px,calc(9px + (var(--dsh-content-font-size, 10px) - 10px) * .75));padding:4px 12px}
+@container (max-width:1130px){
+  .v2-top-title{display:flex}
+  .v2-modes{margin-left:8px}
+  .v2-disconnect{display:none}
+}
+@container (max-width:800px){
+  .v2-top-title{min-width:unset}
+  .v2-top-lockup{width:140px;height:32px}
+  .v2-modes{margin-left:0}
+}
+@container (max-width:650px){
+  .v2-top-lockup{width:116px;height:28px}
+  .v2-icon-toggle{display:none}
+  .v2-social-tools .yenra-composer-toolbar{gap:3px}
+}
+/* Official Windows DSH AppFrame collapses its own sidebar to zero.
+ * Expose the same native panel actions as one thin V2 icon view inside main.
+ * Official expanded sidebar remains the only full navigation and hides this rail.
+ * No independent navigation state, Sender, Agent or sidebar store is created. */
+.yenra-v2{display:grid;grid-template-columns:0 minmax(0,1fr);
+  grid-template-rows:60px minmax(0,1fr) 25px;min-width:0;min-height:0;overflow:hidden}
+[data-sidebar-collapsed] .yenra-v2{grid-template-columns:50px minmax(0,1fr)}
+.v2-navigation-rail{display:none;grid-column:1;grid-row:1/4;flex-direction:column;align-items:center;
+  padding:11px 4px 9px;gap:8px;background:var(--dsw-alias-bg-layer-1);border-right:1px solid var(--dsw-alias-border-l2);
+  min-width:0;min-height:0}
+[data-sidebar-collapsed] .yenra-v2 .v2-navigation-rail{display:flex}
+.v2-rail-top{display:flex;flex-direction:column;align-items:center;gap:7px}
+.v2-rail-button{display:grid;place-items:center;flex:none;width:40px;height:40px;
+  background:transparent;border:1px solid transparent;border-radius:var(--dsw-radius-lg);
+  color:var(--dsw-alias-label-secondary);cursor:pointer;line-height:1}
+.v2-rail-button:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.v2-rail-button[aria-current=page]{background:var(--dsw-alias-button-ghost-active-fill);border-color:var(--dsw-alias-border-l2);color:var(--dsw-alias-label-primary);
+  box-shadow:inset 3px 0 var(--dsw-alias-bg-mask-3)}
+.v2-topbar{grid-column:2;grid-row:1;min-width:0;min-height:0}
+.v2-workspace{grid-column:2;grid-row:2;min-width:0;min-height:0}
+.v2-footer{grid-column:2;grid-row:3;min-width:0;min-height:0}
+@container (max-width:980px){.v2-navigation-rail{padding-left:4px;padding-right:4px}}
+@media (prefers-reduced-motion:reduce){.v2-rail-button{transition:none}}
+/* In the official embedded DSH Conversation, when the current session has no
+ * transcript views, its native flex scrollport contains only composerSeat.
+ * Layout it at the bottom; never clone or replace the upstream Composer. */
+.v2-native-conversation [data-conversation-scroll] > [data-composer-seat]{margin-top:auto}
+
+/* OSS ChatScope list has height:100% by default; preserve an actual future
+ * scrollable roster but don't make the empty collection hide channel status. */
+/* The existing ChatScope scrollport must own ALL remaining sidebar height.
+ * The old 230px reservation created a blank strip below visible contacts. */
+.v2-social .cs-sidebar.v2-roster .cs-conversation-list{
+  flex:1 1 0;min-height:0;height:auto;max-height:none;overflow:hidden;
+}
+/* ChatScope input delegates color to DSH Theme. */
+.v2-social .cs-message-input .cs-message-input__content-editor-wrapper,
+.v2-social .cs-message-input .cs-message-input__content-editor{
+  background-color:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);
+}
+.v2-social .cs-message-input .cs-message-input__content-editor::placeholder{
+  color:var(--dsw-alias-label-secondary);
+}
+.v2-social .cs-input-toolbox.v2-social-tools{justify-content:flex-start}
+.v2-social .cs-input-toolbox.v2-social-tools .v2-local-file{flex:0 0 100%;width:100%;margin:3px 0 0;order:2;min-height:27px;border-radius:7px}
+
+/* When the official DSH sidebar is manually expanded, it owns the brand;
+   never display the same whale + YENRA identity a second time. */
+div[style*="grid-template-columns"]:not([data-sidebar-collapsed]) .yenra-v2 .v2-top-title{display:none!important}
+
+/* Empty-state UX: no developer documentation in the application window.
+ * Keep ChatScope and DSH native controls; only factual empty state remains.
+ */
+.yenra-v2{grid-template-rows:60px minmax(0,1fr)}
+.v2-social .cs-message-list{display:flex;flex-direction:column}
+.v2-social-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  flex:1 1 auto;min-height:0;min-width:0;max-width:440px;width:100%;
+  margin:0 auto;padding:20px;text-align:center;gap:5px
+}
+.v2-social-empty .v2-empty-symbol{
+  display:grid;place-items:center;width:53px;height:53px;margin-bottom:15px;
+  border-radius:17px;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-secondary);
+  font-size:max(10px,calc(27px + (var(--dsh-content-font-size, 10px) - 10px) * .75));line-height:1
+}
+.v2-social-empty h2{font-size:max(10px,calc(15px + (var(--dsh-content-font-size, 10px) - 10px) * .75));font-weight:650;color:var(--dsw-alias-label-primary);margin:0 0 3px}
+.v2-social-empty p{font-size:max(10px,calc(11px + (var(--dsh-content-font-size, 10px) - 10px) * .75));line-height:1.6;color:var(--dsw-alias-label-secondary);margin:0}
+.v2-roster-empty{padding:42px 10px;align-items:center;text-align:center}
+.v2-roster-empty>span:not(.v2-empty-glyph){font-size:max(10px,calc(12px + (var(--dsh-content-font-size, 10px) - 10px) * .75));font-weight:450;color:var(--dsw-alias-label-secondary)}
+.v2-brain-head{min-height:62px}
+.v2-brain-label strong{font-size:max(10px,calc(14px + (var(--dsh-content-font-size, 10px) - 10px) * .75))}
+.v2-brain-controls button{line-height:1;min-width:32px}
+.v2-native-conversation{flex:1 1 auto;min-height:0}
+.v2-disconnect{padding:6px 10px;white-space:nowrap}
+
+
+
+
+
+/* One native Windows caption row: use the official DSH Electron
+ * titleBarOverlay / AppFrame's reserved caption, do not create another titlebar.
+ * The native top-left controls / application menu own x<190 and Windows caption
+ * buttons own the trailing 140px. Existing YENRA navigation is simply seated
+ * in the safe middle of the official caption, with draggable gaps.
+ * At extremely narrow widths (under 680 CSS px), retain the native safe fallback;
+ * keep Windows controls visible, never hide or fake system captions.
+ */
+@media (min-width:680px){
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2{
+    grid-template-rows:0 minmax(0,1fr);
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .v2-topbar{
+    position:fixed;
+    inset:0 140px auto max(190px, calc(var(--dsh-windows-sidebar-width, 0px) + 12px));
+    z-index:40;
+    width:auto;
+    height:40px;
+    min-height:40px;
+    max-height:40px;
+    padding:0 8px;
+    gap:14px;
+    border:0;
+    /* Paint the same DSH caption fill so the approved logo's bitmap can
+       blend with a real backdrop in both light and dark modes. */
+    background:var(--dsw-specific-sidebar-fill);
+    isolation:isolate;
+    overflow:visible;
+    -webkit-app-region:drag;
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .v2-topbar :is(button,nav,input){
+    -webkit-app-region:no-drag;
+  }
+  /* A hidden retained chat seat must not keep its drag region over the native
+   * session header: the drag region swallows the 聊天/工作 clicks even while
+   * the seat is visibility:hidden. */
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-retained-chat-seat[data-yenra-retained-visible="false"] .v2-topbar{
+    -webkit-app-region:no-drag;
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .v2-top-title{
+    min-width:145px;
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .v2-top-lockup{
+    width:145px;
+    height:33px;
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .v2-modes{
+    height:40px;
+    padding:2px;
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .v2-top-actions{
+    gap:6px;
+  }
+}
+
+/* DSH Windows caption: insert the existing contact-list toggle before the
+ * official Application/Edit menus. The preload menu remains the SAME native
+ * Shadow DOM menu: only its supported --dsh-windows-menu-start seat moves.
+ * Never replace or intercept its commands. */
+@media (min-width:680px) {
+  html[data-windows-titlebar]:has(.yenra-v2) {
+    --dsh-windows-menu-start:134px;
+  }
+  html[data-windows-titlebar]:has(.yenra-v2) .v2-roster-toggle {
+    position:fixed;
+    left:94px;
+    top:6px;
+    width:28px;
+    height:28px;
+    min-width:28px;
+    min-height:28px;
+    padding:0;
+    z-index:1101;
+    border:0;
+    background:transparent;
+    -webkit-app-region:no-drag;
+  }
+  html[data-windows-titlebar]:has(.yenra-v2) .v2-topbar {
+    /* App/Edit labels grow with the official DSH font setting; reserve room. */
+    left:max(252px, calc(252px + (var(--dsh-content-font-size, 10px) - 10px) * 3), calc(var(--dsh-windows-sidebar-width, 0px) + 12px));
+  }
+}
+/* The official DSH text-size setting is the only source of UI size.
+ * Do not introduce a YENRA font-size preference or font-settings engine. */
+html[data-platform="win32"] body {
+  font-size:max(12px,calc(16px + (var(--dsh-content-font-size, 10px) - 10px) * .75));
+}
+html[data-platform="win32"] body :is(button,input,textarea,select,label,[role="tab"],[role="option"]) {
+  font-size:max(10px,calc(14px + (var(--dsh-content-font-size, 10px) - 10px) * .75))!important;
+}
+/* The native DSH expanded sidebar is the existing panel-list component.
+ * Bind only its labels, not brand artwork, to the same official setting. */
+html[data-platform="win32"] div:has(> [data-window-drag="true"])
+:is(button span,button label,[role="menuitem"]) {
+  font-size:max(10px,calc(14px + (var(--dsh-content-font-size, 10px) - 10px) * .75))!important;
+}
+html[data-platform="win32"] body .v2-mode {
+  font-size:max(10px,calc(14px + (var(--dsh-content-font-size, 10px) - 10px) * .75));
+}
+
+/* V2 conversation-first density, using the resident DSH Lexical composer
+ * and ChatScope MessageInput rather than any replacement editor. */
+.v2-brain-head{
+  height:42px;
+  min-height:42px;
+  padding:4px 10px;
+}
+.v2-brain-label{gap:6px}
+.v2-brain-mark{width:26px;height:26px}
+.v2-brain-controls button{width:28px;height:28px;min-width:28px}
+/* The original dsh-persona-dafeiyu REST API owns all profile and scope
+ * mutations; this narrow titlebar adapter only moves its user controls.
+ * The original dock remains a safe fallback if the plugin is unavailable. */
+.v2-brain-head .v2-brain-label{min-width:0;flex:none}
+.v2-brain-head .v2-brain-controls{min-width:0;flex:1;justify-content:flex-end;align-items:center}
+.v2-persona-header{min-width:0;position:relative;display:flex;flex:0 1 200px;max-width:200px}
+.v2-brain-controls .v2-persona-header button{
+  display:flex;width:auto;height:auto;min-width:0;min-height:0;flex:none;
+  padding:0;line-height:1.35;cursor:pointer;font:inherit;
+  border-radius:var(--dsw-radius-md);
+}
+.v2-brain-controls .v2-persona-header .v2-persona-trigger{
+  display:flex;flex:1 1 auto;align-items:center;justify-content:center;
+  gap:5px;width:100%;min-width:0;height:29px;min-height:29px;
+  border:1px solid var(--dsw-alias-border-l2);
+  background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);
+  font-size:11px;padding:0 7px;
+}
+.v2-persona-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.v2-persona-menu{
+  position:absolute;right:-34px;top:calc(100% + 7px);z-index:35;
+  width:min(300px,calc(var(--yenra-brain-width,385px) - 20px));
+  max-height:min(65vh,380px);overflow-y:auto;box-sizing:border-box;
+  background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);
+  border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-lg);
+  box-shadow:var(--dsw-elevation-panel);
+  padding:9px;scrollbar-width:thin;
+}
+.v2-persona-menu-heading{font-size:11px;font-weight:700;color:var(--dsw-alias-label-tertiary);padding:6px 5px}
+.v2-persona-choice-list{display:flex;flex-direction:column;gap:3px}
+.v2-brain-controls .v2-persona-menu button{
+  width:100%;min-height:31px;display:flex;flex:1 1 auto;
+  align-items:center;justify-content:space-between;text-align:left;gap:8px;
+  padding:7px 9px;white-space:normal;font-size:12px;
+  color:var(--dsw-alias-label-primary);background:transparent;border:0;
+}
+.v2-brain-controls .v2-persona-menu button:hover:not(:disabled),
+.v2-brain-controls .v2-persona-menu button[aria-pressed="true"]{
+  background:var(--dsw-alias-interactive-bg-hover);
+}
+.v2-brain-controls .v2-persona-menu button:disabled{opacity:.55;cursor:default}
+.v2-persona-fallback{border-top:1px solid var(--dsw-alias-border-l2);margin-top:5px;padding-top:5px}
+.v2-persona-scope-list{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.v2-brain-controls .v2-persona-scope-list button{
+  justify-content:center;text-align:center;border:1px solid var(--dsw-alias-border-l2);
+}
+.v2-persona-menu-note{font-size:11px;color:var(--dsw-alias-label-secondary);padding:7px 5px}
+.v2-persona-menu-error{font-size:11px;color:var(--dsw-alias-state-danger-primary);padding:7px 5px}
+.v2-brain:has(.v2-persona-header[data-yenra-persona-state="ready"])
+  .v2-native-embed [data-dsh-persona-dock]{display:none!important}
+.v2-native-embed [data-conversation-region="composer"]{
+  /* The official DSH auto-growing Lexical editor owns its own resize logic.
+   * Limit only its inherited scroll cap so a long draft cannot eat the transcript. */
+  --dsh-composer-text-max-height:min(34vh,240px);
+}
+.v2-native-embed [data-composer-card]{
+  padding-top:4px;
+}
+.v2-native-embed [data-composer-card] > :last-child{
+  padding-top:0;
+  padding-bottom:2px;
+}
+.v2-native-embed [data-composer-input]{
+  min-height:28px;
+  padding-top:1px;
+  /* Same visible 14px base as the original OSS human Composer. Keep DSH's
+   * native Lexical editing, global content-size setting and theme tokens. */
+  font-family:var(--dsw-font-family,inherit);
+  font-size:max(12px,calc(14px + (var(--dsh-content-font-size,10px) - 10px) * .75));
+  line-height:1.5;
+}
+.v2-native-embed [data-composer-dock]{
+  padding-top:4px;
+}
+/* The official DSH dock is nowrap by default. In the narrow embedded Brain
+ * panel, keep the upstream Persona picker and its scope controls together on
+ * their own row, while native context/performance meters wrap below.
+ * No new picker, Composer, or upstream patch. */
+.v2-native-embed [data-composer-dock]:has([data-dsh-persona-dock]){
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-start;
+  column-gap:10px;
+  row-gap:4px;
+  min-width:0;
+  max-width:100%;
+}
+.v2-native-embed [data-composer-dock] [data-dsh-persona-dock]{
+  order:-1;
+  flex:1 1 100%;
+  width:100%;
+  min-width:0;
+  justify-content:flex-start;
+}
+.v2-native-embed :has(> [data-composer-card]){
+  padding-bottom:1px;
+}
+/* ChatScope's built-in attachment button is the existing plus-menu trigger.
+ * No extra independent composer or upload/send pipeline is created. */
+.v2-social .cs-message-input{
+  min-height:51px;
+  margin:4px 12px 8px;
+}
+.v2-social .cs-message-input__content-editor{
+  min-height:26px;
+  max-height:min(34vh,220px);
+  overflow-y:auto;
+  overflow-wrap:anywhere;
+  white-space:pre-wrap;
+}
+.v2-social .cs-input-toolbox.v2-social-tools{
+  min-height:36px;
+  padding:4px 12px 2px;
+}
+
+/* Show a + glyph on the existing ChatScope attachment action, which now
+ * toggles the original InputToolbox; its actual click handler remains native. */
+.v2-social .cs-message-input .cs-button--attachment{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;
+  width:30px;
+  height:30px;
+  min-width:30px;
+  padding:0;
+  border-radius:50%;
+  background:var(--dsw-alias-bg-layer-2);
+  color:var(--dsw-alias-label-primary);
+}
+.v2-social .cs-message-input .cs-button--attachment svg{
+  display:none;
+}
+.v2-social .cs-message-input .cs-button--attachment::after{
+  content:"+";
+  display:block;
+  font-size:20px;
+  font-weight:500;
+  line-height:1;
+}
+.v2-social .cs-message-input .cs-button--attachment:hover{
+  background:var(--dsw-alias-bg-layer-3);
+}
+
+/* Media is a popup belonging to the original ChatScope toolbox, not to the
+ * tiny "媒体" summary's right edge. Anchor to toolbox padding so the popup
+ * never passes underneath the contact roster or loses pointer interaction. */
+.v2-social-tools .yenra-media-menu{position:static}
+.v2-social-tools .yenra-media-menu>.yenra-media-sheet{
+  left:12px;
+  right:auto;
+  width:min(325px,calc(100% - 24px));
+}
+
+/* Existing YENRA media-card design from theme.css, mapped onto the official
+ * DSH Desktop design-platform tokens. V2 does not load legacy theme.css;
+ * only carry across the presentational media subrules, not a second theme. */
+.v2-social-tools .yenra-media-menu>.yenra-media-sheet{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  box-sizing:border-box;
+  padding:10px 12px;
+  max-height:min(65vh,420px);
+  overflow-y:auto;
+  color:var(--dsw-alias-label-primary);
+}
+.v2-social-tools .yenra-media-title{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:8px;
+  padding:4px 2px 10px;
+  font-size:max(12px,calc(13px + (var(--dsh-content-font-size,10px) - 10px) * .75));
+  font-weight:700;
+  color:var(--dsw-alias-label-primary);
+  line-height:1.4;
+}
+.v2-social-tools .yenra-media-title small{
+  font-size:max(10px,calc(11px + (var(--dsh-content-font-size,10px) - 10px) * .75));
+  font-weight:400;
+  color:var(--dsw-alias-label-tertiary);
+  white-space:nowrap;
+}
+.v2-social-tools .yenra-media-row{
+  display:grid;
+  grid-template-columns:26px minmax(0,1fr) auto;
+  gap:9px;
+  align-items:center;
+  padding:10px 2px;
+  border-top:1px solid var(--dsw-alias-border-l2);
+  min-width:0;
+}
+.v2-social-tools .yenra-media-glyph{
+  display:flex;
+  width:26px;
+  height:26px;
+  align-items:center;
+  justify-content:center;
+  border-radius:8px;
+  background:var(--dsw-alias-bg-layer-3);
+  color:var(--dsw-alias-label-secondary);
+  font-size:14px;
+}
+.v2-social-tools .yenra-media-row strong{
+  display:block;
+  font-size:max(11px,calc(12px + (var(--dsh-content-font-size,10px) - 10px) * .75));
+  line-height:1.4;
+  font-weight:650;
+  color:var(--dsw-alias-label-primary);
+}
+.v2-social-tools .yenra-media-row small{
+  display:block;
+  margin-top:3px;
+  font-size:max(10px,calc(11px + (var(--dsh-content-font-size,10px) - 10px) * .75));
+  line-height:1.45;
+  font-weight:400;
+  color:var(--dsw-alias-label-secondary);
+  overflow-wrap:anywhere;
+}
+.v2-social-tools .yenra-media-state{
+  align-self:center;
+  font-size:max(10px,calc(10px + (var(--dsh-content-font-size,10px) - 10px) * .75));
+  line-height:1.3;
+  white-space:nowrap;
+  color:var(--dsw-alias-label-tertiary);
+}
+
+/* Compact existing ChatScope roster header. The actual connected-channel list
+ * remains empty until the existing social adapter supplies authenticated data.
+ * Search stays icon-only when inactive; no duplicate custom search control. */
+.v2-social .v2-roster-header{
+  padding:7px 6px 6px;
+}
+.v2-roster-controls{
+  display:flex;
+  align-items:center;
+  gap:3px;
+  min-width:0;
+  min-height:32px;
+}
+.v2-roster-controls .v2-filters{
+  display:flex;
+  flex:1 1 auto;
+  flex-wrap:nowrap;
+  align-items:center;
+  min-width:0;
+  gap:3px;
+  margin-top:0;
+}
+.v2-roster-controls .v2-filters button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;
+  min-width:28px;
+  height:28px;
+  padding:3px 6px;
+  line-height:1;
+  border-radius:8px;
+  white-space:nowrap;
+}
+.v2-roster-controls .v2-filters button.v2-channel-filter{
+  width:26px;
+  min-width:26px;
+  padding:3px;
+}
+.v2-roster-controls .v2-search-toggle{
+  display:grid;
+  place-items:center;
+  flex:none;
+  width:28px;
+  height:28px;
+  margin-left:auto;
+  padding:0;
+  border:1px solid transparent;
+  border-radius:8px;
+  background:transparent;
+  color:var(--dsw-alias-label-secondary);
+  cursor:pointer;
+}
+.v2-roster-controls .v2-search-toggle:hover,
+.v2-roster-controls .v2-search-toggle:focus-visible{
+  background:var(--dsw-alias-interactive-bg-hover);
+  color:var(--dsw-alias-label-primary);
+}
+.v2-roster-controls .v2-search{
+  width:0;
+  height:28px;
+  flex:1 1 auto;
+  min-width:0;
+  max-width:100%;
+  margin:0;
+  padding:5px 9px;
+  box-sizing:border-box;
+  font-size:max(10px,calc(12px + (var(--dsh-content-font-size,10px) - 10px) * .75));
+}
+.v2-channel-mark{
+  display:inline-flex;
+  position:relative;
+  align-items:center;
+  justify-content:center;
+  width:18px;
+  height:18px;
+}
+.v2-channel-mark img{
+  display:block;
+  width:18px;
+  height:18px;
+}
+[data-ds-dark-theme] .v2-channel-mark img{
+  filter:invert(1);
+}
+.v2-channel-page>svg{
+  position:absolute;
+  right:-4px;
+  bottom:-4px;
+  border-radius:3px;
+  background:var(--dsw-alias-bg-layer-2);
+  color:var(--dsw-alias-label-primary);
+}
+.v2-roster-empty{
+  padding-top:24px;
+}
+
+/* One explicit close control only; native search clear X would duplicate it. */
+.v2-roster-controls .v2-search::-webkit-search-cancel-button{
+  -webkit-appearance:none;
+  appearance:none;
+  display:none;
+}
+
+/* Thin native DSH-style divider integration inside the existing YENRA panel.
+ * The underlying official ChatScope Sidebar and DSH Conversation stay mounted.
+ * Values come from the same scoped browser preference convention as the
+ * upstream DSH ConversationWidthControls; no secondary settings database. */
+.v2-workspace[data-brain-open=true]{
+  grid-template-columns:minmax(0,1fr) var(--yenra-brain-width,385px);
+}
+.v2-social{position:relative}
+.v2-social .cs-main-container--responsive>.cs-sidebar.v2-roster{
+  flex:0 0 var(--yenra-contact-width,174px);
+  width:var(--yenra-contact-width,174px);
+  min-width:var(--yenra-contact-width,174px);
+  max-width:var(--yenra-contact-width,174px);
+}
+.v2-pane-grip{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:10px;
+  z-index:25;
+  cursor:col-resize;
+  touch-action:none;
+  user-select:none;
+  background:transparent;
+  outline:none;
+}
+.v2-contact-grip{left:calc(var(--yenra-contact-width,174px) - 5px)}
+.v2-brain-grip{right:calc(var(--yenra-brain-width,385px) - 5px)}
+.v2-pane-grip::after{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:4px;
+  width:2px;
+  height:58px;
+  border-radius:2px;
+  transform:translateY(-50%);
+  background:var(--dsw-alias-border-l2);
+  opacity:0;
+  pointer-events:none;
+  transition:background-color .12s,opacity .12s;
+}
+.v2-pane-grip:hover::after,
+.v2-pane-grip[data-dragging=true]::after,
+.v2-pane-grip:focus-visible::after{
+  background:var(--dsw-alias-brand-primary);
+  opacity:1;
+}
+.v2-pane-grip:focus-visible{
+  outline:none;
+}
+.yenra-v2:has(.v2-pane-grip[data-dragging=true]){
+  user-select:none;
+  cursor:col-resize;
+}
+/* Narrow DSH windows keep the original safe overlay/compact behavior. */
+@container (max-width:980px){
+  .v2-brain{
+    width:min(var(--yenra-brain-width,385px),96%);
+  }
+  .v2-pane-grip{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .v2-pane-grip::after{transition:none}
+}
+
+/* P2 native Plugins tab: one DSH-managed entry, no parallel account UI/service. */
+.v2-connect-empty-action{display:inline-flex;align-items:center;justify-content:center;min-height:34px;margin-top:13px;padding:7px 16px;border-radius:var(--dsw-radius-md);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-button-ghost-active-fill);color:var(--dsw-alias-label-primary);font-weight:650;cursor:pointer}
+.v2-connect-empty-action:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.yenra-connection-tab{display:flex;flex-direction:column;gap:20px;max-width:980px;margin:0 auto;padding:18px 12px 32px;color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,inherit)}
+.yenra-connection-head{display:flex;align-items:start;justify-content:space-between;gap:16px}
+.yenra-connection-head h2{font-size:21px;margin:0 0 6px;font-weight:700}
+.yenra-connection-head p{font-size:13px;margin:0;line-height:1.6;color:var(--dsw-alias-label-secondary)}
+.yenra-connection-tab button{font:inherit;cursor:pointer;border-radius:var(--dsw-radius-md);border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);padding:9px 13px;color:var(--dsw-alias-label-primary);white-space:normal;text-align:center}
+.yenra-connection-tab button:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}
+.yenra-connection-tab button:disabled{cursor:not-allowed;opacity:.65}
+.yenra-connection-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.yenra-connection-card[data-channel="whatsapp"]{grid-column:1/-1}
+.yenra-connection-card{display:flex;flex-direction:column;min-height:230px;gap:12px;padding:16px;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-lg);background:var(--dsw-alias-bg-layer-1)}
+.yenra-connection-card-top{display:flex;gap:11px;align-items:start}
+.yenra-connection-card-top img{width:29px;height:29px;flex:none;object-fit:contain}
+.yenra-connection-card h3{font-size:15px;font-weight:700;margin:0}
+.yenra-connection-card-top p{font-size:11px;line-height:1.6;color:var(--dsw-alias-label-secondary);margin:4px 0 0}
+.yenra-connection-status{margin:0;font-size:12px;font-weight:650;color:var(--dsw-alias-label-secondary)}
+.yenra-connection-note{font-size:12px;color:var(--dsw-alias-label-secondary);line-height:1.7;margin:0}
+/* Existing DSH-IM identities, visually distinct inside ONE WhatsApp channel. */
+.yenra-wa-account-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;min-width:0}
+.yenra-wa-account{display:flex;gap:6px;min-width:0;padding:9px 7px;
+  border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md);
+  background:var(--dsw-alias-bg-layer-2);align-items:flex-start}
+.yenra-wa-account-index{display:inline-flex;flex:none;align-items:center;justify-content:center;
+  width:21px;height:21px;border-radius:50%;font-size:11px;font-weight:700;
+  background:var(--dsw-alias-button-ghost-active-fill);color:var(--dsw-alias-label-primary)}
+.yenra-wa-account-content{display:flex;flex-direction:column;min-width:0;gap:3px}
+.yenra-wa-account-content strong{font-size:12px;font-weight:700;white-space:nowrap}
+.yenra-wa-account-content span{font-size:11px;color:var(--dsw-alias-label-primary);white-space:nowrap}
+.yenra-wa-account-content small{font-size:11px;line-height:1.4;color:var(--dsw-alias-label-secondary)}
+/* Real per-account DSH-IM identity/status view, not tiny statistics tiles. */
+.yenra-wa-account-list{gap:12px}
+.yenra-wa-account{padding:14px 12px;gap:11px}
+.yenra-wa-account-avatar{display:flex;align-items:center;justify-content:center;flex:none;
+  width:40px;height:40px;border:1px solid var(--dsw-alias-border-l2);
+  border-radius:50%;background:var(--dsw-alias-bg-layer-1)}
+.yenra-wa-account-avatar{position:relative;overflow:hidden}
+.yenra-wa-account-avatar img{width:26px;height:26px;object-fit:contain}
+.yenra-wa-account-avatar img.yenra-wa-own-avatar{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;background:var(--dsw-alias-bg-layer-1)}
+.yenra-wa-account-content{flex:1;gap:6px}
+.yenra-wa-account-heading{display:flex;align-items:center;justify-content:space-between;gap:9px;min-width:0}
+.yenra-wa-account-content strong{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.yenra-wa-account-state{flex:none;font-size:11px;color:var(--dsw-alias-label-secondary)}
+.yenra-wa-account-state[data-connected="true"]{color:var(--dsw-alias-label-positive,var(--dsw-alias-label-primary))}
+.yenra-wa-account-id{font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.yenra-wa-account-error{margin:1px 0 0;padding:8px;line-height:1.5;
+  background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);
+  border-radius:var(--dsw-radius-md);font-size:11px;overflow-wrap:anywhere}
+.yenra-connection-tab .yenra-wa-account-settings{align-self:flex-start;width:auto;padding:6px 10px;font-size:11px}
+.yenra-fb-account{display:flex;align-items:center;gap:12px;min-width:0;
+  padding:12px;border:1px solid var(--dsw-alias-border-l2);
+  border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-2)}
+.yenra-fb-account-avatar{display:flex;flex:none;align-items:center;justify-content:center;
+  width:40px;height:40px;border:1px solid var(--dsw-alias-border-l2);
+  border-radius:50%;background:var(--dsw-alias-bg-layer-1)}
+.yenra-fb-account-avatar img{width:25px;height:25px;object-fit:contain}
+.yenra-fb-account-details{display:flex;flex-direction:column;min-width:0;gap:5px}
+.yenra-fb-account-details strong{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.yenra-fb-account-details small,.yenra-fb-account-details span{font-size:11px;color:var(--dsw-alias-label-secondary);line-height:1.5}
+.yenra-connection-problem{padding:9px 10px;border:1px solid var(--dsw-alias-border-l2);
+  border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-2);
+  color:var(--dsw-alias-label-secondary);font-size:11px;line-height:1.55}
+.yenra-connection-problem summary{cursor:pointer;color:var(--dsw-alias-label-primary);font-weight:650}
+.yenra-connection-problem p{margin:7px 0}
+.yenra-connection-problem code{display:block;overflow-wrap:anywhere;font-size:10px}
+.yenra-connection-actions{margin-top:auto}
+.yenra-connection-actions button{width:100%;font-size:12px}
+.yenra-connection-foot{font-size:11px;line-height:1.7;color:var(--dsw-alias-label-tertiary);margin:0}
+@media(max-width:860px){.yenra-connection-grid,.yenra-wa-account-list{grid-template-columns:1fr}.yenra-connection-card{min-height:150px}.yenra-connection-head{flex-wrap:wrap}}
+
+/* Native DSH main-slot memory entry. Offline service state only: never renders mock records.
+ * Reuses Graphite Glow's existing DSH Theme tokens; no local color palette or Memory Store. */
+.yenra-memory-native{height:100%;min-height:0;min-width:0;overflow-y:auto;
+  background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);
+  font-family:var(--dsw-font-family,"Segoe UI",system-ui,sans-serif);padding:32px clamp(16px,4vw,40px)}
+.yenra-memory-native *, .yenra-memory-native *::before, .yenra-memory-native *::after{box-sizing:border-box}
+.yenra-memory-native-content{width:100%;max-width:880px;margin:0 auto}
+.yenra-memory-native-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;
+  flex-wrap:wrap;margin-bottom:28px}
+.yenra-memory-native-heading{min-width:0}
+.yenra-memory-native-heading span{display:block;color:var(--dsw-alias-label-secondary);font-size:12px;margin-bottom:8px}
+.yenra-memory-native-heading h1{font-size:22px;line-height:1.3;font-weight:500;margin:0;outline-offset:4px}
+.yenra-memory-native-back{flex:none;min-height:36px;padding:7px 14px;
+  border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md);
+  background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);
+  font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.yenra-memory-native-back:hover{background:var(--dsw-alias-interactive-bg-hover)}
+.yenra-memory-native-back:focus-visible,.yenra-memory-native-heading h1:focus-visible{
+  outline:2px solid var(--dsw-alias-link);outline-offset:3px}
+.yenra-memory-native-status{display:grid;grid-template-columns:28px minmax(0,1fr);gap:16px;
+  align-items:start;padding:24px;border:1px solid var(--dsw-alias-border-l2);
+  background:var(--dsw-alias-bg-layer-1);border-radius:var(--dsw-radius-md);
+  color:var(--dsw-alias-label-secondary)}
+.yenra-memory-native-status h2{font-size:15px;line-height:1.5;font-weight:500;margin:0 0 9px;
+  color:var(--dsw-alias-label-primary)}
+.yenra-memory-native-status p{font-size:13px;line-height:1.65;margin:0 0 6px;overflow-wrap:anywhere}
+.yenra-memory-native-status p:last-child{margin:0}
+@media(max-width:640px){
+  .yenra-memory-native{padding:18px 14px}
+  .yenra-memory-native-header{gap:12px;margin-bottom:18px}
+  .yenra-memory-native-heading h1{font-size:20px}
+  .yenra-memory-native-status{padding:16px;gap:10px;grid-template-columns:22px minmax(0,1fr)}
+}
+
+/* DSH settings.launcher Slot override: only the official Settings dialog, no AccountMenu.
+ * Portalled beside the single DSH shell so the same native action stays discoverable
+ * when Windows Desktop collapses its official Sidebar. No second settings state. */
+.yenra-settings-only-launcher{
+  position:fixed;left:5px;bottom:8px;z-index:12;
+  display:grid;place-items:center;width:40px;height:40px;box-sizing:border-box;
+  border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-lg);
+  background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-secondary);
+  padding:0;cursor:pointer;font:inherit;line-height:1;
+}
+.yenra-settings-only-launcher:hover{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.yenra-settings-only-launcher:focus-visible{outline:2px solid var(--dsw-alias-link);outline-offset:2px}
+
+/* Memory records: presentation only over the installed DSH MemoryService.
+ * Values arrive from official Session-scoped Commands, never from a local store. */
+.yenra-memory-native[data-yenra-memory-service=ready] .yenra-memory-native-status{
+ border-color:var(--dsw-alias-border-l2);
+}
+.yenra-memory-live{display:flex;flex-direction:column;gap:18px;padding-top:28px}
+.yenra-memory-live-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.yenra-memory-live h2,.yenra-memory-contacts-boundary h2{margin:0;font-size:15px;font-weight:500;color:var(--dsw-alias-label-primary)}
+.yenra-memory-search{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.yenra-memory-search input{flex:1 1 220px;min-width:0}
+.yenra-memory-native input,.yenra-memory-native textarea{
+ box-sizing:border-box;padding:10px 12px;width:100%;border:1px solid var(--dsw-alias-border-l2);
+ border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-2);
+ color:var(--dsw-alias-label-primary);font:inherit;font-size:13px;line-height:1.6;
+}
+.yenra-memory-native input::placeholder,.yenra-memory-native textarea::placeholder{color:var(--dsw-alias-label-tertiary)}
+.yenra-memory-native textarea{resize:vertical;min-height:92px}
+.yenra-memory-native input:focus-visible,.yenra-memory-native textarea:focus-visible{outline:2px solid var(--dsw-alias-link);outline-offset:2px}
+.yenra-memory-native .yenra-memory-search button,.yenra-memory-editor-actions button,.yenra-memory-record-actions button{
+ flex:none;border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md);
+ background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);padding:7px 13px;
+ cursor:pointer;font:inherit;font-size:12px;min-height:34px;
+}
+.yenra-memory-native button:disabled{opacity:.55;cursor:not-allowed}
+.yenra-memory-native button:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}
+.yenra-memory-list{display:flex;flex-direction:column;gap:8px}
+.yenra-memory-record{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+ min-width:0;padding:16px;border:1px solid var(--dsw-alias-border-l2);
+ border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-layer-1)}
+.yenra-memory-record-info{flex:1;min-width:0}
+.yenra-memory-record-info p{font-size:13px;line-height:1.65;margin:0 0 8px;overflow-wrap:anywhere}
+.yenra-memory-record-info small{color:var(--dsw-alias-label-tertiary);font-size:11px;line-height:1.55}
+.yenra-memory-record-actions{display:flex;gap:5px;align-items:flex-start;flex-wrap:wrap}
+.yenra-memory-record-actions button{padding-inline:9px}
+.yenra-memory-editor{display:flex;flex-direction:column;gap:10px;padding:17px;
+ border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md);
+ background:var(--dsw-alias-bg-layer-1)}
+.yenra-memory-editor-actions{display:flex;flex-wrap:wrap;gap:8px}
+.yenra-memory-notice{margin:0;color:var(--dsw-alias-label-secondary);font-size:12px;line-height:1.6}
+.yenra-memory-empty{margin:0;padding:16px 0;color:var(--dsw-alias-label-secondary);font-size:13px}
+.yenra-memory-contacts-boundary{margin-top:30px;padding:18px;border:1px solid var(--dsw-alias-border-l2);
+ background:var(--dsw-alias-bg-layer-1);border-radius:var(--dsw-radius-md)}
+.yenra-memory-contacts-boundary p{font-size:12px;line-height:1.65;margin:9px 0 0;color:var(--dsw-alias-label-secondary)}
+@media(max-width:640px){
+ .yenra-memory-native{padding-bottom:65px}
+ .yenra-memory-live{gap:14px}
+ .yenra-memory-record{flex-direction:column;gap:8px}
+ .yenra-memory-record-actions{width:100%}
+ .yenra-memory-record-actions button{flex:1}
+ .yenra-memory-search{flex-direction:column;align-items:stretch}
+ .yenra-memory-search input{flex:1 1 auto}
+ .yenra-memory-search button{width:100%}
+}
+
+/* Scout's installed OSS page, rendered in the official DSH 'main' slot.
+ * No second plugin-market implementation and no parallel Electron/Agent.
+ * Deliberately scoped to the standalone panel; original plugin UI is intact. */
+.yenra-scout-standalone {
+  box-sizing:border-box;height:100%;min-height:0;min-width:0;width:100%;
+  display:flex;flex-direction:column;overflow:hidden;
+  padding:20px 26px 16px;
+  background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary);
+}
+.yenra-scout-standalone-head {
+  flex:none;display:flex;align-items:center;justify-content:space-between;
+  gap:20px;margin-bottom:16px;
+}
+.yenra-scout-standalone-head h1 {
+  margin:0 0 6px;font-size:20px;line-height:1.35;font-weight:700;
+}
+.yenra-scout-standalone-head p {
+  margin:0;color:var(--dsw-alias-label-secondary);font-size:12px;
+}
+.yenra-scout-standalone-head button {
+  border:1px solid var(--dsw-alias-border-l2);
+  border-radius:9px;background:var(--dsw-alias-bg-layer-2);
+  color:var(--dsw-alias-label-primary);padding:8px 12px;
+  font:inherit;font-size:12px;cursor:pointer;white-space:nowrap;
+}
+.yenra-scout-standalone-head button:hover {background:var(--dsw-alias-interactive-bg-hover)}
+.yenra-scout-standalone-content {
+  flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;overflow:hidden;
+}
+.yenra-scout-standalone-content .scx-page {
+  flex:1;min-height:0;min-width:0;width:100%;
+  height:100%!important;max-height:100%;overflow:hidden;
+}
+
+/* Scout category tabs in the native market header; reuse original Scout controls. */
+.yenra-scout-standalone{position:relative;}
+.yenra-scout-standalone-head{min-height:90px;align-items:flex-start;}
+.yenra-scout-standalone-head button{align-self:flex-start;}
+.yenra-scout-standalone-content .scx-page{overflow:visible!important;}
+.yenra-scout-standalone-content .scx-body{position:static!important;isolation:auto!important;overflow:visible!important;}
+.yenra-scout-standalone-content .scx-list{overflow:visible!important;}
+.yenra-scout-standalone-content .scx-cats{
+ position:absolute!important;top:15px;left:180px;right:140px;
+ width:auto!important;max-width:none!important;height:auto!important;max-height:none!important;min-height:0;
+ display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:24px;
+ gap:4px 6px;overflow:visible!important;overscroll-behavior:auto;
+ margin:0!important;padding:0!important;border:0!important;border-radius:0;
+ background:transparent!important;z-index:4;scrollbar-gutter:auto;
+}
+.yenra-scout-standalone-content .scx-cats::before{display:none!important;}
+.yenra-scout-standalone-content .scx-cats>.scx-cat{
+ box-sizing:border-box;width:100%!important;min-width:0!important;height:24px!important;min-height:24px!important;
+ padding:1px 6px!important;line-height:20px;font-size:12px;
+ display:flex;flex:none;white-space:nowrap!important;overflow:hidden;
+}
+.yenra-scout-standalone-content .scx-filters{padding-top:0!important;padding-left:0!important;}
+@media(max-width:1240px){
+ .yenra-scout-standalone-head{min-height:112px;}
+ .yenra-scout-standalone-content .scx-cats{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media(max-width:950px){
+ .yenra-scout-standalone-head{min-height:174px;}
+ .yenra-scout-standalone-content .scx-cats{
+   top:80px;left:26px;right:26px;grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media(max-width:720px){
+ .yenra-scout-standalone-head{min-height:232px;}
+ .yenra-scout-standalone-content .scx-cats{grid-template-columns:repeat(2,minmax(0,1fr));}
+ .yenra-scout-standalone-content .scx-body{grid-template-rows:none!important;}
+}
+
+/* Scout is now the dedicated YENRA sidebar page. Suppress ONLY the legacy
+ * top tab in official Plugins; its registered OSS component remains live for
+ * the standalone main panel and continues using the official plugin installer. */
+button[role="tab"][id$="-dsh-plugin-scout"] {display:none!important;}
+
+/* Real, read-only DSH-IM inbox rendered through existing ChatScope components.
+ * Account/room identities come only from native Host Commands. */
+.v2-social .v2-roster-status{
+  flex:none;display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:4px 11px 7px;color:var(--dsw-alias-label-secondary);font-size:11px;
+}
+.v2-social .v2-roster-status button{
+  border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);
+  color:var(--dsw-alias-label-primary);border-radius:7px;min-width:25px;min-height:24px;
+  cursor:pointer;
+}
+.v2-social .v2-account-group{
+  position:sticky;top:0;z-index:1;display:flex;flex-direction:column;gap:3px;
+  border-block:1px solid var(--dsw-alias-border-l2);padding:8px 10px 6px;
+  background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);
+  font-size:11px;min-width:0;
+}
+.v2-social .v2-account-group small{
+  font-size:10px;color:var(--dsw-alias-label-secondary);
+}
+.v2-social .cs-conversation{
+  cursor:pointer;min-width:0;border:none;
+  box-sizing:border-box;height:64px;min-height:64px;max-height:64px;
+  padding:9px 10px;align-items:center;
+  font-family:var(--dsw-font-family,"Segoe UI",Arial,sans-serif);
+}
+.v2-social .cs-conversation__name,.v2-social .cs-conversation__info{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;
+  font-size:12px;line-height:17px;
+}
+.v2-social .cs-conversation__content{min-width:0;margin-right:6px;flex:1 1 auto;}
+.v2-social .cs-conversation__last-activity-time{flex:0 0 60px;width:60px;min-width:60px;max-width:60px;font-size:11px;line-height:18px;white-space:nowrap;align-self:flex-start;justify-content:flex-end;font-variant-numeric:tabular-nums;}
+.v2-social .cs-message{
+  max-width:100%;margin:7px 10px;
+}
+.v2-social .cs-message__content{white-space:pre-wrap;overflow-wrap:anywhere;}
+.v2-social .cs-message__footer{font-size:10px;color:var(--dsw-alias-label-secondary);}
+.v2-social .cs-conversation-header .v2-header-btn{min-width:44px;justify-content:center;}
+.v2-workspace[data-contacts=compact] .v2-social .v2-roster-status,
+.v2-workspace[data-contacts=compact] .v2-social .v2-account-group small{display:none;}
+.v2-workspace[data-contacts=compact] .v2-social .v2-account-group{
+  padding:7px 2px;font-size:10px;text-align:center;word-break:break-all;
+}
+
+/* Manual send is a real DSH-IM Host command. Never show a fake optimistic bubble. */
+.v2-social .v2-send-notice{
+  order:4;flex:none;margin:3px 12px 0;padding:6px 10px;border-radius:8px;
+  color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-layer-2);
+  border:1px solid var(--dsw-alias-border-l2);font-size:11px;line-height:1.45;
+}
+.v2-social .cs-message-input{order:5}
+
+/* Real WhatsApp historical roster: names come from DSH-IM only.
+ * Missing identities are stated plainly; never expose opaque hash as name. */
+.v2-social .v2-roster-status{align-items:center;gap:6px;min-width:0;padding:7px 10px 8px;}
+.v2-social .v2-roster-status-copy{
+  flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;
+  gap:2px;line-height:1.35;
+}
+.v2-social .v2-roster-status-copy strong{
+  font-size:11px;font-weight:650;color:var(--dsw-alias-label-primary);
+}
+.v2-social .v2-roster-status-copy small{
+  font-size:10px;line-height:1.3;color:var(--dsw-alias-label-secondary);
+  white-space:normal;overflow-wrap:anywhere;
+}
+.v2-social .v2-account-group{gap:2px;}
+.v2-social .v2-account-group strong{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.v2-social .cs-conversation__name{font-size:14px;font-weight:600!important;line-height:20px;}
+.v2-social .cs-conversation__info{color:var(--dsw-alias-label-secondary);}
+
+/* YENRA bilingual presentation: translation above smaller original in native ChatScope. */
+.v2-social .cs-message__content{white-space:pre-line;overflow-wrap:anywhere;}
+.v2-social .v2-message-bilingual{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere;}
+.v2-social .v2-message-translation{font-size:1em;line-height:1.5;font-weight:500;white-space:pre-wrap;overflow-wrap:anywhere;}
+.v2-social .v2-message-original{font-size:1em;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;}
+.v2-social .v2-message-original--secondary{font-size:.84em;line-height:1.45;opacity:.84;}
+.v2-social .v2-translation-switch{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:57px;height:30px;padding:0 8px 0 7px;border:1px solid var(--dsw-alias-border-l2);border-radius:999px;background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);font-size:11px;font-weight:650;cursor:pointer;white-space:nowrap;}
+.v2-social .v2-translation-switch:hover{background:var(--dsw-alias-interactive-bg-hover);}
+.v2-social .v2-translation-switch:focus-visible{outline:2px solid var(--dsw-alias-label-primary);outline-offset:2px;}
+.v2-social .v2-translation-switch-track{position:relative;display:block;flex:none;width:26px;height:15px;border-radius:999px;background:var(--dsw-alias-border-l2);transition:background .15s ease;}
+.v2-social .v2-translation-switch-thumb{position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:var(--dsw-alias-bg-base);box-shadow:0 0 0 1px var(--dsw-alias-border-l2);transition:transform .15s ease;}
+.v2-social .v2-translation-switch[aria-checked=true] .v2-translation-switch-track{background:var(--dsw-alias-label-primary);}
+.v2-social .v2-translation-switch[aria-checked=true] .v2-translation-switch-thumb{transform:translateX(11px);}
+.v2-social .v2-translation-switch-state{min-width:11px;text-align:center;}
+.v2-social .v2-send-notice button{margin-left:8px;}
+
+
+/* YENRA_GLOBAL_UI_SCALE_90_PERCENT_20261105
+ * One proportional application-wide scale: native DSH navigation, ChatScope,
+ * contacts, typography, icons, buttons and Brain. Do not separately shrink
+ * individual components. Root CSS zoom reflows to fill the Electron viewport
+ * (verified 1280 / 1152 / 1024px without horizontal overflow).
+ * Revert by removing this one declaration; no DSH upstream changes.
+ */
+html { zoom: .9; }
+
+/* YENRA_ROSTER_FULL_HEIGHT_AND_NO_TECH_COPY_20261105
+ * Fill the complete contacts pane using the original ChatScope scrollport.
+ * Refresh stays alongside channel filters/search, not in a metadata banner.
+ */
+.v2-social .v2-roster-controls .v2-roster-refresh{
+  display:grid;place-items:center;flex:0 0 27px;
+  width:27px;height:27px;min-width:27px;
+  padding:0;border:0;border-radius:8px;cursor:pointer;
+  background:transparent;color:var(--dsw-alias-label-secondary);
+  font-size:16px;line-height:1;
+}
+.v2-social .v2-roster-controls .v2-roster-refresh:hover,
+.v2-social .v2-roster-controls .v2-roster-refresh:focus-visible{
+  background:var(--dsw-alias-interactive-bg-hover);
+  color:var(--dsw-alias-label-primary);
+}
+.v2-social .cs-sidebar.v2-roster .cs-conversation-list{
+  flex:1 1 0;max-height:none;min-height:0;height:auto;overflow:hidden;
+}
+.v2-social .v2-account-group{
+  box-sizing:border-box;min-height:29px;
+  padding:7px 10px;gap:0;
+}
+.v2-social .v2-account-group strong{
+  font-size:12px;line-height:15px;font-weight:600;
+}
+
+/* Original ChatScope Avatar element, real W25/Matrix media via the one DSH Host.
+   Browser-native lazy loading; missing media leaves a plain contact initial. */
+.v2-social .v2-roster .cs-avatar{
+  position:relative;overflow:hidden;flex-shrink:0;
+  background:var(--dsw-alias-bg-layer-1);
+  color:var(--dsw-alias-label-primary);
+}
+.v2-social .v2-roster .cs-avatar .v2-avatar-fallback{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font:inherit;font-size:14px;font-weight:600;
+}
+.v2-social .v2-roster .cs-avatar .v2-avatar-authentic-image{
+  display:block;position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;z-index:1;
+}
+
+/* YENRA_CONTACT_HEADER_SAME_AVATAR_NO_ROW_LINES_20261105
+ * The native ChatScope header reuses the identical authenticated contact avatar
+ * from the selected roster row; no second avatar lookup or UI widget.
+ */
+.v2-social .cs-conversation-header__avatar{
+  display:flex;align-items:center;justify-content:center;
+  flex:none;margin-right:10px;
+}
+.v2-social .cs-conversation-header__avatar > .cs-avatar{
+  position:relative;flex:0 0 42px;
+  width:42px;height:42px;min-width:42px;min-height:42px;
+  overflow:hidden;background:var(--dsw-alias-bg-layer-1);
+  color:var(--dsw-alias-label-primary);
+}
+.v2-social .cs-conversation-header__avatar .v2-avatar-fallback{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font:inherit;font-size:14px;font-weight:600;
+}
+.v2-social .cs-conversation-header__avatar .v2-avatar-authentic-image{
+  display:block;position:absolute;inset:0;
+  width:100%;height:100%;object-fit:cover;z-index:1;
+}
+.v2-social .cs-conversation-header__content{justify-content:center;}
+.v2-social .v2-roster .cs-conversation,
+.v2-social .v2-roster .cs-conversation.cs-conversation--active{
+  border:0;
+}
+/* Native DSH Markdown and the native typography setting own all font sizes.
+   Only lay out the official turnTail action controls: no text-size overrides. */
+.v2-brain .yenra-native-reply-candidates{
+  display:grid;gap:8px;width:100%;min-width:0;margin:10px 0;
+  padding-top:9px;border-top:1px solid var(--dsw-alias-border-l2);
+}
+.v2-brain .yenra-native-reply-actions{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center;gap:7px;min-width:0;padding:6px 9px;
+  border:1px solid var(--dsw-alias-border-l2);border-radius:9px;
+  background:var(--dsw-alias-bg-layer-2);
+}
+.v2-brain .yenra-native-reply-head{
+  font-weight:650;color:var(--dsw-alias-label-primary);
+  min-width:0;overflow-wrap:anywhere;
+}
+.v2-brain .yenra-native-reply-actions button{
+  font:inherit;font-weight:550;cursor:pointer;
+  border-radius:7px;border:1px solid var(--dsw-alias-border-l2);
+  padding:5px 10px;min-width:54px;
+  background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);
+}
+.v2-brain .yenra-native-reply-actions button:hover{background:var(--dsw-alias-interactive-bg-hover);}
+.v2-brain .yenra-native-reply-actions button:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px;}
+
+/* One reading scale derived from DSH Appearance, for both social bubbles
+ * and native reply cards. No separate YENRA font setting or second renderer.
+ * The floor prevents unreadably small advice when the global UI is compact. */
+.v2-social,.v2-brain{
+  --yenra-chat-reading-size:max(13px,var(--dsh-content-font-size,14px));
+}
+.v2-social .cs-message__content{
+  font-size:var(--yenra-chat-reading-size);
+  line-height:1.55;
+}
+/* Native DSH AssistantMarkdown keeps sole ownership of prose and translation.
+ * Only the existing Adopt/Edit controls are attached to each native row. */
+.v2-brain [data-chat-group-part="response"] ol:has(> li > .yenra-native-reply-inline-tools){
+  list-style:none;margin:0;padding:0;display:grid;gap:.55em;
+}
+.v2-brain [data-chat-group-part="response"] :is(li,p):has(> .yenra-native-reply-inline-tools){
+  position:relative;box-sizing:border-box;min-width:0;
+  margin:0;min-height:5.15em;
+  padding:.72em 5.7em .76em .9em;
+  border-radius:var(--dsw-radius-md,9px);
+  border:1px solid var(--dsw-alias-border-l2);
+  background:var(--dsw-alias-bg-layer-2);
+  color:var(--dsw-alias-label-primary);
+  overflow-wrap:break-word;word-break:normal;
+  font-size:var(--yenra-chat-reading-size);
+  line-height:1.55;
+}
+.v2-brain .yenra-native-reply-inline-tools{
+  position:absolute;inset-inline-end:.62em;top:50%;
+  transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:stretch;gap:.35em;
+  white-space:nowrap;min-width:0;
+  font-size:inherit;line-height:normal;
+}
+.v2-brain .yenra-native-reply-inline-tools button,
+html[data-platform="win32"] body .v2-brain .yenra-native-reply-inline-tools button{
+  font-size:var(--yenra-chat-reading-size)!important;
+  line-height:1.15;font-weight:550;cursor:pointer;
+  border:1px solid var(--dsw-alias-border-l2);
+  border-radius:var(--dsw-radius-sm,6px);
+  padding:.34em .56em;
+  min-height:2em;white-space:nowrap;
+  color:var(--dsw-alias-label-primary);
+  background:var(--dsw-alias-bg-layer-1);
+}
+.v2-brain .yenra-native-reply-inline-tools button:hover{
+  background:var(--dsw-alias-interactive-bg-hover);
+}
+.v2-brain .yenra-native-reply-inline-tools button:focus-visible{
+  outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px;
+}
+.v2-brain [data-chat-group-part="response"] :is(li,p):has(> .yenra-native-reply-inline-tools):focus-within{
+  border-color:var(--dsw-alias-brand-primary);
+}
+@media(max-width:720px){
+  .v2-brain [data-chat-group-part="response"] :is(li,p):has(> .yenra-native-reply-inline-tools){
+    padding-inline-end:5.5em;
+  }
+}
+
+
+/* YENRA 2026-11-06 laptop layout: geometry only, no palette or font settings.
+ * Preserve DSH Theme and native Composer; OSS owns contacts and social drafts.
+ * At 1280x720 keep three usable columns; at smaller widths the Brain becomes
+ * an overlay without unmounting the original DSH/OSS sessions.
+ */
+.yenra-v2{grid-template-rows:52px minmax(0,1fr)}
+[data-sidebar-collapsed] .yenra-v2{grid-template-columns:44px minmax(0,1fr)}
+.yenra-v2 .v2-navigation-rail{padding:7px 3px;gap:6px}
+.yenra-v2 .v2-rail-top{gap:5px}
+.yenra-v2 .v2-rail-button{width:36px;height:36px}
+.yenra-v2 .v2-topbar{min-height:52px;padding:0 10px;gap:8px}
+.yenra-v2 .v2-top-title{min-width:132px}
+.yenra-v2 .v2-top-lockup{width:132px;height:30px}
+.yenra-v2 .v2-modes{margin-left:0;gap:2px;padding:2px}
+.yenra-v2 .v2-mode{height:30px;padding:0 10px;font-size:max(10px,calc(12px + (var(--dsh-content-font-size,10px) - 10px) * .75))}
+.yenra-v2 .v2-top-actions{gap:5px}
+.yenra-v2 .v2-icon-toggle{width:30px;min-width:30px;height:30px;min-height:30px}
+.yenra-v2 .v2-brain-toggle{height:30px;min-height:30px;padding:0 8px}
+.yenra-v2 .v2-workspace[data-brain-open=true][data-brain-layout=inline]{
+  grid-template-columns:minmax(0,1fr) var(--yenra-brain-width,385px);
+}
+/* Supersede the older <=980px absolute-position rule when JS has correctly
+ * selected the inline layout. This prevents the brain from covering the
+ * native social Composer on a 1024px Windows laptop. */
+.yenra-v2 .v2-workspace[data-brain-open=true][data-brain-layout=inline] .v2-brain{
+  position:static;top:auto;right:auto;bottom:auto;width:auto;
+  min-width:0;max-width:none;box-shadow:none;z-index:auto;
+}
+.yenra-v2 .v2-workspace[data-brain-open=true][data-brain-layout=drawer]{
+  grid-template-columns:minmax(0,1fr);
+}
+.yenra-v2 .v2-workspace[data-brain-layout=drawer] .v2-brain{
+  position:absolute;top:0;bottom:0;right:0;z-index:40;
+  width:min(var(--yenra-brain-width,385px),calc(100% - 16px));
+  max-width:none;min-width:0;min-height:0;
+  border-left:1px solid var(--dsw-alias-border-l2);
+  box-shadow:var(--dsw-elevation-panel);
+}
+/* In the existing narrow DSH Brain drawer, only one Composer is actionable
+ * at a time. Keep the mature inbox mounted and its own per-room draft intact;
+ * closing Brain reveals the same original human Composer. This prevents the
+ * underlying input from being visible or clickable through the drawer at
+ * 150% laptop scaling. No new responsive state, socket or Sender. */
+.yenra-v2 .v2-workspace[data-brain-open=true][data-brain-layout=drawer] .v2-social .yenra-compose-form{
+  visibility:hidden;pointer-events:none;
+}
+/* The original messaging-inbox owns contact visibility through its
+ * contactsCollapsed state. At laptop widths, do not force-hide the original
+ * .yenra-contact-panel when the user has explicitly expanded it. DSH only
+ * allocates the adjacent Brain panel; the OSS controls its own sidebar. */
+.yenra-v2 .v2-social:has(.yenra-oss-native-wrap){min-height:0;min-width:0}
+.yenra-v2 .v2-brain-head{height:40px;min-height:40px;padding:4px 8px}
+.yenra-v2 .v2-brain-label{gap:5px}
+.yenra-v2 .v2-persona-header{max-width:190px}
+.yenra-v2 .v2-brain-controls .v2-persona-header .v2-persona-trigger{
+  font-size:max(10px,calc(11px + (var(--dsh-content-font-size,10px) - 10px) * .75));
+}
+@media (min-width:680px){
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2{
+    grid-template-rows:0 minmax(0,1fr);
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2 .v2-topbar{
+    height:40px;min-height:40px;max-height:40px;padding:0 4px;gap:8px;
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2 .v2-top-title{
+    min-width:125px;
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2 .v2-top-lockup{
+    width:125px;height:30px;
+  }
+}
+@media (max-height:740px){
+  .yenra-v2 .v2-brain-head{height:38px;min-height:38px}
+  .yenra-v2 .v2-native-conversation{min-height:0}
+  .yenra-v2 .v2-native-embed [data-conversation-region="composer"]{
+    --dsh-composer-text-max-height:min(28vh,180px);
+  }
+}
+
+/* YENRA native narrow-screen drawer: the mature OSS contacts toggle remains
+ * inside its OWN channelbar; reserve clickable space to the left of the
+ * original DSH Brain overlay. No OSS Composer, theme or DOM manipulation. */
+.yenra-v2 .v2-workspace[data-brain-layout=drawer][data-brain-open=true] .yenra-social-channelbar{
+  padding-right:min(calc(var(--yenra-brain-width,385px) + 16px),calc(100% - 178px));
+}
+
+/* Original mature OSS account controls share the ONE native DSH caption.
+ * This seat is intentionally empty until the original OSS Portal mounts. */
+.yenra-v2 .v2-native-account-seat{
+  display:flex;flex:0 1 auto;min-width:0;align-items:center;justify-content:flex-end;
+  max-width:min(246px,32vw);height:36px;
+  -webkit-app-region:no-drag;
+}
+.yenra-v2 .v2-native-account-seat>*{min-width:0;max-width:100%}
+html[data-windows-titlebar] .yenra-v2 .v2-native-account-seat,
+html[data-windows-titlebar] .yenra-v2 .v2-native-account-seat *{
+  -webkit-app-region:no-drag;
+}
+@container (max-width:870px){
+  .yenra-v2 .v2-native-account-seat{max-width:210px}
+  .yenra-v2 .v2-top-actions{gap:3px}
+}
+@container (max-width:720px){
+  .yenra-v2 .v2-top-title{display:none}
+  .yenra-v2 .v2-native-account-seat{max-width:175px}
+  .yenra-v2 .v2-top-actions{gap:2px}
+}
+
+/* YENRA unified native header menus (2026-11-06).
+ * Same visual language for original OSS account selection and the existing
+ * dsh-persona-dafeiyu persona adapter. Appearance is inherited from official
+ * DSH semantic tokens and global font settings; no custom theme or engine.
+ */
+/* Reuse existing mature OSS Bell/Sound controls, aligned with the DSH
+ * native toolbar; no duplicate notification switch or notification engine. */
+.yenra-v2 .v2-social :is(.yenra-notification-toggle,.yenra-sound-toggle){
+  color:var(--dsw-alias-label-secondary);border-radius:var(--dsw-radius-md);
+  background:transparent;width:32px;height:32px;min-width:32px;
+}
+.yenra-v2 .v2-social :is(.yenra-notification-toggle,.yenra-sound-toggle):hover:not(:disabled){
+  background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary);
+}
+.yenra-v2 .v2-social .yenra-notification-toggle[data-enabled=true]{
+  color:var(--dsw-alias-brand-primary);
+}
+.yenra-v2 .v2-social :is(.yenra-notification-toggle,.yenra-sound-toggle):focus-visible{
+  outline:2px solid var(--dsw-alias-brand-primary);outline-offset:2px;
+}
+/* Existing mature OSS selector: original authenticated account photos,
+ * with the original Users icon underneath for accounts lacking a photo. */
+.yenra-native-account-avatar{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 22px;width:22px;height:22px;min-width:22px;min-height:22px;
+  overflow:hidden;border-radius:50%;color:var(--dsw-alias-label-secondary);
+  background:var(--dsw-alias-bg-layer-2);
+}
+.yenra-native-account-avatar img{
+  position:absolute;inset:0;width:100%;height:100%;display:block;
+  object-fit:cover;border-radius:inherit;
+}
+.yenra-native-account-dropdown{min-width:min(380px,calc(100vw - 20px));max-width:calc(100vw - 20px)}
+.yenra-native-account-dropdown .yenra-native-account-option-name{
+  flex:1 1 auto;min-width:0;overflow-wrap:anywhere;white-space:normal;
+  color:var(--dsw-alias-label-primary);font-family:var(--dsw-font-family,inherit);
+}
+.yenra-v2 .v2-native-account-seat .yenra-native-account-trigger,
+.yenra-v2 .v2-brain-controls .v2-persona-header .v2-persona-trigger{
+  box-sizing:border-box;
+  display:inline-flex;align-items:center;justify-content:flex-start;gap:6px;
+  width:100%;min-width:0;height:30px;min-height:30px;max-height:30px;
+  padding:0 8px;
+  border:1px solid transparent;
+  border-radius:var(--dsw-radius-md,8px);
+  background:transparent;
+  color:var(--dsw-alias-label-secondary);
+  box-shadow:none;
+  line-height:1.35;
+  font-family:var(--dsw-font-family,inherit);
+  font-size:max(11px,calc(12px + (var(--dsh-content-font-size,10px) - 10px) * .7));
+  font-weight:500;
+  letter-spacing:normal;
+  cursor:pointer;
+  transition:background-color .14s ease,color .14s ease,border-color .14s ease;
+}
+.yenra-v2 .v2-native-account-seat .yenra-native-account-trigger:hover,
+.yenra-v2 .v2-native-account-seat .yenra-native-account-trigger[data-state="open"],
+.yenra-v2 .v2-brain-controls .v2-persona-header .v2-persona-trigger:hover,
+.yenra-v2 .v2-brain-controls .v2-persona-header .v2-persona-trigger[aria-expanded="true"]{
+  border-color:var(--dsw-alias-border-l2);
+  background:var(--dsw-alias-interactive-bg-hover);
+  color:var(--dsw-alias-label-primary);
+}
+.yenra-v2 .v2-native-account-seat .yenra-native-account-trigger:focus-visible,
+.yenra-v2 .v2-brain-controls .v2-persona-header .v2-persona-trigger:focus-visible{
+  outline:2px solid var(--dsw-alias-brand-primary);
+  outline-offset:1px;
+}
+.yenra-v2 .v2-native-account-seat .yenra-native-account-trigger svg,
+.yenra-v2 .v2-brain-controls .v2-persona-header .v2-persona-trigger svg{
+  width:15px;height:15px;min-width:15px;max-width:15px;flex:none;
+  color:inherit;
+}
+.yenra-v2 .v2-native-account-seat .yenra-native-account-trigger svg:last-child,
+.yenra-v2 .v2-brain-controls .v2-persona-header .v2-persona-trigger svg:last-child{
+  width:13px;height:13px;min-width:13px;max-width:13px;
+  opacity:.7;
+}
+.yenra-v2 .v2-native-account-seat .yenra-native-account-name,
+.yenra-v2 .v2-brain-controls .v2-persona-header .v2-persona-name{
+  display:block;flex:1 1 auto;min-width:0;overflow:hidden;
+  white-space:nowrap;text-overflow:ellipsis;text-align:left;
+}
+.yenra-v2 .v2-brain-controls .v2-persona-header{max-width:190px;flex:0 1 190px;}
+.yenra-v2 .v2-native-account-seat{max-width:min(222px,29vw);}
+@media(max-width:1152px){
+  .yenra-v2 .v2-brain-controls .v2-persona-header{max-width:158px;flex-basis:158px;}
+  .yenra-v2 .v2-native-account-seat{max-width:178px;}
+}
+
+/* Retain the official DSH owner Work Session's original Conversation view
+ * after the first entry. Hide the inactive native view completely without
+ * discarding its React SessionProvider/Composer or affecting the mature OSS. */
+.yenra-v2 .v2-brain[hidden]{display:none!important}
+.yenra-v2 .v2-native-conversation .v2-native-chat-pane,
+.yenra-v2 .v2-native-conversation .v2-native-work-pane{
+  display:flex;flex-direction:column;flex:1 1 0;min-width:0;min-height:0;
+  width:100%;height:100%;overflow:hidden;
+}
+.yenra-v2 .v2-native-conversation .v2-native-chat-pane[hidden]{
+  display:none!important;
+}
+/* The workspace itself owns 100cqw: unlike the narrow Chat-side Brain,
+ * its width is constant across Chat <-> Work for the same window size.
+ * Keep the original large DSH Work transcript laid out at this full width
+ * even when inactive, avoiding another 5k-node text-wrap/layout each entry. */
+.yenra-v2 .v2-workspace{container-type:inline-size}
+.yenra-v2 .v2-native-conversation .v2-native-work-pane{
+  position:absolute;top:0;left:0;
+  width:100cqw;min-width:100cqw;max-width:100cqw;height:100%;
+  flex:0 0 auto;opacity:1;will-change:opacity;
+}
+/* No HTML hidden attribute here: it imposes display:none and nullifies the
+ * compositor retention. React inert + aria-hidden guard the original native
+ * Composer; this pane is fully non-interactive while Chat is active. */
+.yenra-v2 .v2-native-conversation .v2-native-work-pane[data-inactive="true"]{
+  display:flex!important;opacity:0;pointer-events:none;
+}
+
+/* YENRA P0: Chat / Work are two presentations of the SAME official DSH
+ * main Slot. Never unmount the original OSS inbox when the user switches
+ * modes: its native per-room drafts, contacts and 3-channel state stay owned
+ * by the original mature component. The existing official DSH Conversation
+ * fills Work mode; this is only a placement rule, no extra workspace. */
+.yenra-v2 .v2-workspace[data-yenra-mode=work]{
+  grid-template-columns:minmax(0,1fr)!important;
+}
+.yenra-v2 .v2-workspace[data-yenra-mode=work] .v2-social{
+  position:absolute;inset:0;width:100%;height:100%;
+  visibility:hidden;pointer-events:none;z-index:0;
+  /* Unlike display:none, content-visibility does not unmount the mature OSS,
+   * but skips the expensive hidden transcript/contact-list layout in Work. */
+  content-visibility:hidden;contain:layout style paint;
+}
+.yenra-v2 .v2-workspace[data-yenra-mode=work] .v2-brain{
+  position:relative!important;top:auto!important;right:auto!important;
+  bottom:auto!important;left:auto!important;inset:auto!important;
+  grid-column:1;grid-row:1;
+  width:100%!important;max-width:none!important;min-width:0;
+  height:100%;min-height:0;z-index:1;box-shadow:none;
+  border-left:0;
+}
+
+/* Existing DSH token-based account card form, no second account manager. */
+.yenra-connection-tab .yenra-page-account-setup{display:grid;gap:8px;padding:10px 0}
+.yenra-connection-tab .yenra-page-account-setup>button{justify-self:start;cursor:pointer;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);border-radius:var(--dsw-radius-md);padding:7px 12px}
+.yenra-connection-tab .yenra-page-account-form{display:grid;gap:9px;min-width:0}
+.yenra-connection-tab .yenra-page-account-form label{display:grid;gap:4px;min-width:0;font-size:12px;color:var(--dsw-alias-label-secondary)}
+.yenra-connection-tab .yenra-page-account-form input{width:100%;min-width:0;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-2);color:var(--dsw-alias-label-primary);border-radius:var(--dsw-radius-md);padding:9px;font:inherit}
+.yenra-connection-tab .yenra-page-account-form button{padding:9px 13px;cursor:pointer;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md)}
+.yenra-connection-tab .yenra-page-account-form button:disabled{opacity:.5;cursor:wait}
+
+/* YENRA Graphite Glow | single-system visual refinement 2026-11-07.
+ * Fixed native navigation, original collapse actions, DSH chat and Work
+ * Sessions, Brain Composer and original inbox export are all retained.
+ * A single bronze design token replaces scattered decorative hardcoding.
+ */
+.yenra-v2{
+  --yenra-design-metal:#a27d67;
+  --yenra-design-tint:color-mix(in srgb,var(--dsw-alias-bg-layer-1) 89%,var(--yenra-design-metal));
+  --yenra-design-veil:color-mix(in srgb,var(--dsw-alias-bg-layer-1) 96%,var(--yenra-design-metal));
+  --yenra-design-rule:color-mix(in srgb,var(--dsw-alias-border-l2) 76%,transparent);
+  background:var(--yenra-design-veil);
+}
+.dark .yenra-v2{
+  --yenra-design-metal:#c19c83;
+}
+.yenra-v2 .v2-topbar{
+  background:var(--yenra-design-veil);
+  border-bottom:1px solid var(--yenra-design-rule);
+  gap:12px;
+}
+.yenra-v2 .v2-navigation-rail{
+  background:var(--yenra-design-veil);
+  border-right:1px solid var(--yenra-design-rule);
+}
+.yenra-v2 .v2-rail-button{
+  border-color:transparent;
+  border-radius:11px;
+}
+.yenra-v2 .v2-rail-button:hover,
+.yenra-v2 .v2-rail-button[aria-current="page"]{
+  background:var(--yenra-design-tint);
+  color:var(--dsw-alias-label-primary);
+  box-shadow:none;
+}
+.yenra-v2 .v2-modes{
+  background:transparent;
+  border:0;
+}
+.yenra-v2 .v2-mode{
+  border-radius:10px;
+  color:var(--dsw-alias-label-secondary);
+  font-weight:610;
+}
+.yenra-v2 .v2-mode-current{
+  background:var(--yenra-design-tint);
+  color:var(--dsw-alias-label-primary);
+  box-shadow:0 1px 5px color-mix(in srgb,var(--dsw-alias-label-primary) 5%,transparent);
+}
+.yenra-v2 .v2-social{
+  border-right:1px solid var(--yenra-design-rule);
+}
+.yenra-v2 .v2-brain{
+  background:var(--yenra-design-veil);
+  border-left:1px solid var(--yenra-design-rule);
+}
+.yenra-v2 .v2-brain-head{
+  background:var(--yenra-design-veil);
+  border-bottom:1px solid var(--yenra-design-rule);
+}
+.yenra-v2 .v2-brain-mark{
+  color:var(--yenra-design-metal);
+}
+.yenra-v2 .v2-brain-controls button{
+  background:var(--dsw-alias-bg-layer-1);
+  border-color:var(--yenra-design-rule);
+  border-radius:10px;
+}
+.yenra-v2 .v2-native-conversation{
+  background:var(--yenra-design-veil);
+}
+.yenra-v2 .v2-native-conversation .v2-native-chat-pane{
+  background:linear-gradient(165deg,var(--dsw-alias-bg-layer-1),var(--yenra-design-veil));
+}
+/* Three model replies are individual lines in ONE continuous original
+ * DSH Assistant response; no permanent cards, modal, or duplicate Composer. */
+.yenra-v2 .v2-brain [data-chat-group-part="response"] ol:has(> li > .yenra-native-reply-inline-tools){
+  display:block;list-style:none;margin:0;padding:0;
+}
+.yenra-v2 .v2-brain [data-chat-group-part="response"] :is(li,p):has(> .yenra-native-reply-inline-tools){
+  border:0;
+  border-bottom:1px solid var(--yenra-design-rule);
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  padding:.82em 5.75em .9em .18em;
+  min-height:4.9em;
+  margin:0;
+}
+.yenra-v2 .v2-brain [data-chat-group-part="response"] :is(li,p):has(> .yenra-native-reply-inline-tools):last-child{
+  border-bottom-color:transparent;
+}
+.yenra-v2 .v2-brain .yenra-native-reply-inline-tools button{
+  border-color:var(--yenra-design-rule);
+  background:var(--yenra-design-tint);
+  border-radius:999px;
+}
+.yenra-v2 .v2-brain .yenra-native-reply-inline-tools button:hover{
+  background:color-mix(in srgb,var(--yenra-design-metal) 18%,var(--dsw-alias-bg-layer-1));
+}
+.yenra-v2 .v2-brain-pending{
+  color:var(--dsw-alias-label-secondary);
+  background:transparent;
+}
+.yenra-v2 .v2-brain [data-composer-seat]{
+  border-top-color:var(--yenra-design-rule);
+}
+/* Keep original DSH size and collapse controls; only touch spacing/surface. */
+.yenra-v2 .v2-native-account-seat .yenra-native-account-trigger{
+  background:var(--yenra-design-veil);
+  border-color:var(--yenra-design-rule);
+  border-radius:999px;
+}
+@media(max-width:1152px){
+  .yenra-v2 .v2-topbar{gap:7px}
+  .yenra-v2 .v2-brain [data-chat-group-part="response"] :is(li,p):has(> .yenra-native-reply-inline-tools){
+    padding-inline-end:5.45em;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .yenra-v2 .v2-mode,.yenra-v2 .v2-rail-button{transition:none}
+}
+
+/* Keep one readable native Brain column on 12–14-inch laptops while
+ * retaining the existing draggable width and right collapse action. */
+@container (max-width:1024px){
+  .yenra-v2 .v2-workspace[data-brain-open=true][data-brain-layout="inline"]{
+    grid-template-columns:minmax(0,1fr) max(300px,var(--yenra-brain-width,385px));
+  }
+}
+
+/* If upstream Markdown structure changes, the existing official Slot
+ * fallback actions are still presented as plain conversation rows. */
+.yenra-v2 .v2-brain .yenra-native-reply-candidates{
+  display:block;background:transparent;margin:8px 0 0;
+  border-top:1px solid var(--yenra-design-rule);
+}
+.yenra-v2 .v2-brain .yenra-native-reply-actions{
+  background:transparent;border:0;border-radius:0;
+  border-bottom:1px solid var(--yenra-design-rule);
+  padding:10px 2px;gap:6px;
+}
+.yenra-v2 .v2-brain .yenra-native-reply-actions button{
+  background:var(--yenra-design-tint);
+  border:1px solid var(--yenra-design-rule);
+  border-radius:999px;min-width:48px;
+}
+
+/* Responsive single-row DSH caption: the original native App/Edit menu,
+ * YENRA mode switch and existing OSS account picker share ONE Windows row
+ * at common 12-14" laptop CSS viewports. No shadow navigation or caption.
+ * A compact brand/logo remains until it cannot fit safely. */
+@media (min-width:680px) and (max-width:1099px){
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2 .v2-topbar{
+    gap:6px;padding:0 4px;
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2 .v2-top-title{
+    min-width:116px;
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2 .v2-top-lockup{
+    width:116px;height:28px;
+  }
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2 .v2-native-account-seat{
+    max-width:min(190px,25vw);
+  }
+}
+@media (min-width:680px) and (max-width:939px){
+  /* The official DSH sidebar brand remains reachable; compact caption
+     prioritizes native system menus, mode controls and account selector. */
+  html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2 .v2-top-title{
+    display:none;
+  }
+}
+
+/* YENRA C / 12–14-inch: keep all four mature inbox actions accessible while
+ * the contact column is around 198px. The title must never wrap vertically.
+ * No OSS button is hidden, disabled, or replaced by a mock control. */
+@media (max-width:1100px){
+  .yenra-v2 .v2-social .yenra-contact-heading{
+    padding:10px 8px 8px;min-height:45px;gap:3px;
+  }
+  .yenra-v2 .v2-social .yenra-contact-heading > div:first-child{
+    flex:0 0 auto;min-width:0;
+  }
+  .yenra-v2 .v2-social .yenra-contact-title{
+    white-space:nowrap;flex-shrink:0;font-size:14px;line-height:1.25;
+  }
+  .yenra-v2 .v2-social .yenra-contact-heading > div:last-child{
+    display:flex;align-items:center;gap:1px;flex:0 0 auto;
+  }
+  .yenra-v2 .v2-social .yenra-contact-heading button{
+    width:26px;height:28px;min-width:26px;max-width:26px;padding:0;
+  }
+  .yenra-v2 .v2-social .yenra-contact-heading button svg{
+    width:15px;height:15px;
+  }
+}
+
+/* Work hot-path P0: preserve every official DSH tool row while postponing
+ * layout and style work for the many offscreen rows in the original Work
+ * transcript. 20px is calibrated from the existing 308-row live session:
+ * original Work scrollHeight 9384px and optimized scrollHeight 9384px at
+ * top/middle/bottom. content-visibility:auto never removes a tool or media;
+ * rows become fully laid out and interactive as they scroll into view.
+ * Unlike display:none or virtualising content, this retains the native
+ * DSH Session, Composer, tool events, selection and source order. */
+.yenra-v2 .v2-native-work-pane .CsglhW_callRow{
+  content-visibility:auto;
+  contain-intrinsic-size:auto 20px;
+}
+
+/* YENRA blank Work Session: a display-only welcome over the ONE native DSH
+   Conversation. Its existing Composer remains mounted and owns all input. */
+.yenra-v2 .v2-native-work-pane .yenra-native-work-welcome{
+  position:absolute;z-index:2;top:20%;left:12px;right:12px;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:8px;max-width:min(720px,calc(100% - 24px));margin:0 auto;
+  color:var(--dsw-alias-label-primary);pointer-events:none;
+}
+.yenra-v2 .yenra-native-work-welcome h1{
+  font-size:clamp(22px,2.6vw,30px);line-height:1.3;font-weight:550;margin:0;
+}
+.yenra-v2 .yenra-native-welcome-subtitle{
+  margin:0;color:var(--dsw-alias-label-secondary);font-size:15px;line-height:1.5;
+}
+.yenra-v2 .yenra-native-welcome-meta{
+  display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+  column-gap:10px;row-gap:3px;margin:7px 0 0;
+  color:var(--dsw-alias-label-secondary);font-size:12px;line-height:20px;
+}
+.yenra-v2 .yenra-native-welcome-source{
+  pointer-events:auto;color:var(--dsw-alias-label-tertiary);
+  font-size:10px;text-decoration:none;opacity:.8;
+}
+.yenra-v2 .yenra-native-welcome-source:hover{text-decoration:underline}
+@media (max-height:620px){
+  .yenra-v2 .v2-native-work-pane .yenra-native-work-welcome{top:12%;gap:4px}
+}
+
+.yenra-v2 .yenra-native-welcome-mark{
+  display:block;width:38px;height:38px;object-fit:contain;border-radius:10px;
+  margin:0 0 4px;
+}
+
+/* One global header only when the *official native Conversation* is active.
+ * Rendered through the original AppFrame shell.overlay Slot, not a new shell. */
+.yenra-native-session-header {
+  position: absolute;
+  top: 0;
+  left: var(--dsh-windows-sidebar-width, 0px);
+  right: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  background: var(--dsw-alias-bg-layer-1, #fff);
+  border-bottom: 1px solid var(--dsw-alias-border-l2, #dee4ec);
+  color: var(--dsw-alias-label-primary, #252d38);
+  font-family: var(--dsw-font-family, "Segoe UI", system-ui, sans-serif);
+  z-index: 1;
+  pointer-events: auto;
+  /* The header sits inside the Electron 40px titlebar overlay; without
+   * no-drag the native caption drag area swallows the 聊天/工作 clicks. */
+  -webkit-app-region: no-drag;
+}
+.yenra-native-session-header :is(button,nav,input){
+  -webkit-app-region: no-drag;
+}
+.yenra-native-session-lockup {
+  width: 98px;
+  height: 29px;
+  object-fit: contain;
+  display: block;
+}
+.yenra-native-session-modes {display: flex; gap: 4px; align-items: center;}
+/* The original Windows caption menu owns x=75..164 at default text size.
+ * Preserve its hit testing, never cover it: the root-shell YENRA controls
+ * begin after the menu's reserved titlebar region. */
+html[data-windows-titlebar] .yenra-native-session-header {
+  left: max(220px, var(--dsh-windows-sidebar-width, 0px));
+}.yenra-native-session-modes button {
+  height: 27px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #69788b);
+  font-size: 12px;
+  font-weight: 650;
+  font-family: inherit;
+  cursor: pointer;
+}
+.yenra-native-session-modes button[aria-current="page"] {
+  background: var(--dsw-alias-button-ghost-active-fill, #f1f3f6);
+  color: var(--dsw-alias-label-primary, #252d38);
+}
+.yenra-native-session-modes button:hover {
+  background: var(--dsw-alias-interactive-bg-hover, #e9edf3);
+}
+.yenra-native-session-modes button:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary, #28303a);
+  outline-offset: 1px;
+}
+/* One persistent DSH shell.overlay occupant. Read-only AppFrame geometry is
+   applied by ResizeObserver; panel selection changes visibility, not mounting. */
+.yenra-retained-chat-seat{
+  position:absolute;z-index:2;display:flex;flex-direction:column;
+  min-width:0;min-height:0;overflow:hidden;
+  background:var(--dsw-alias-bg-base);
+}
+.yenra-retained-chat-seat>.yenra-v2{width:100%;height:100%;min-height:0;min-width:0}
+.yenra-retained-chat-seat[data-yenra-retained-visible=false]{pointer-events:none!important}
