@@ -7,6 +7,7 @@ This repository is the only public GitHub home for the owner-operated YENRA proj
 - Owner baseline version: `0.2.1-rc.5.20261116.18`.
 - Official frozen Bridge manifest: 58 paths; 53 code paths and five support scripts.
 - Official frozen latest-source map: 20 paths.
+- Owner DSH desktop / Electron / conversation-layout integration: 27 modified original-upstream paths exported as a 90 KB re-applicable patch against pinned MIT-licensed DSH commit `b830ec950faba0a46dda564be3e2d854afed94f1`. The full upstream tree is not redistributed.
 - Selected original YENRA modules: Chatwoot Cloud Bridge and its mocked tests, Cloud inbound/ACK/adapters, typed UI overlays, personal chrome, private themes, typography and KT Europe source. Only source and relevant manifests/locks are copied.
 - Conservative automatic scanner removes test fixtures with phone numbers, identifiable contacts and credential-like literal values from the public candidate. Credentials, DPAPI material, live profiles, messages, media, evidence, installers, runtime, upstream vendor trees and historic backups are not copied.
 - The Meta Ads launcher is included with generic official Meta entry URLs rather than hardcoded owner ad-account identifiers. This is an intentional privacy/portability change from the owner source and requires account selection on Meta's site.
