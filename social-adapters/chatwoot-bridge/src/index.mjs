@@ -191,7 +191,7 @@ async function main() {
   // once-only claim directory for ALL authorized API inboxes.
   const cloudWaClaimDirectory=join(process.env.LOCALAPPDATA??'','YENRA','cloud-wa-once-claims');
   const cloudWaOutbound=cloudApiSenderAuthority?createCloudWaOutbound({
-    ...cloudApiSenderAuthority,hostSender:sender,index,logger,
+    ...cloudApiSenderAuthority,hostSender:sender,host,index,logger,
     claimDirectory:cloudWaClaimDirectory,allowedInboxIds:allowedCloudSenderInboxIds,
   }):null;
   const cloudWaRecentSync=cloudApiSenderAuthority?createCloudWaRecentSync({
@@ -545,12 +545,22 @@ async function main() {
     try{
       const fresh=await host.readRoster({whatsappOnly:true});
       const changed=[];
+      let rosterExtended=false;
       for(const account of fresh.accounts.filter(a=>a.channel==='WhatsApp')){
         const known=roster.accounts.find(a=>a.channel==='WhatsApp'&&a.accountRef===account.accountRef);
         if(!known)continue;
         for(const room of account.rooms){
-          const knownRoom=known.rooms.find(r=>r.roomRef===room.roomRef);
-          if(!knownRoom)continue;
+          let knownRoom=known.rooms.find(r=>r.roomRef===room.roomRef);
+          if(!knownRoom){
+            // Newly saved, original-Host-verified WA contacts may have no
+            // inbound event. Admit their native room identity to the SAME
+            // roster/index, so the existing Cloud contact hydration can
+            // recover them without inventing a message or another Socket.
+            known.rooms.unshift(room);
+            knownRoom=room;
+            rosterExtended=true;
+            if(Number.isSafeInteger(roster.totalRooms))roster.totalRooms++;
+          }
           // The trusted original WhatsApp roster can resolve a LID phone
           // long after Bridge boot. Enrich only a missing E.164 phone; never
           // replace a previously verified number or merge LID identities.
@@ -563,6 +573,12 @@ async function main() {
              stamp>Date.now()-72*60*60*1000)
             changed.push({accountRef:account.accountRef,roomRef:room.roomRef,stamp,key});
         }
+      }
+      if(rosterExtended){
+        const updated=buildRosterIndex(roster,resolved.mapping);
+        index.byIdentifier=updated.byIdentifier;
+        index.byAccountRef=updated.byAccountRef;
+        index.size=updated.size;
       }
       changed.sort((a,b)=>b.stamp-a.stamp);
       for(const room of changed.slice(0,3)){

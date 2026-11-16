@@ -245,7 +245,8 @@ export function createCloudInboundProjection({
   return avatarSync.schedule({channel,accountRef,roomRef,
    contactId:cloudContactId,inboxId:cloudInboxId});
  }
- const waRosterHydration={scanned:0,matched:0,scheduled:0,missing:0,failed:0};
+ const waRosterHydration={scanned:0,matched:0,scheduled:0,missing:0,
+   createdContacts:0,createdConversations:0,failed:0};
  let hydrationCursor=0,hydrationBusy=false;
  async function reconcileExistingWhatsAppContacts({batchSize=2}={}){
   if(!Number.isSafeInteger(batchSize)||batchSize<1||batchSize>4)
@@ -264,14 +265,45 @@ export function createCloudInboundProjection({
     waRosterHydration.scanned++;
     try{
      const identifier=stableContactIdentifier(row.accountRef,row.roomRef);
-     const contact=await cloud.findContactByIdentifier(identifier);
-     if(!current(contact?.id)||contact.identifier!==identifier||
-        !Array.isArray(contact.contact_inboxes)||
-        !contact.contact_inboxes.some(ci=>
+     let contact=await cloud.findContactByIdentifier(identifier);
+     // An old original DSH WhatsApp room with no recent inbound may have
+     // no Cloud contact at all. Use the same native createContact authority as
+     // the existing inbound path, never create one by name or phone guesses.
+     if(!contact){
+       if(typeof cloud.createContact!=='function')throw Error('WA_ROSTER_CLOUD_CONTACT_CREATE_UNAVAILABLE');
+       const name=scope.room.nameKnown&&scope.room.name?.trim()
+        ?scope.room.name.trim().slice(0,260):'YENRA contact '+identifier.slice(-8);
+       contact=await cloud.createContact({name,identifier,
+         inboxId:scope.binding.cloudInboxId,sourceId:identifier});
+       if(!current(contact?.id))throw Error('WA_ROSTER_CONTACT_CREATE_UNCONFIRMED');
+       waRosterHydration.createdContacts++;
+     }
+     // Never trust an API create response or attach a phone/avatar to a
+     // contact with a different original account, inbox, or source_id.
+     const verified=await cloud.getContactById(contact.id);
+     if(!current(verified?.id)||verified.id!==contact.id||
+        verified.identifier!==identifier||
+        !Array.isArray(verified.contact_inboxes)||
+        !verified.contact_inboxes.some(ci=>
           Number(ci?.inbox?.id??ci?.inbox_id)===scope.binding.cloudInboxId&&
           ci.source_id===identifier)){
-      waRosterHydration.missing++;continue;
+       waRosterHydration.missing++;continue;
      }
+     // Create the single native API-channel conversation only if there is
+     // none. This is contact recovery, not a synthetic text message, history
+     // import, or a second Sender.
+     const existing=await cloud.listContactConversations(verified.id);
+     if(!Array.isArray(existing))throw Error('WA_ROSTER_CONVERSATION_LIST_INVALID');
+     const linked=existing.filter(cv=>Number(cv.inbox_id??cv.inbox?.id)===scope.binding.cloudInboxId);
+     if(linked.length>1)throw Error('WA_ROSTER_CONVERSATION_AMBIGUOUS');
+     if(!linked.length){
+       if(typeof cloud.createConversation!=='function')throw Error('WA_ROSTER_CLOUD_CONVERSATION_CREATE_UNAVAILABLE');
+       const cv=await cloud.createConversation({inboxId:scope.binding.cloudInboxId,
+         contactId:verified.id,sourceId:identifier});
+       if(!current(cv?.id))throw Error('WA_ROSTER_CONVERSATION_CREATE_UNCONFIRMED');
+       waRosterHydration.createdConversations++;
+     }
+     contact=verified;
      waRosterHydration.matched++;
      if(scheduleExistingWhatsAppContact({channel:'WhatsApp',
        accountRef:row.accountRef,roomRef:row.roomRef,cloudContactId:contact.id,
