@@ -27,6 +27,8 @@ jobs:
         run: node scripts/ci/check-architecture.mjs
       - name: Parse all imported JavaScript modules
         run: node scripts/ci/check-source-syntax.mjs
+      - name: Prove archival v18 builder and verifier refuse execution
+        run: node scripts/ci/check-release-reference-guard.mjs
 
   source-regressions:
     name: Four-channel and UI offline source regression tests
