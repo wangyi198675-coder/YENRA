@@ -28,6 +28,6 @@ test('keeps Cloud search/filter/sort space and mobile controls', () => {
 test('no hardcoded credential, local profile, or private contact data in public CSS', () => {
   for (const content of [nav, privateChat]) {
     assert.doesNotMatch(content, /\b(?:gh[pousr]_[a-z0-9]{12,}|sk-[a-z0-9]{12,}|Bearer\s+[A-Za-z0-9._-]{16,})\b/i);
-    assert.doesNotMatch(content, /C:\\Users\\|\b196799\b|\+[1-9]\d{8,14}\b|@gmail\.com/i);
+    assert.doesNotMatch(content, /C:\\Users\\|\b\d{6,10}\b|\+[1-9]\d{8,14}\b|@gmail\.com/i);
   }
 });
