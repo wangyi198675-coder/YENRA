@@ -1,4 +1,4 @@
-name: YENRA v18 source and reproducibility gates
+name: YENRA v19 candidate and immutable v18 provenance gates
 
 on:
   pull_request:
@@ -29,6 +29,10 @@ jobs:
         run: node scripts/ci/check-source-syntax.mjs
       - name: Prove archival v18 builder and verifier refuse execution
         run: node scripts/ci/check-release-reference-guard.mjs
+      - name: Verify immutable published v18 source archive (58 Bridge, 19 formal)
+        run: node scripts/ci/verify-v18-published-baseline.mjs
+      - name: Verify v19 candidate source hashes against owner receipts
+        run: node scripts/ci/verify-v19-candidate-sources.mjs
 
   source-regressions:
     name: Four-channel and UI offline source regression tests
@@ -46,7 +50,7 @@ jobs:
         run: npm ci --prefix social-adapters/kt-dedupe-native --ignore-scripts
       - name: Run isolated mocked ACK, inbound, selection, KT and native-toggle regressions
         run: |
-          node --test             ui/chatwoot-embed/qa/native-contact-public-source.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-platform-ack.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-inbound-projection.test.mjs             social-adapters/chatwoot-bridge/test/selection.test.mjs             social-adapters/kt-dedupe-native/kt-country-number-disambiguation.test.mjs
+          node --test             ui/chatwoot-embed/qa/native-contact-public-source.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-platform-ack.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-inbound-projection.test.mjs             social-adapters/chatwoot-bridge/test/selection.test.mjs             social-adapters/kt-dedupe-native/kt-country-number-disambiguation.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-native-selection.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-wa-outbound.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-webhook-contract.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-wa-original-mid-recovery.test.mjs             ui/chatwoot-embed/qa/brain-reply-distinctness-20261116.test.mjs             ui/chatwoot-embed/qa/p1-native-caption-drag-zone-20261116.test.mjs
 
   plugin-build:
     name: Locked TypeScript plugin bundles (${{ matrix.os }}, not installer)
@@ -84,10 +88,20 @@ jobs:
         run: pnpm -C ui/chatwoot-embed/desktop-integration-candidate install --frozen-lockfile --ignore-scripts
       - name: Bundle desktop overlay TypeScript source
         run: pnpm -C ui/chatwoot-embed/desktop-integration-candidate run bundle
+      - name: Validate real Cloud translation and preview source with isolated fixtures
+        run: node --test ui/chatwoot-embed/src/client/cloud-preview-live-miss-20261116.test.mjs ui/chatwoot-embed/src/client/cloud-translation-auto-restore-20261115.test.mjs
+      - name: Retain compiled plugin bundles as review-only evidence (not installer)
+        uses: actions/upload-artifact@v4
+        with:
+          name: yenra-v19-plugins-${{ matrix.os }}
+          path: |
+            ui/chatwoot-embed/lib
+            ui/chatwoot-embed/desktop-integration-candidate/lib
+          retention-days: 7
 
-  frozen-v18-provenance:
-    name: v18 frozen-source SHA verification (release blocker)
-    runs-on: ubuntu-latest
+  windows-nsis-input-provenance:
+    name: Windows full v18 NSIS exact-input blocker (not a release)
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,5 +109,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Compare public sources to owner v18 frozen hashes
-        run: node scripts/ci/verify-v18-source-snapshot.mjs
+      - name: Require all 13 frozen plugin archives with exact SHA before independent NSIS build
+        run: node scripts/ci/check-v18-nsis-inputs.mjs

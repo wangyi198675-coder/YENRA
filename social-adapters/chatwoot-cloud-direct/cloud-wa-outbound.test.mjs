@@ -234,3 +234,49 @@ test('forged MID-pending claim cannot claim transport success on webhook replay'
   assert.equal(b.getSendCount(),1);
  }finally{await rm(dir,{recursive:true,force:true})}
 });
+
+test('YEN-9: one new exact original Host MID repairs missing Socket receipt without a second send',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'yenra-wa-recover-'));
+ try{
+  const b=setup({missingMid:true});
+  const old={direction:'OUTBOUND',mid:'wamid.old.2',text:'Hallo',timestamp:now-90000};
+  const next={direction:'OUTBOUND',mid:'wamid.new.3',text:'Hallo',timestamp:now+125};
+  const host={readRoom:async ({channel,accountRef,roomRef})=>{
+   assert.equal(channel,'WhatsApp');
+   assert.equal(accountRef,'a'.repeat(32));assert.equal(roomRef,'b'.repeat(32));
+   return {accountRef,roomRef,messages:b.getSendCount()?[old,next]:[old]};
+  }};
+  const opts={...b,host,claimDirectory:dir,now:()=>now,activatedAt:now-1000};
+  const adapter=createCloudWaOutbound(opts);
+  const first=await adapter.process({});
+  assert.equal(first.kind,'submitted-unconfirmed');
+  assert.equal(first.providerMidPresent,true);
+  assert.equal(adapter.stats.midRecovered,1);
+  assert.equal(b.getSendCount(),1);
+  const claim=await readFile(join(dir,'account-196799','81.jsonl'),'utf8');
+  assert.match(claim,/SUBMITTED_UNCONFIRMED/);
+  assert.match(claim,/providerMidSha256/);
+  assert.doesNotMatch(claim,/wamid\.new\.3|Hallo|TRANSPORT_SUBMITTED_MID_PENDING/);
+  assert.equal((await createCloudWaOutbound(opts).process({})).kind,'already-claimed');
+  assert.equal(b.getSendCount(),1);
+ }finally{await rm(dir,{recursive:true,force:true})}
+});
+test('YEN-9: two identical new original Socket MIDs leave a safe pending claim and never retry',async()=>{
+ const dir=await mkdtemp(join(tmpdir(),'yenra-wa-recover-'));
+ try{
+  const b=setup({missingMid:true});
+  const after=[
+   {direction:'OUTBOUND',mid:'wamid.new.a',text:'Hallo',timestamp:now+111},
+   {direction:'OUTBOUND',mid:'wamid.new.b',text:'Hallo',timestamp:now+112}
+  ];
+  const host={readRoom:async ({accountRef,roomRef})=>({
+   accountRef,roomRef,messages:b.getSendCount()?after:[]})};
+  const opts={...b,host,claimDirectory:dir,now:()=>now,activatedAt:now-1000};
+  const adapter=createCloudWaOutbound(opts);
+  assert.equal((await adapter.process({})).kind,'submitted-mid-pending');
+  assert.equal(adapter.stats.midRecovered,0);
+  assert.equal(b.getSendCount(),1);
+  assert.equal((await createCloudWaOutbound(opts).process({})).kind,'submitted-mid-pending');
+  assert.equal(b.getSendCount(),1);
+ }finally{await rm(dir,{recursive:true,force:true})}
+});

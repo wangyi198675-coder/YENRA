@@ -368,12 +368,15 @@ html[data-windows-titlebar][data-yenra-caption-menu=ready]:not([data-fullscreen]
 }
 /* Keep the original mode buttons reachable by mouse and keyboard without
    drawing a permanent second focal point in the native caption. */
+/* Invisible mode buttons must never take pointer clicks. Their existing
+ * parent hover target stays active and reveals the same original controls. */
 html[data-windows-titlebar][data-yenra-caption-menu=ready]:not([data-fullscreen]) .v2-modes>.v2-mode{
-  opacity:0;transition:opacity 120ms ease;
+  opacity:0;pointer-events:none;transition:none;
 }
-html[data-windows-titlebar][data-yenra-caption-menu=ready]:not([data-fullscreen]) .v2-modes:is(:hover,:focus-within)>.v2-mode{opacity:1}
+html[data-windows-titlebar][data-yenra-caption-menu=ready]:not([data-fullscreen]) .v2-modes:is(:hover,:focus-within)>.v2-mode{opacity:1;pointer-events:auto}
 @media(hover:none){
-  html[data-windows-titlebar][data-yenra-caption-menu=ready]:not([data-fullscreen]) .v2-modes>.v2-mode{opacity:1}
+  /* Touch devices have no hover: keep the only navigation controls usable. */
+  html[data-windows-titlebar][data-yenra-caption-menu=ready]:not([data-fullscreen]) .v2-modes>.v2-mode{opacity:1;pointer-events:auto}
 }
 @media(prefers-reduced-motion:reduce){
   html[data-windows-titlebar][data-yenra-caption-menu=ready]:not([data-fullscreen]) .v2-modes>.v2-mode{transition:none}
@@ -1789,15 +1792,20 @@ html[data-yenra-caption-menu=ready] .yenra-native-session-modes button[aria-curr
 .v2-caption-drag-zone{display:none}
 html[data-windows-titlebar]:not([data-fullscreen]) .yenra-v2[data-yenra-merged-header=true] .v2-caption-drag-zone{
   display:block;position:fixed;top:0;
-  left:calc(var(--yenra-caption-mode-center) - 34px);
-  width:clamp(0px,calc(100vw - var(--yenra-caption-mode-center) - var(--yenra-brain-width,360px) - 100px),300px);
+  /* Leave the original Cloud contact title and the hover-only mode buttons
+     unobstructed. Keep a native drag strip to their right and finish before
+     the Cloud header action icons (including at narrow laptop widths). */
+  left:max(645px,calc(var(--yenra-caption-mode-center) + 48px));
+  width:clamp(0px,calc(100vw - var(--yenra-caption-brain-width,360px) - max(645px,calc(var(--yenra-caption-mode-center) + 48px)) - 110px),160px);
   height:40px;pointer-events:auto;-webkit-app-region:drag;cursor:move;
 }
 /* Invisible center Chat/Work buttons previously consumed the exact blank
  * caption spot used for window dragging. Preserve their mouse+keyboard
  * actions, but give them their own nonoverlapping part of the same row. */
 html[data-windows-titlebar][data-yenra-caption-menu=ready] .yenra-v2[data-yenra-merged-header=true] .v2-modes{
-  left:calc(var(--yenra-caption-mode-center) - 124px);
+  /* Retain hidden-until-hover behavior but never reveal over the Cloud
+     contact's name. This is the SAME native Chat/Work mode control. */
+  left:max(555px,calc(var(--yenra-caption-mode-center) - 42px));
 }
 .yenra-v2[data-yenra-merged-header=true] .v2-brain-head{
   position:relative;height:40px;min-height:40px;padding:0 148px 0 8px;gap:4px;

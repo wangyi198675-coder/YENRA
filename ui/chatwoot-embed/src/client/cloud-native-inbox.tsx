@@ -505,6 +505,11 @@ export function CloudNativeInbox({visible,shareConversationId,verifiedShareLinks
     let previewLastFetch=0,previewBusy=false,previewFollowup=false;
     let previewCacheBusy=false,previewCacheFollowup=false;
     const previewCacheReadAt=new Map<string,number>();
+    // Only visible, exact-MID latest messages can fall back to the original
+    // DSH translator when both Cloud saved zh and DSH persisted cache miss.
+    // Throttle unsuccessful attempts for 15 minutes; never bulk-translate
+    // unopened chat history or re-invoke models for already cached messages.
+    const previewAutoAttemptAt=new Map<string,number>();
     // A preview cache MISS must not survive a later successful translation of
     // this exact Cloud MID. Otherwise the 45s miss throttle can keep the
     // contact list untranslated after the bubble already shows Chinese.
@@ -521,9 +526,9 @@ export function CloudNativeInbox({visible,shareConversationId,verifiedShareLinks
         if(prefixes.some(prefix=>key.startsWith(prefix)))previewCacheReadAt.delete(key);
       }
     };
-    // Cloud preview rows hold authoritative saved zh_CN first. For the few
-    // currently visible rows without it, use ONLY the existing DSH cached
-    // translation endpoint. Never generate/pay for an unopened contact.
+    // Cloud saved zh_CN wins. For only the currently visible exact latest MID,
+    // read existing persisted DSH cache first; a genuine text miss may then
+    // use the same authorized DSH translation path in a bounded single pass.
     const restoreCachedVisiblePreviews=async(targetView:Guest)=>{
       if(disposed||!visibleRef.current||guest!==targetView)return;
       if(previewCacheBusy){previewCacheFollowup=true;return;}
@@ -542,6 +547,7 @@ export function CloudNativeInbox({visible,shareConversationId,verifiedShareLinks
           typeof x.name==='string'&&
           now-(previewCacheReadAt.get(x.conversationId+':'+x.messageId+':'+x.original)??0)>45000
         ).slice(0,18);
+        let autoBudget=4; // Never invoke a large model batch on a roster refresh.
         for(let start=0;start<eligible.length;start+=3){
           if(disposed||!visibleRef.current||guest!==targetView)break;
           await Promise.all(eligible.slice(start,start+3).map(async x=>{
@@ -553,19 +559,45 @@ export function CloudNativeInbox({visible,shareConversationId,verifiedShareLinks
                 AbortSignal.timeout(19000));
               const item=Array.isArray(result.items)?result.items.find(
                 (value:{id?:number;translation?:string})=>value.id===x.messageId):null;
-              if(result.mode!=='cached'||result.conversationId!==x.conversationId||
-                typeof item?.translation!=='string'||
-                !/[\u3400-\u9fff]/u.test(item.translation))return;
-              if(disposed||guest!==targetView||!visibleRef.current)return;
+              if(result.mode!=='cached'||result.conversationId!==x.conversationId)return;
+              let translation=typeof item?.translation==='string'&&
+                /[\u3400-\u9fff]/u.test(item.translation)?item.translation:'';
+              // A new inbound/outbound latest message must not remain foreign
+              // forever just because nobody opened the conversation. Resolve
+              // its ORIGINAL Cloud MID through the existing Host authorization,
+              // not the preview text and not a new message store or Sender.
+              const natural=!!x.original.trim()&&!/[\u3400-\u9fff]/u.test(x.original)&&
+                /\p{L}/u.test(x.original)&&x.original.length<=1200;
+              if(!translation&&natural&&autoBudget>0&&
+                Date.now()-(previewAutoAttemptAt.get(key)??0)>900000&&
+                !disposed&&visibleRef.current&&guest===targetView){
+                autoBudget--;
+                previewAutoAttemptAt.set(key,Date.now());
+                try{
+                  const generated=await sendDshTranslation({
+                    mode:'incoming',conversationId:x.conversationId,messageIds:[x.messageId],
+                  },AbortSignal.timeout(90000));
+                  const match=Array.isArray(generated.items)?generated.items.find(
+                    (value:{id?:number;translation?:string})=>value.id===x.messageId):null;
+                  if(generated.mode==='incoming'&&
+                    generated.conversationId===x.conversationId&&
+                    typeof match?.translation==='string'&&
+                    /[\u3400-\u9fff]/u.test(match.translation))
+                    translation=match.translation;
+                }catch{/* Preserve the original Cloud preview on model failure. */}
+              }
+              if(!translation||disposed||guest!==targetView||!visibleRef.current)return;
               await targetView.executeJavaScript(
                 'window.__yenraCloudSavedPreviewV1?.mergeCached?.('+
-                JSON.stringify([{...x,translation:item.translation}])+')'
+                JSON.stringify([{...x,translation}])+')'
               ).catch(()=>{});
             }catch{/* Cache misses or a missing Host must not stall Cloud. */}
           }));
         }
         while(previewCacheReadAt.size>200)
           previewCacheReadAt.delete(previewCacheReadAt.keys().next().value!);
+        while(previewAutoAttemptAt.size>200)
+          previewAutoAttemptAt.delete(previewAutoAttemptAt.keys().next().value!);
       }catch{/* Keep native Cloud previews if guest is unavailable. */}
       finally{
         previewCacheBusy=false;

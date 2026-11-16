@@ -2103,7 +2103,7 @@ function makeV2Panel(host:ClientContext){
     return <div ref={rootRef} className="yenra-v2" data-yenra-v2="native" data-channel-data={socialDataState}
       data-yenra-cloud-chat={cloudSeat&&workspaceMode==='chat'&&surfaceVisible}
       data-yenra-merged-header={mergedCaption}
-      style={{'--yenra-caption-mode-center':captionModeCenter+'px'} as React.CSSProperties}
+      style={{'--yenra-caption-mode-center':captionModeCenter+'px','--yenra-caption-brain-width':visibleBrainWidth+'px'} as React.CSSProperties}
       data-yenra-social-readonly="false" data-yenra-account-count={visibleAccountCount} data-yenra-mode={workspaceMode}
       data-yenra-selected-account={selectedSocial?.accountRef} data-yenra-selected-room={selectedSocial?.roomRef}>
       {/* Windows DSH intentionally hides its sidebar completely when collapsed.

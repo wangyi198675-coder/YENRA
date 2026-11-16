@@ -24,6 +24,7 @@ import {originalSocialSseBroadcast} from './social-native-events.ts'
 import {resolveTrustedContact,isContactBrainSession,type ImService} from './social-agent-tools.ts'
 import type {TranslationBridge} from './translation-commands.ts'
 import {decodeEnvelope} from './command-envelope.ts'
+import {isCloudMemorySessionTitle,assertVerifiedCloudMemoryScope} from './cloud-memory-model-scope.ts'
 
 const REF=/^[a-f0-9]{32}$/u
 const PANELS=new Set([
@@ -465,8 +466,24 @@ export function registerSocialActionAgentTools(ctx:Context,translate?:Translatio
       // scope first, exactly like the memory panel does on open. The tuple is
       // taken from the Session title and re-verified by the command handler;
       // the model cannot choose an identity.
-      if(isContactBrainSession(agent)){
-        const match=/^YENRA:B:([a-f0-9]{32}):([a-f0-9]{32})$/u.exec(sessionTitle(agent)??'')
+      const memoryTitle=sessionTitle(agent)??''
+      if(isCloudMemorySessionTitle(memoryTitle)){
+        // Cloud Page/WA/Personal titles must NEVER take the owner fallback.
+        // The existing UI/Host binds verified scopes before a model turn;
+        // this tool only checks that exact native grant, and the subsequent
+        // native command re-verifies original Host authority on every access.
+        const memory=agent.ctx.get('memory') as {
+          verifiedScope?:(a:Agent)=>{
+            kind:'owner'|'contact';workspace:string;
+            channel?:'Page'|'WhatsApp'|'Personal';
+            pageIdentityHash?:string;cloudIdentityHash?:string
+          }
+        }|undefined
+        if(typeof memory?.verifiedScope!=='function')
+          throw new Error('Cloud 联系人尚未取得原生记忆作用域，拒绝访问主人记忆')
+        assertVerifiedCloudMemoryScope(memoryTitle,memory.verifiedScope(agent))
+      }else if(isContactBrainSession(agent)){
+        const match=/^YENRA:B:([a-f0-9]{32}):([a-f0-9]{32})$/u.exec(memoryTitle)
         if(!match)throw new Error('当前联系人 Session 身份不完整，拒绝记忆访问')
         for(const channel of ['WhatsApp','Personal','Page'] as const){
           const bound=await runCommand(ctx,agent,'yenra-memory-bind',JSON.stringify({

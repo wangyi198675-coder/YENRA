@@ -10,7 +10,7 @@ import type { PropsRuntime, InjectFace } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '@deepseek-ai/dsh-client-ui-chat/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-session/client'
-import { suggestionsFromText, isNativeBrainAdvicePrompt, canRecoverNativeAdvice, type AdviceSuggestion } from './advice-bridge'
+import { suggestionsFromText, diagnoseAdviceChoices, isNativeBrainAdvicePrompt, canRecoverNativeAdvice, type AdviceSuggestion } from './advice-bridge'
 import { emitBrainTiming } from './brain-timing'
 import { isVisibleBrainScope } from './grammar/scope'
 import { coversFinalDrafts, createReviewStore, createTurnTimingGuard, grammarLanguage, grammarPlan, parseGrammarReport, parsePanelReview, reviewIdentity, reviewLabel, shouldProofreadCurrentAdvice, type GrammarLanguage, type GrammarReview } from './grammar/review'
@@ -53,6 +53,7 @@ export function ReplyActions({turn,useChat,inputActions,adopt,modify,regenerate,
  const recentReply=completedAt>0&&Date.now()>=completedAt&&Date.now()-completedAt<120000
  const body=closing?.blocks.flatMap(block=>block.kind==='text'?[block.text]:[]).join('')??''
  const replies=useMemo(()=>suggestionsFromText(body),[body])
+ const choiceIssues=useMemo(()=>diagnoseAdviceChoices(replies??[]),[replies])
  const drafts=useMemo(()=>replies?.map(reply=>reply.text)??[],[replies])
  // ToolResultNode's content/isError are the native contract (not just a success
  // transport bit). Parse it with the SAME function as the panel fallback.
@@ -148,8 +149,11 @@ export function ReplyActions({turn,useChat,inputActions,adopt,modify,regenerate,
    {replies.map((option,i)=><div key={option.id} className="yenra-native-reply-history-entry">
      <strong>{i+1}.</strong> <span>{option.text}</span>
      <p lang="zh-CN">{option.translation}</p>
+     {choiceIssues[i]?.duplicateOf!==null&&choiceIssues[i]?.duplicateOf!==undefined?
+       <small role="status">与第 {choiceIssues[i]!.duplicateOf!+1} 条基本相同，可修改或重新生成</small>:null}
+     {choiceIssues[i]?.multipleQuestions?<small>这条有多个问句，建议先修改</small>:null}
      <div className="yenra-native-reply-buttons" data-yenra-reply-history-option={i+1}>
-       <button type="button" onClick={()=>adopt(option.text)} aria-label={'采用历史第'+(i+1)+'条回复'}>采用</button>
+       <button type="button" disabled={choiceIssues[i]?.duplicateOf!==null&&choiceIssues[i]?.duplicateOf!==undefined} onClick={()=>adopt(option.text)} aria-label={'采用历史第'+(i+1)+'条回复'}>采用</button>
        <button type="button" onClick={()=>modify(option.text)} aria-label={'修改历史第'+(i+1)+'条回复'}>修改</button>
        <button type="button" onClick={regenerate} aria-label="重新生成三条回复建议">重新生成</button>
      </div>
@@ -171,8 +175,11 @@ export function ReplyActions({turn,useChat,inputActions,adopt,modify,regenerate,
      <strong className="yenra-native-reply-head">{String(i+1).padStart(2,'0')}</strong>
      <p className="yenra-native-reply-original">{option.text}</p>
      <p className="yenra-native-reply-translation" lang="zh-CN">{option.translation}</p>
+     {choiceIssues[i]?.duplicateOf!==null&&choiceIssues[i]?.duplicateOf!==undefined?
+       <small role="status">与第 {choiceIssues[i]!.duplicateOf!+1} 条基本相同，可修改或重新生成</small>:null}
+     {choiceIssues[i]?.multipleQuestions?<small>这条有多个问句，建议先修改</small>:null}
      <div className="yenra-native-reply-buttons">
-       <button type="button" onClick={()=>adopt(option.text)} aria-label={'采用第'+(i+1)+'条回复'}>采用</button>
+       <button type="button" disabled={choiceIssues[i]?.duplicateOf!==null&&choiceIssues[i]?.duplicateOf!==undefined} onClick={()=>adopt(option.text)} aria-label={'采用第'+(i+1)+'条回复'}>采用</button>
        <button type="button" onClick={()=>modify(option.text)} aria-label={'修改第'+(i+1)+'条回复'}>修改</button>
        <button type="button" onClick={regenerate} aria-label="重新生成三条回复建议">重新生成</button>
      </div>

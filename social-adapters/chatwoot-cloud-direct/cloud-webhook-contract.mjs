@@ -35,8 +35,16 @@ export function verifyCloudWebhook({body,headers,secret,nowMs=Date.now()}={}){
     // no MID is neither a new inbound nor proof of successful delivery.
     // Acknowledge this notification without creating a second Sender or
     // flooding the Bridge with 401s. Missing MID on inbound stays invalid.
-    if(direction==='OUTBOUND'&&!providerMid)
+    if(direction==='OUTBOUND'&&!providerMid){
+      // Meta Graph #551 is a real provider rejection ("recipient not
+      // available"). It is not a Bridge 503, a token-expiry diagnosis, or
+      // permission to retry via the original Host Sender. Signed Cloud failed
+      // notifications stay Cloud-owned, with a safe machine-readable reason.
+      const external=String(x?.content_attributes?.external_error??'');
+      if(x.status==='failed'&&/\(#551\)|(?:^|\D)551(?:\D|$)/u.test(external))
+        return {kind:'ignore',reason:'PAGE_META_551_RECIPIENT_UNAVAILABLE'};
       return {kind:'ignore',reason:'PAGE_OUTBOUND_PENDING_PROVIDER_MID'};
+    }
     throw Error('CLOUD_MESSAGE_ID_OR_MID_INVALID');
   }
   // Always re-read the exact message and contact/PSID via Cloud API before

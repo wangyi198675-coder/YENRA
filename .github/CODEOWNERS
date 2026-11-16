@@ -1,0 +1,5 @@
+# Review ownership; enforcement also requires branch-protection rules.
+/baselines/v18/ @wangyi198675-coder
+/docs/v18-source-hashes.json @wangyi198675-coder
+/docs/v18-nsis-inputs.json @wangyi198675-coder
+/.github/workflows/ @wangyi198675-coder

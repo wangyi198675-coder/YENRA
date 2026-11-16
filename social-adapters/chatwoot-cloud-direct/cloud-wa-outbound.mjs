@@ -11,6 +11,8 @@ import {join} from 'node:path';
 import {resolveCloudNativeConversation} from './cloud-native-selection.mjs';
 import {MAX_TEXT} from '../chatwoot-bridge/src/contract.mjs';
 import {verifyCloudApiChannelCallback} from './cloud-api-channel-callback.mjs';
+import {snapshotOriginalWhatsAppOutbox,recoverSubmittedOriginalWhatsAppMid}
+ from './cloud-wa-original-mid-recovery.mjs';
 
 const NUM=x=>Number.isSafeInteger(x)&&x>0;
 function extractMessageList(payload){
@@ -103,7 +105,7 @@ async function verifyCloudSenderSeat({cloud,senderId,inboxId}){
    throw Error('CLOUD_WA_OUTBOUND_AGENT_NOT_MEMBER');
 }
 export function createCloudWaOutbound({
- cloud,hostSender,index,scopes,logger,claimDirectory,
+ cloud,hostSender,host=null,index,scopes,logger,claimDirectory,
  verify=verifyCloudApiChannelCallback,now=Date.now,activatedAt=Date.now(),
  allowedInboxIds=new Set([155901,155902])
 }={}){
@@ -115,8 +117,8 @@ export function createCloudWaOutbound({
     !Array.isArray(scopes)||!logger?.warn||
     typeof claimDirectory!=='string'||!claimDirectory||!/^([a-zA-Z]:[\\/]|\\\\)/u.test(claimDirectory))
    throw Error('CLOUD_WA_OUTBOUND_DEPENDENCIES_REQUIRED');
- const stats={verified:0,submitted:0,midPending:0,duplicate:0,refused:0,unknown:0};
- const pending=new Map();
+ const stats={verified:0,submitted:0,midPending:0,midRecovered:0,duplicate:0,refused:0,unknown:0};
+ const pending=new Map(),roomFlights=new Map();
  async function process({rawBody,headers}={}){
   const result=await verify({rawBody,headers,permitVerifiedOutbound:true,allowedInboxIds});
   if(result.kind==='ignore')return {kind:'ignored'};
@@ -178,7 +180,21 @@ export function createCloudWaOutbound({
        contentSha256:fingerprint,state:'CLAIMED_BEFORE_SEND',at:now()})+'\n');
      await handle.sync();
    }finally{await handle.close()}
+   // Concurrent Cloud callbacks for the same original room may carry the
+   // same text. Serialize their pre/post-Socket snapshots so a second MID
+   // can never be mistaken for this first once-only claim.
+   const roomKey=bound.selection.accountRef+'|'+bound.selection.roomRef;
+   const previous=roomFlights.get(roomKey);
+   if(previous)await previous;
+   let unlock;
+   const roomHeld=new Promise(resolve=>{unlock=resolve});
+   roomFlights.set(roomKey,roomHeld);
    try{
+     const originalScope={channel:expectedChannel,
+       accountRef:bound.selection.accountRef,roomRef:bound.selection.roomRef};
+     const before=expectedChannel==='WhatsApp'
+       ?await snapshotOriginalWhatsAppOutbox({host,scope:originalScope}):null;
+     const sendStartedAt=now();
      const receipt=await hostSender.send({channel:expectedChannel,
        accountRef:bound.selection.accountRef,
        roomRef:bound.selection.roomRef,text});
@@ -191,9 +207,17 @@ export function createCloudWaOutbound({
         receipt.accountRef!==bound.selection.accountRef||
         receipt.roomRef!==bound.selection.roomRef)
        throw Error('CLOUD_WA_ORIGINAL_TRANSPORT_RECEIPT_UNVERIFIED');
-     const providerMid=receipt.providerMessageId;
+     let providerMid=receipt.providerMessageId;
      if(providerMid!=null&&(typeof providerMid!=='string'||!providerMid.trim()))
        throw Error('CLOUD_WA_ORIGINAL_PROVIDER_MID_INVALID');
+     if(!providerMid&&before){
+       // Strict same-room pre/post transport MID comparison. This is the
+       // existing original Socket outbox, not a second Sender or a guess from
+       // the Cloud message timestamp. Missing/ambiguous stays MID pending.
+       providerMid=await recoverSubmittedOriginalWhatsAppMid({
+         host,scope:originalScope,before,text,sendStartedAt,now});
+       if(providerMid)stats.midRecovered++;
+     }
      if(providerMid){
        await appendFile(claimPath,JSON.stringify({state:'SUBMITTED_UNCONFIRMED',
          platformMidPresent:true,
@@ -215,6 +239,9 @@ export function createCloudWaOutbound({
      await appendFile(claimPath,JSON.stringify({state:'UNKNOWN_NO_RETRY',at:now()})+'\n').catch(()=>{});
      logger.warn('cloud.wa_outbound_unknown_no_retry',{code:String(error?.code??error?.message??'UNKNOWN').slice(0,64)});
      throw Error('CLOUD_WA_OUTBOUND_UNKNOWN_NO_RETRY');
+   }finally{
+     if(roomFlights.get(roomKey)===roomHeld)roomFlights.delete(roomKey);
+     unlock();
    }
   })();
   pending.set(key,task);

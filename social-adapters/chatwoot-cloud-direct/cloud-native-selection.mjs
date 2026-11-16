@@ -60,7 +60,10 @@ export async function resolveCloudNativeConversation({
        Number.isFinite(m.created_at))
      .slice(-30).map(m=>({id:m.id,direction:m.message_type===0?'INBOUND':'OUTBOUND',
        text:m.content.trim().slice(0,700),timestamp:m.created_at,
-       status:['sent','delivered','read'].includes(m.status)?m.status:'unknown'}));
+       // A Meta 551 rejection is a real FAILED provider message. The Brain
+       // must not interpret failed Cloud Page drafts as successfully sent.
+       // Never upgrade this to sent/delivered/read without a Meta MID.
+       status:['sent','delivered','read','failed'].includes(m.status)?m.status:'unknown'}));
    return {ok:true,selection:{
      kind:'CLOUD_PAGE',cloudAccountId:196799,cloudInboxId:inboxId,
      cloudConversationId:conversationId,cloudContactId:verified.cloudContactId,

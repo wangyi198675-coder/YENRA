@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-16
 
-**Status:** Source migration in Draft PR #3. Core build/test gates pass. **v18 full NSIS reproducibility is not established.**
+**Status:** This document is historical evidence for the initial review. The next-v19 source integration and preserved v18 release archive are detailed in `docs/YEN-15-V19-OWNER-HANDOFF.md`. **v18 full NSIS reproducibility is not established.**
 
 - [Linear YEN-15](https://linear.app/yenra/issue/YEN-15)
 - [YENRA public source PR #3](https://github.com/wangyi198675-coder/YENRA/pull/3)

@@ -2,3 +2,5 @@
 ui/** -text
 social-adapters/** -text
 patches/** -text
+baselines/** -text
+docs/v18-source-hashes.json -text

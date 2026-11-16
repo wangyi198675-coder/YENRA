@@ -25,7 +25,7 @@ The owner freeze hashes currently differ from the on-disk formal source for thes
 
 The v18 packaged installer was constructed from DSH official upstream, 13 pinned local plugin archives, a Cloud Bridge snapshot, private owner-specific offline dependencies, and its immutable release-freeze manifest. These **binary snapshots and private runtime inputs are intentionally not public**. The local v18 builder uses hardcoded source and artifact paths, so a Linux or Windows GitHub checkout cannot yet reproduce the official installer.
 
-The `frozen-v18-provenance` CI gate must remain failing if frozen-source hashes drift. Such failure is evidence of a baseline mismatch, not an excuse to skip the gate or silently rewrite the freeze data. Resolve source ownership with the unified release Owner before merging and compare generated artifacts from a clean isolated Windows environment before calling YEN-15 complete.
+The v18 archive is now immutable and verified by `verify-v18-published-baseline.mjs`: 58/58 frozen Bridge sources and 19/20 exact formal sources were recovered. The unrecovered formal `cloud-native-inbox.tsx` remains a documented gap. New post-v18 changes are separately recorded as v19 source SHA receipts, not compared as though they were part of the frozen v18 release. The independent Windows full-NSIS input gate must remain failing until all pinned build assets are made available legally and validated byte-for-byte; no older release SHA may be rewritten. See `docs/YEN-15-V19-OWNER-HANDOFF.md`.
 
 ## CI scope and limitations
 

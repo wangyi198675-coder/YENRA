@@ -38,7 +38,7 @@ for (const rel of files) {
   if (content.includes('\u0000')) { errors.push({ file: normalized, reason: 'binary content in public source' }); continue; }
   for (const [reason, re] of secretPatterns) {
     // The audit source contains the contact-name detector itself, not fixture data.
-    if (reason === 'named real-contact fixture' && /^scripts\/ci\/(audit-public-source\.mjs|import-owner-source\.ps1)$/.test(normalized)) continue;
+    if (reason === 'named real-contact fixture' && /^scripts\/ci\/(audit-public-source\.mjs|import-owner-source\.ps1|import-v18-published-baseline\.mjs|sync-v19-owner-sources\.mjs)$/.test(normalized)) continue;
     // The asset-staging source explicitly rejects such local paths; it does not use one.
     if (reason === 'private local home path' && normalized === 'ui/desktop-candidate/stage-messaging-inbox-assets.mjs') continue;
     if (re.test(content)) errors.push({ file: normalized, reason });

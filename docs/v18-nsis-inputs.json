@@ -1,0 +1,92 @@
+{
+  "version": "0.2.1-rc.5.20261116.18",
+  "buildInputKind": "metadata-only; original archives not published",
+  "officialDshCommit": "b830ec950faba0a46dda564be3e2d854afed94f1",
+  "bundleCount": 42,
+  "dependencyCount": 32,
+  "pluginArchiveCount": 13,
+  "seedPackageSha256": "0c82e6b8795738ceb60fc11c81237ea8526a2add4508c5c86bd38fccbe9859aa",
+  "seedLockSha256": "9456cc463c1c662f892b7991ae5cab84ce7e66f3256a2fda4db3d10f185fc4a2",
+  "releaseFreezeSha256": "3f0cd933f3d6658fc6ce78b0fd5221861d78106af27bb4cc3932215a836cbce1",
+  "bridgeManifestSha256": "370ce6a100e6b0b541e6f43184202a867d850d409ff3ed060b3ed14050593df3",
+  "pinnedArchives": [
+    {
+      "id": "@deepseek-ai/dsh-subagent-claude-code",
+      "file": "deepseek-ai-dsh-subagent-claude-code-0.2.1-rc.5.tgz",
+      "sha256": "1a8e59af859541a21dc6190d0063e46f7332d473e5846dca59596c9d6fbd90ad",
+      "bytes": 23367
+    },
+    {
+      "id": "@deepseek-ai/dsh-subagent-codex",
+      "file": "deepseek-ai-dsh-subagent-codex-0.2.1-rc.5.tgz",
+      "sha256": "bf0857f069401f679f0063587f86943120cf87d05bc947cbae8881abbc42d6b9",
+      "bytes": 25985
+    },
+    {
+      "id": "@guntur-d/dsh-memory",
+      "file": "guntur-d-dsh-memory-0.1.0-yenra.rc5compat.10.tgz",
+      "sha256": "7aaa460d1459d65e0002d9ce16fe4918b282d923d9a1e05e5b0e8e11c9e4b849",
+      "bytes": 8694
+    },
+    {
+      "id": "@local/yenra-personal-chrome",
+      "file": "local-yenra-personal-chrome-1.0.1.tgz",
+      "sha256": "600767da8ce9cabe99eecfc95671fbf4f18d0fec388b6c3b2e136e186ec43ec5",
+      "bytes": 3623
+    },
+    {
+      "id": "@local/yenra-private-themes",
+      "file": "local-yenra-private-themes-1.1.1.tgz",
+      "sha256": "c9470c5e8e764e5908702c95415f7c90e848af4bd50567a046370e9c8d6361f5",
+      "bytes": 774300
+    },
+    {
+      "id": "@local/yenra-typography-fix",
+      "file": "local-yenra-typography-fix-1.0.1.tgz",
+      "sha256": "612b1f7a583153a0f79af6d4e6e7ccd658424e7c0fcf761b6d33f762351ebe08",
+      "bytes": 9419
+    },
+    {
+      "id": "@xmanrui/dsh-im",
+      "file": "xmanrui-dsh-im-5.10.0-yenra.rc5compat.13.tgz",
+      "sha256": "a475863ececaae266a355129b04f90713185fbf43e6cf3e6140f02ce2d958581",
+      "bytes": 10747462
+    },
+    {
+      "id": "@yenra/brain-host-overlay",
+      "file": "yenra-brain-host-overlay-0.1.0.tgz",
+      "sha256": "65a518f0624a0d4a3657e1afa422108a78337fb3de47ff8919f119f60935cf2e",
+      "bytes": 6143
+    },
+    {
+      "id": "@yenra/chatwoot-embed",
+      "file": "yenra-chatwoot-embed-0.3.0-route.9.tgz",
+      "sha256": "1409eb0167a11eb4edce9864c72f6a578b23b456b1683d2f398d5df0970c6694",
+      "bytes": 246799
+    },
+    {
+      "id": "@yenra/desktop-ui-candidate",
+      "file": "yenra-desktop-ui-candidate-0.1.0-yenra.unified.20261116.18.tgz",
+      "sha256": "5ff19dfac4363ee4ddff6155db71cc5b49f8d81d98e6a74cacfbe9c1c81582ac",
+      "bytes": 856424
+    },
+    {
+      "id": "dsh-codex-oauth",
+      "file": "dsh-codex-oauth-0.1.1.tgz",
+      "sha256": "5cc97dbffc3b81e2c38b973bf55a7fda358f6f2796bbb512c77bdbb3030613af",
+      "bytes": 397518
+    },
+    {
+      "id": "dsh-model-settings",
+      "file": "dsh-model-settings-0.2.2-yenra.unified.20261115.2.tgz",
+      "sha256": "eb169967aca3f341adc1ca9602ceab4fe4ce152da9be933166562bcc30fd92ec",
+      "bytes": 25593
+    },
+    {
+      "id": "dsh-plugin-health",
+      "file": "dsh-plugin-health-3.1.1.tgz",
+      "sha256": "7ac94bd546d004eb70433510f8cae9589a31d55e1b9c775b6c5d4048422ea60f",
+      "bytes": 423875
+    }
+  ]
+}
