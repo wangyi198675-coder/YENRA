@@ -9,7 +9,7 @@ import { auditOwner, BASE_VERSION } from './Assert-YENRA-Owner-ReleaseGate-20261
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sha = p => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
-const source = path.join(root, 'artifacts/YENRA_V19_OWNER_INTAKE_20261116/v19-owner-source-04');
+const source = path.join(root, 'artifacts/YENRA_V19_OWNER_INTAKE_20261116/v19-owner-source-05');
 const build = path.join(root, 'artifacts/YENRA_V19_OWNER_INTAKE_20261116/v19-owner-build-02');
 const installed = path.join(root, 'runtime/ui-candidate-desktop-home/profiles/desktop/node_modules/@yenra/desktop-ui-candidate/lib/client.js');
 const candidate = path.join(root, 'artifacts/YENRA_V19_OWNER_INTAKE_20261116/v19-owner-build-03/desktop-merged-complete/client.js');
