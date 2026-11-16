@@ -20,6 +20,7 @@ import { captainActionIds, captainActionLabels, captainActionPrompt, type Captai
 import { installNativeReplyCards } from './native-reply-cards'
 import { createCloudMemoryBindGate } from './cloud-memory-bind-gate'
 import { resolveCloudContextWithRetry } from './cloud-context-retry'
+import { retryableManualModify, type FailedManualModify } from './manual-modify-recovery'
 import { PersonaHeaderMenu } from './persona-header-menu'
 import { ensureNativeYeonheeCore, revalidateNativePersonaBeforeGeneration } from './native-persona-core'
 import { emitBrainTiming } from './brain-timing'
@@ -1443,6 +1444,20 @@ function makeV2Panel(host:ClientContext){
     // One DSH Brain Session produces each complete candidate set. A manual
     // Regenerate/Modify action never calls Captain or a second model gateway.
     const [replyBusy,setReplyBusy]=useState(false)
+    const [failedModify,setFailedModify]=useState<FailedManualModify|null>(null)
+    // Match both the ORIGINAL DSH Session and current, authenticated
+    // conversation's latest MID. A -> B -> A or new inbound must never
+    // expose an old person's failed edit as a retryable draft.
+    const latestManualSourceKey=cloudPage?.messages.at(-1)?.id
+      ?'cloud:'+cloudPage.cloudConversationId+':'+cloudPage.messages.at(-1)!.id
+      :selectedSocial&&selectedRoom?.messages.at(-1)?.mid
+        ?'host:'+selectedSocial.accountRef+':'+selectedRoom.messages.at(-1)!.mid
+        :undefined
+    const retryFailedModifySeed=retryableManualModify(failedModify,{
+      sessionId:brainLiveRef?.sessionId,contactKey:brainKey,
+      sourceKey:latestManualSourceKey,
+    },replyBusy)
+    useEffect(()=>setFailedModify(null),[brainKey,latestManualSourceKey])
     // Scoped to the ORIGINAL DSH Session; a queued native reply remains busy
     // until its own turn/end, not merely until queue admission returns.
     const replyInFlight=useRef(new Map<SessionId,{requestId?:string;stop?:()=>void}>())
@@ -1509,6 +1524,9 @@ function makeV2Panel(host:ClientContext){
       if(mode==='modify'&&(!seed.trim()||/[\u3400-\u9fff]/u.test(seed))){
         setCaptainNotice('当前候选不是有效外文草稿，已拒绝修改');return
       }
+      // One explicit action only. Never automatically retry a rejected model
+      // request or reuse a previous failed edit after contact/MID changes.
+      setFailedModify(null)
       replyInFlight.current.set(ref.sessionId,{})
       setReplyBusy(true)
       setCaptainNotice(mode==='regenerate'?'正在用原生 DSH 重新生成三条建议…':'正在用原生 DSH 修改这条建议…')
@@ -1579,8 +1597,16 @@ function makeV2Panel(host:ClientContext){
           replyInFlight.current.delete(ref.sessionId)
           if(stillSelected()){
             setReplyBusy(false)
-            setCaptainNotice(observed.reason==='completed'?''
-              :'原生 DSH 本轮生成未完成，可重新生成')
+            if(observed.reason==='completed'){
+              setFailedModify(null)
+              setCaptainNotice('')
+            }else if(mode==='modify'&&brainKey&&latestManualSourceKey){
+              setFailedModify({sessionId:ref.sessionId,contactKey:brainKey,
+                sourceKey:latestManualSourceKey,seed})
+              setCaptainNotice('原生修改未完成，已保留原草稿；可点击「重试上次修改」。不会自动重试或发送')
+            }else{
+              setCaptainNotice('原生 DSH 本轮生成未完成，可重新生成；未发送')
+            }
           }
         }
         // Subscribe BEFORE queue admission. A very short native turn may
@@ -2245,6 +2271,14 @@ function makeV2Panel(host:ClientContext){
                   disabled={replyBusy}
                   onClick={()=>{void generateReplies('regenerate')}}>
                   {replyBusy?'生成中…':'重新生成三条建议'}
+                </button>:null}
+              {retryFailedModifySeed&&brainLiveRef&&!brainArchived&&workspaceMode==='chat'?
+                <button type="button" className="v2-brain-regenerate"
+                  data-yenra-explicit-modify-retry=""
+                  aria-label="重试上次修改的原草稿，不发送消息"
+                  disabled={replyBusy}
+                  onClick={()=>{void generateReplies('modify',retryFailedModifySeed)}}>
+                  重试上次修改
                 </button>:null}
               {captainNotice&&workspaceMode==='chat'?<p className="v2-brain-captain-notice" role="status">{captainNotice}</p>:null}
               {cloudSeat&&cloudContextPhase==='verified'&&roomPhase==='error'?<p className="v2-brain-captain-notice" role="status">这段聊天暂时读取不了，请稍后重试。</p>:null}
