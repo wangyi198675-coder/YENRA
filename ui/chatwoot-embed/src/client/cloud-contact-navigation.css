@@ -1,0 +1,105 @@
+/* YENRA contact visibility correction.
+   Chatwoot Cloud owns the list, header, row selection and mobile navigation.
+   Do not add a second Contacts or Back control.
+   The Cloud guest can be ~800px wide beside the native DSH Brain, even when
+   the outer Electron window is wide enough for the desktop layout. */
+@media (min-width: 768px) {
+  body:has(.conversation-details-wrap) .conversations-list-wrap {
+    display: flex !important;
+    flex: 0 0 256px !important;
+    width: 256px !important;
+    min-width: 256px !important;
+    max-width: 256px !important;
+    visibility: visible !important;
+    transform: none !important;
+  }
+  body:has(.conversations-list-wrap) .conversation-details-wrap {
+    display: flex !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+  }
+  /* The original Cloud Back control stays visible below 768px, where the
+     list and conversation alternate. Above 768px this adapter pins both
+     panes side by side, so the mobile Back button is redundant. Match the
+     original chevron inside the actual selected-contact header, not other
+     conversation actions or a newly created navigation element. */
+  body:has(.conversations-list-wrap) .conversation-details-wrap>div:first-child:has(>div>span[class~="group/avatar"])>div:first-child>button:first-child:has(>i.i-lucide-chevron-left) {
+    display: none !important;
+  }
+
+  /* Chatwoot already owns the list visibility and the original arrow toggle.
+     YENRA previously hid the native button and then pinned the list open.
+     Re-enable that SAME button; never introduce a duplicate router/control. */
+  .conversations-list-wrap>div:first-child>div:last-child>button:has(>span.i-lucide-arrow-right-to-line),
+  .conversations-list-wrap>div:first-child>div:last-child>button:has(>span.i-lucide-arrow-left-to-line) {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    width: 28px !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+  }
+
+  /* The native collapsed state is "hidden basis-full". Honor that state
+     instead of the default 256px !important pin, but keep its original
+     expand button reachable beside the conversation title. */
+  body:has(.conversation-details-wrap) .conversations-list-wrap.hidden {
+    display: flex !important;
+    flex: 0 0 0px !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    overflow: visible !important;
+  }
+  body:has(.conversation-details-wrap) .conversations-list-wrap.hidden>div:not(:first-child) {
+    display: none !important;
+  }
+  body:has(.conversation-details-wrap) .conversations-list-wrap.hidden>div:first-child {
+    position: absolute !important;
+    inset-inline-start: 0 !important;
+    top: 0 !important;
+    z-index: 25 !important;
+    display: flex !important;
+    width: 36px !important;
+    min-width: 36px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 6px 4px !important;
+    background: rgb(var(--slate-1)) !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+  body:has(.conversation-details-wrap) .conversations-list-wrap.hidden>div:first-child>div:last-child {
+    margin: 0 !important;
+    gap: 0 !important;
+  }
+  body:has(.conversation-details-wrap) .conversations-list-wrap.hidden>div:first-child>div:last-child>div {
+    display: none !important;
+  }
+  body:has(.conversations-list-wrap.hidden) .conversation-details-wrap>div:first-child {
+    padding-inline-start: 44px !important;
+  }
+  body:has(.conversations-list-wrap.hidden) aside:has(>nav)>section a[href$="/search"] {
+    display: none !important;
+  }
+}
+/* Under 768px Chatwoot owns the mobile list/thread switch. Restore the
+   upstream header tap areas instead of inventing another back button. */
+@media (max-width:767px) {
+  .conversations-list-wrap>div:first-child {
+    height:auto!important;
+    min-height:44px!important;
+  }
+  .conversation-details-wrap>div:first-child:has(>div>span[class~="group/avatar"]) {
+    flex:0 0 44px!important;
+    height:44px!important;
+    min-height:44px!important;
+    padding:4px 8px!important;
+  }
+}
+/* Legacy first-patch buttons must never appear if an older guest persists
+   across a hot desktop update. Clean them from the DOM via the guest adapter. */
+.yenra-cloud-show-contacts,
+.yenra-cloud-hide-contacts { display: none !important; }
