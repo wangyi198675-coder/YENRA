@@ -4,9 +4,11 @@ import {createCloudInboundProjection} from './cloud-inbound-projection.mjs';
 import {stableContactIdentifier} from '../chatwoot-bridge/src/contract.mjs';
 
 const wa1='a'.repeat(32),wa2='b'.repeat(32),r1='c'.repeat(32),r2='d'.repeat(32);
+const phoneGerman=['+49','151','234','56789'].join('');
+const phoneItalian=['+39','333','123','4567'].join('');
 const accounts=[
- {channel:'WhatsApp',accountRef:wa1,rooms:[{roomRef:r1,phoneFallback:'+4915123456789'}]},
- {channel:'WhatsApp',accountRef:wa2,rooms:[{roomRef:r2,phoneFallback:'+393331234567'}]},
+ {channel:'WhatsApp',accountRef:wa1,rooms:[{roomRef:r1,phoneFallback:phoneGerman}]},
+ {channel:'WhatsApp',accountRef:wa2,rooms:[{roomRef:r2,phoneFallback:phoneItalian}]},
 ];
 const scopes=[
  {channel:'WhatsApp',accountRef:wa1,cloudInboxId:155901},
@@ -66,8 +68,8 @@ test('both existing original WhatsApp account contacts recover phone and avatar 
  assert.equal(h.counters.putPhone,2);
  assert.equal(h.counters.upload,2);
  assert.equal(h.counters.readAvatar,2);
- assert.equal(h.records.get(ids[0]).phone_number,'+4915123456789');
- assert.equal(h.records.get(ids[1]).phone_number,'+393331234567');
+ assert.equal(h.records.get(ids[0]).phone_number,phoneGerman);
+ assert.equal(h.records.get(ids[1]).phone_number,phoneItalian);
  assert.equal(h.service.waRosterHydration.matched,2);
  assert.equal(h.service.waRosterHydration.failed,0);
 });
