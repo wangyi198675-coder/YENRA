@@ -6,8 +6,8 @@ const root = path.resolve(import.meta.dirname, '../..');
 const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], {
   cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
 }).split('\0').filter(Boolean);
-const protectedSegment = /(^|\/)(?:node_modules|runtime|artifacts|upstream|backups|exports|evidence|brain-memory|profiles?|cookies|secrets|credentials|\.dsh-uploads)(\/|$)/i;
-const protectedFile = /(?:^|\/)(?:\.env(?:\..*)?|\.npmrc|\.git-credentials|.*\.(?:sqlite(?:-.*)?|db(?:-.*)?|exe|msi|asar|7z|zip|tgz|tar|pem|p12|pfx|key|session|log))$/i;
+const protectedSegment = /(^|\/)(?:node_modules|runtime|artifacts|upstream|backups|exports|evidence|brain-memory|profiles?|cookies|secrets|credentials|appdata|\.dsh-uploads)(\/|$)/i;
+const protectedFile = /(?:^|\/)(?:\.env(?:\..*)?|\.npmrc|\.git-credentials|Local State|Login Data|Cookies(?:-journal)?|.*\.(?:sqlite(?:-.*)?|db(?:-.*)?|exe|msi|asar|7z|zip|tgz|tar|pem|p12|pfx|key|session|log|dpapi(?:-.*)?)|.*(?:dpapi|credential|cookie|secret).*\.(?:json|dat|bin|blob))$/i;
 const secretPatterns = [
   ['known credential shape', /(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-(?:proj-)?[A-Za-z0-9_-]{20,}|xox[baprs]-[A-Za-z0-9-]{20,})/],
   ['private key', /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/],
@@ -30,8 +30,10 @@ for (const rel of files) {
     errors.push({ file: normalized, reason: 'prohibited path or file type' }); continue;
   }
   const abs = path.join(root, rel);
-  if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) continue;
-  const stat = fs.statSync(abs);
+  if (!fs.existsSync(abs)) continue;
+  const stat = fs.lstatSync(abs);
+  if (stat.isSymbolicLink()) { errors.push({ file: normalized, reason: 'symbolic link not permitted' }); continue; }
+  if (!stat.isFile()) continue;
   if (stat.size > 600_000) { errors.push({ file: normalized, reason: 'unexpected large file' }); continue; }
   totalBytes += stat.size;
   const content = fs.readFileSync(abs, 'utf8');

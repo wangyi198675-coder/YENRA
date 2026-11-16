@@ -20,6 +20,14 @@
 **/*.pfx
 **/*.key
 **/*.session
+**/*.dpapi
+**/*.dpapi.*
+**/*dpapi*secret*.json
+**/*dpapi*credential*.json
+**/Local State
+**/Login Data
+**/Cookies
+**/Cookies-journal
 **/*.exe
 **/*.msi
 **/*.zip
