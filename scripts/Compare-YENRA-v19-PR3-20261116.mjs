@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const stage = path.join(root, 'artifacts/YENRA_V19_OWNER_INTAKE_20261116/v19-owner-source-04');
+const stage = path.join(root, 'artifacts/YENRA_V19_OWNER_INTAKE_20261116/v19-owner-source-05');
 const owner = JSON.parse(fs.readFileSync(path.join(stage, 'v19-source-intake.json'), 'utf8'));
 const prHead = '70816e5e3859d471c27a61b38b843954fc7fcdf4';
 const hash = v => crypto.createHash('sha256').update(v).digest('hex');
