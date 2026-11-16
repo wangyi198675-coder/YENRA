@@ -35,8 +35,8 @@ jobs:
         run: node scripts/ci/verify-v19-candidate-sources.mjs
 
   source-regressions:
-    name: Four-channel and UI offline source regression tests
-    runs-on: ubuntu-latest
+    name: Owner Windows runtime mock regression tests
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
