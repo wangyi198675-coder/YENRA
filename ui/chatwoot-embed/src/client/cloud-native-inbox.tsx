@@ -1267,9 +1267,12 @@ export function CloudNativeInbox({visible,shareConversationId,verifiedShareLinks
             };
             void (async()=>{
               try{
+                // The original DSH Host owns translation and persistence.
+                // A stalled network request must not pin this MID's in-flight
+                // guard forever or leave the guest showing a permanent spinner.
                 const result=await sendDshTranslation({
                   mode:'export',conversationId:cid,messageIds:[mid],
-                });
+                },AbortSignal.timeout(45000));
                 const item=Array.isArray(result.items)?
                   result.items.find((x:{id?:number;translation?:string})=>x.id===mid):null;
                 if(result.mode!=='export'||result.conversationId!==cid||
@@ -1284,9 +1287,20 @@ export function CloudNativeInbox({visible,shareConversationId,verifiedShareLinks
                   'window.__yenraDshCloudTranslatorV1?.paint?.('+
                   cid+','+JSON.stringify([{id:mid,translation:item.translation}])+')'
                 );
+                // paint() is intentionally idempotent: it returns zero when
+                // this EXACT MID's Chinese is already rendered. That is a
+                // SUCCESS, not an error! The old painted!==1 branch wrongly
+                // displayed a persistent red failure on cached messages.
+                const alreadyVisible=painted===1||await el.executeJavaScript(
+                  '(()=>{const node=document.querySelector('+
+                  JSON.stringify('[data-message-id="'+mid+'"] [data-yenra-dsh-chinese][data-yenra-message-id="'+mid+'"]')+
+                  ');return node?.textContent?.trim()==='+
+                  JSON.stringify(item.translation.trim())+'})()'
+                ).catch(()=>false);
                 invalidatePreviewMisses(cid,[{id:mid,translation:item.translation}]);
                 scheduleSavedPreviews();
-                await feedback(painted===1?'翻译完成，可查看原文':'译文已保存，消息未显示时可重新打开会话',painted!==1);
+                await feedback(alreadyVisible?'翻译完成，可查看原文':
+                  '译文已保存，消息未显示时可重新打开会话',!alreadyVisible);
               }catch{
                 await feedback('翻译没有完成，请稍后重试',true);
               }finally{manualTranslationInFlight.delete(key);}
