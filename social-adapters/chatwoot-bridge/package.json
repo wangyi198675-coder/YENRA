@@ -1,0 +1,16 @@
+{
+  "name": "@yenra/chatwoot-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "YENRA thin protocol bridge: current DSH Host read-only social endpoints -> Chatwoot v4.19.1 fork (inbound), Chatwoot webhook -> the ONE existing Host Sender (outbound skeleton, real send disabled by default). No sender, no listener, no message database, no dedup engine of its own.",
+  "engines": {
+    "node": ">=24"
+  },
+  "main": "src/index.mjs",
+  "scripts": {
+    "start": "node src/index.mjs",
+    "start:friend": "node src/friend-main.mjs",
+    "test": "node --test"
+  }
+}

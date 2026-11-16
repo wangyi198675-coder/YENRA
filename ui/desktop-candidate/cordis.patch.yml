@@ -1,0 +1,6 @@
+# Original DSH Cordis bundle entry for the ONE YENRA workbench.
+# Identical to the owner's verified host plugin registration, but WITHOUT
+# account paths, provider secrets, W25, separate Sender or duplicate Agent.
+- insert:
+    - id: yenra-desktop-candidate
+      name: '@yenra/desktop-ui-candidate'

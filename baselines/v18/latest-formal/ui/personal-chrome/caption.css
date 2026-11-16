@@ -1,0 +1,4 @@
+/* Windows uses sidebar-fill for its native caption probe and outer frame.
+   Match that shared frame surface to the header in every layout mode.
+   Content/message surfaces and all native window operations remain unchanged. */
+html[data-windows-titlebar] body{--dsw-specific-sidebar-fill:var(--dsw-alias-bg-layer-1)!important}

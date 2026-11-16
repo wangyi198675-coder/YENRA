@@ -1,0 +1,53 @@
+{
+  "name": "@local/yenra-private-themes",
+  "version": "1.1.1",
+  "private": true,
+  "type": "module",
+  "description": "Persistent, reversible day/night themes with verified token coverage and opaque menu materials.",
+  "exports": {
+    ".": "./host-v111.js",
+    "./client": "./client-v111.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "host-v111.js",
+    "client-v111.js",
+    "core-v111.js",
+    "store-v111.js",
+    "core.js",
+    "store.js",
+    "appearance.js",
+    "index.js",
+    "client-entry.js",
+    "build.mjs",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme",
+        "@deepseek-ai/dsh-client-ui-settings-general",
+        "@yenra/desktop-ui-candidate"
+      ]
+    }
+  },
+  "bundledDependencies": [
+    "zod"
+  ],
+  "main": "host-v111.js"
+}

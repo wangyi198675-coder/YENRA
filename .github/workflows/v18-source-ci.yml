@@ -1,0 +1,118 @@
+name: YENRA published v19 source / immutable v18 / independent NSIS provenance
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-source-audit:
+    name: Public-source and single-host architecture guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Reject secret, personal fixture, runtime and binary paths
+        run: node scripts/ci/audit-public-source.mjs
+      - name: Reject second Electron, Agent, chat database or model gateway dependencies
+        run: node scripts/ci/check-architecture.mjs
+      - name: Parse all imported JavaScript modules
+        run: node scripts/ci/check-source-syntax.mjs
+      - name: Prove archival v18 builder and verifier refuse execution
+        run: node scripts/ci/check-release-reference-guard.mjs
+      - name: Verify immutable published v18 source archive (58 Bridge, 19 formal)
+        run: node scripts/ci/verify-v18-published-baseline.mjs
+      - name: Verify captured v19 source hashes against owner receipts
+        run: node scripts/ci/verify-v19-candidate-sources.mjs
+      - name: Verify the independently audited published v19 source receipt
+        run: node scripts/ci/verify-v19-published-receipt.mjs
+
+  source-regressions:
+    name: Owner Windows runtime mock regression tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: social-adapters/kt-dedupe-native/package-lock.json
+      - name: Install locked KT dependencies (no lifecycle scripts)
+        run: npm ci --prefix social-adapters/kt-dedupe-native --ignore-scripts
+      - name: Run isolated mocked ACK, inbound, selection, KT and native-toggle regressions
+        run: |
+          node --test             ui/chatwoot-embed/qa/native-contact-public-source.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-platform-ack.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-inbound-projection.test.mjs             social-adapters/chatwoot-bridge/test/selection.test.mjs             social-adapters/kt-dedupe-native/kt-country-number-disambiguation.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-native-selection.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-wa-outbound.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-webhook-contract.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-wa-original-mid-recovery.test.mjs             ui/chatwoot-embed/qa/brain-reply-distinctness-20261116.test.mjs             ui/chatwoot-embed/qa/p1-native-caption-drag-zone-20261116.test.mjs
+
+      - name: Validate published v19 WhatsApp MID and translation-rightclick logic without real sends
+        run: node --test social-adapters/chatwoot-cloud-direct/cloud-wa-recent-sync.test.mjs ui/chatwoot-embed/src/client/cloud-translation-rightclick-fallback-v19.test.mjs
+
+  plugin-build:
+    name: Locked TypeScript plugin bundles (${{ matrix.os }}, not installer)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check out pinned original DSH (ephemeral build dependency, not vendored)
+        uses: actions/checkout@v4
+        with:
+          repository: deepseek-ai/deepseek-harness
+          ref: b830ec950faba0a46dda564be3e2d854afed94f1
+          path: upstream/official-source
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Replay YENRA DSH overlay on pinned official source (27 deltas)
+        run: node scripts/ci/apply-owner-dsh-patch.mjs
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.28.5
+      - name: Resolve pinned original DSH root build preset dependencies
+        run: pnpm -C upstream/official-source install --frozen-lockfile --ignore-scripts
+      - name: Install Chatwoot UI plugin exactly from lockfile
+        run: pnpm -C ui/chatwoot-embed install --frozen-lockfile --ignore-scripts
+      - name: Bundle Chatwoot UI TypeScript source
+        run: pnpm -C ui/chatwoot-embed run bundle
+      - name: Install desktop overlay exactly from lockfile
+        run: pnpm -C ui/chatwoot-embed/desktop-integration-candidate install --frozen-lockfile --ignore-scripts
+      - name: Bundle desktop overlay TypeScript source
+        run: pnpm -C ui/chatwoot-embed/desktop-integration-candidate run bundle
+      - name: Validate real Cloud translation and preview source with isolated fixtures
+        run: node --test ui/chatwoot-embed/src/client/cloud-preview-live-miss-20261116.test.mjs ui/chatwoot-embed/src/client/cloud-translation-auto-restore-20261115.test.mjs
+      - name: Retain compiled plugin bundles as review-only evidence (not installer)
+        uses: actions/upload-artifact@v4
+        with:
+          name: yenra-v19-plugins-${{ matrix.os }}
+          path: |
+            ui/chatwoot-embed/lib
+            ui/chatwoot-embed/desktop-integration-candidate/lib
+          retention-days: 7
+
+  windows-nsis-input-provenance:
+    name: Independent Windows v19 NSIS input provenance (expected blocked until secure provisioning)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Require all 13 published v19 private archives and original KT / grammar resources
+        run: node scripts/ci/check-v19-nsis-inputs.mjs

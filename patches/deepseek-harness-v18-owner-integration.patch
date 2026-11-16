@@ -1,0 +1,1568 @@
+diff --git a/apps/desktop-host/src/index.ts b/apps/desktop-host/src/index.ts
+index 3086755b..84683c28 100644
+--- a/apps/desktop-host/src/index.ts
++++ b/apps/desktop-host/src/index.ts
+@@ -59,6 +59,24 @@ async function main(): Promise<void> {
+   process.on('message', (message: unknown) => {
+     if (typeof message !== 'object' || message === null || !('type' in message)) return
+     if (message.type === 'shutdown') { void stop(); return }
++    // Reuse the SAME official WebServer index injection collector. Live HMR
++    // revisions differ from the initial Host-ready snapshot after plugin rebuilds.
++    if (message.type === 'read-boot-injections') {
++      if (!('requestId' in message) || !Number.isSafeInteger(message.requestId)) return
++      const requestId = message.requestId
++      void (async () => {
++        try {
++          if (stopping !== undefined) throw new Error('desktop boot: Host is stopping')
++          const running = await application
++          await send({ type: 'read-boot-injections', requestId,
++            injections: running.ctx.webServer.collectIndexInjections() })
++        } catch (error) {
++          await send({ type: 'read-boot-injections', requestId, injections: [],
++            error: error instanceof Error ? error.message : String(error) })
++        }
++      })().catch((error: unknown) => { console.error(error) })
++      return
++    }
+     if (message.type === 'quit-inspection') {
+       if (!('requestId' in message) || !Number.isSafeInteger(message.requestId)) return
+       const requestId = message.requestId
+diff --git a/apps/desktop/installer/extract-report.h b/apps/desktop/installer/extract-report.h
+index cdfbbad2..8be6b541 100644
+--- a/apps/desktop/installer/extract-report.h
++++ b/apps/desktop/installer/extract-report.h
+@@ -114,7 +114,7 @@ inline std::wstring Headline(int code, const std::wstring& output, const std::ws
+ 
+ inline std::wstring Compose(int code, const std::wstring& archive, const std::wstring& destination, const std::wstring& output,
+                             const std::wstring& timestamp, const std::wstring& windowsVersion) {
+-    std::wstring report = L"DeepSeek Harness installer: extraction failed\r\n";
++    std::wstring report = L"Application installer: extraction failed\r\n";
+     report += L"Time: " + timestamp + L"\r\n";
+     report += L"Result: " + DescribeResult(code) + L"\r\n";
+     report += L"Archive: " + archive + L"\r\n";
+diff --git a/apps/desktop/installer/strings.nsh b/apps/desktop/installer/strings.nsh
+index a1ac41b4..26bf2682 100644
+--- a/apps/desktop/installer/strings.nsh
++++ b/apps/desktop/installer/strings.nsh
+@@ -19,16 +19,16 @@ LangString INSTALLER_BROWSE ${LANG_ENGLISH} "Browse"
+ LangString INSTALLER_BROWSE ${LANG_SIMPCHINESE} "选择"
+ LangString INSTALLER_LAUNCH ${LANG_ENGLISH} "Launch now"
+ LangString INSTALLER_LAUNCH ${LANG_SIMPCHINESE} "立即启动"
+-LangString INSTALLER_LAUNCH_FAILED ${LANG_ENGLISH} "DeepSeek Harness could not be launched. Retry, or clear Launch now and close the installer."
+-LangString INSTALLER_LAUNCH_FAILED ${LANG_SIMPCHINESE} "无法启动 DeepSeek Harness。请重试，或取消勾选立即启动后关闭安装程序。"
++LangString INSTALLER_LAUNCH_FAILED ${LANG_ENGLISH} "${PRODUCT_FILENAME} could not be launched. Retry, or clear Launch now and close the installer."
++LangString INSTALLER_LAUNCH_FAILED ${LANG_SIMPCHINESE} "无法启动 ${PRODUCT_FILENAME}。请重试，或取消勾选立即启动后关闭安装程序。"
+ LangString INSTALLER_UI_ERROR ${LANG_ENGLISH} "The installer could not initialize its window. Close it and try again."
+ LangString INSTALLER_UI_ERROR ${LANG_SIMPCHINESE} "无法初始化安装窗口，请关闭后重试。"
+ LangString INSTALLER_THEME_ERROR ${LANG_ENGLISH} "Use /THEME=auto, /THEME=light or /THEME=dark."
+ LangString INSTALLER_THEME_ERROR ${LANG_SIMPCHINESE} "主题参数须为 /THEME=auto、/THEME=light 或 /THEME=dark。"
+ LangString INSTALLER_FAILED ${LANG_ENGLISH} "Installation did not finish. Close this installer and retry. If the problem persists, download the installer again."
+ LangString INSTALLER_FAILED ${LANG_SIMPCHINESE} "安装未完成，请关闭安装程序后重试。如仍然失败，请重新下载安装包。"
+-LangString INSTALLER_RUNNING ${LANG_ENGLISH} "DeepSeek Harness is running. Quit it from the system tray and try again."
+-LangString INSTALLER_RUNNING ${LANG_SIMPCHINESE} "DeepSeek Harness 正在运行，请先在系统托盘中退出应用后重试。"
++LangString INSTALLER_RUNNING ${LANG_ENGLISH} "${PRODUCT_FILENAME} is running. Quit it from the system tray and try again."
++LangString INSTALLER_RUNNING ${LANG_SIMPCHINESE} "${PRODUCT_FILENAME} 正在运行，请先在系统托盘中退出应用后重试。"
+ LangString INSTALLER_DIRECTORY_FAILED ${LANG_ENGLISH} "The installation directory could not be replaced."
+ LangString INSTALLER_DIRECTORY_FAILED ${LANG_SIMPCHINESE} "无法替换安装目录。"
+ LangString INSTALLER_DIRECTORY_HINT ${LANG_ENGLISH} "Check access to the installation directory and close programs using its files, then run the installer again. Copy the error details if the problem persists."
+@@ -37,8 +37,8 @@ LangString INSTALLER_DIRECTORY_RESTORE_HINT ${LANG_ENGLISH} "The previous instal
+ LangString INSTALLER_DIRECTORY_RESTORE_HINT ${LANG_SIMPCHINESE} "未能恢复原安装目录。请保留错误详情中列出的备份目录，联系支持人员后再安装。"
+ LangString INSTALLER_PATH_INVALID ${LANG_ENGLISH} "Choose a full local folder path. Drive roots, system folders, links and special characters are not supported."
+ LangString INSTALLER_PATH_INVALID ${LANG_SIMPCHINESE} "请选择本地磁盘上的完整文件夹路径，不能使用磁盘根目录、系统目录、链接目录或包含特殊字符的路径。"
+-LangString INSTALLER_PATH_OWNERSHIP ${LANG_ENGLISH} "Choose an empty folder or the registered DeepSeek Harness installation folder."
+-LangString INSTALLER_PATH_OWNERSHIP ${LANG_SIMPCHINESE} "请选择空文件夹，或 DeepSeek Harness 原来的安装目录。"
++LangString INSTALLER_PATH_OWNERSHIP ${LANG_ENGLISH} "Choose an empty folder or the registered ${PRODUCT_FILENAME} installation folder."
++LangString INSTALLER_PATH_OWNERSHIP ${LANG_SIMPCHINESE} "请选择空文件夹，或 ${PRODUCT_FILENAME} 原来的安装目录。"
+ LangString INSTALLER_PATH_WRITABLE ${LANG_ENGLISH} "This location is not writable. Choose a folder available to the current user."
+ LangString INSTALLER_PATH_WRITABLE ${LANG_SIMPCHINESE} "无法写入此位置。请选择当前用户可写入的文件夹；安装程序不会申请管理员权限。"
+ LangString INSTALLER_DISK_SPACE ${LANG_ENGLISH} "There is not enough free disk space. Choose another location."
+diff --git a/apps/desktop/scripts/dev.ts b/apps/desktop/scripts/dev.ts
+index 37515c20..3473d57d 100644
+--- a/apps/desktop/scripts/dev.ts
++++ b/apps/desktop/scripts/dev.ts
+@@ -91,6 +91,25 @@ async function launchElectron(): Promise<void> {
+ }
+ 
+ async function main(): Promise<void> {
++  // YENRA uses ONE official DSH desktop/profile. A bare pnpm DSH desktop start
++  // silently creates a second development userData and DSH_HOME, bypassing
++  // the YENRA launcher and splitting sessions. Apply only in this checkout.
++  const yenraRoot = resolve(REPOSITORY_ROOT, '..', '..')
++  if (process.platform === 'win32'
++      && existsSync(join(yenraRoot, 'YENRA_HIGHEST_EXECUTION_RULE.md'))) {
++    const expectedHome = resolve(yenraRoot, 'runtime', 'ui-candidate-desktop-home')
++    const expectedUserData = resolve(yenraRoot, 'runtime', 'ui-candidate-desktop-user-data')
++    const providedHome = process.env.DSH_HOME
++    const providedUserData = process.env.DSH_DESKTOP_USER_DATA_DIR
++    if (process.env.YENRA_DESKTOP_BRAND !== '1'
++        || !providedHome || resolve(providedHome).toLowerCase() !== expectedHome.toLowerCase()
++        || !providedUserData || resolve(providedUserData).toLowerCase() !== expectedUserData.toLowerCase()) {
++      throw new Error(
++        'YENRA_SINGLE_DESKTOP_REQUIRED: use scripts/Start-YENRA-UI-Candidate-Desktop.ps1;'
++        + ' do not launch an additional upstream DSH desktop/profile.',
++      )
++    }
++  }
+   const { values } = parseArgs({ options: { 'skip-build': { type: 'boolean', default: false } } })
+   if (!values['skip-build']) {
+     await runPackageScript('build:artifacts', REPOSITORY_ROOT)
+diff --git a/apps/desktop/scripts/electron-builder-config.mjs b/apps/desktop/scripts/electron-builder-config.mjs
+index 4b9cd27a..baac9a8a 100644
+--- a/apps/desktop/scripts/electron-builder-config.mjs
++++ b/apps/desktop/scripts/electron-builder-config.mjs
+@@ -1,8 +1,8 @@
+ import { officePackageDirectories } from '../../../scripts/libreoffice-packages.mjs'
+ import { X509Certificate } from 'node:crypto'
+-import { readFileSync } from 'node:fs'
++import { existsSync, readFileSync } from 'node:fs'
+ import { readFile } from 'node:fs/promises'
+-import { join, relative, sep } from 'node:path'
++import { isAbsolute, join, relative, sep } from 'node:path'
+ import { fileURLToPath } from 'node:url'
+ import { execFile } from 'node:child_process'
+ import { promisify } from 'node:util'
+@@ -65,6 +65,88 @@ export function createElectronBuilderConfig(
+   if (skipNotarization && (unsigned || resolvedPlatform !== 'darwin')) throw new Error('Skipping notarization requires a signed macOS build')
+   const packagesMacOS = targetPlatform === 'darwin' || (targetPlatform === undefined && hostPlatform === 'darwin')
+   const packagesWindows = resolvedPlatform === 'win32'
++  // Opt-in YENRA *plugin resources* for the original NSIS builder. This is
++  // not an account/profile state export or a second Windows installer.
++  const yenraSeedDir = env.DSH_DESKTOP_YENRA_PROFILE_SEED_DIR
++  // Optional, credential-free reuse of the ONE existing YENRA Cloud Bridge,
++  // to prevent friend installations containing only an inert plugin seed.
++  const yenraFriendBridgeDir = env.DSH_DESKTOP_YENRA_FRIEND_BRIDGE_DIR
++  // Opt-in checked, credential-free LanguageTool runtime; distributed with the same official NSIS.
++  const yenraOfflineGrammarDir = env.DSH_DESKTOP_YENRA_OFFLINE_GRAMMAR_DIR
++  // Optional original KT DirectSession + pinned phone-plan dependencies.
++  // Part of the SAME official NSIS, never a second installer or sender.
++  const yenraKtNativeDir = env.DSH_DESKTOP_YENRA_KT_NATIVE_DIR
++  // A YENRA friend package must have YENRA application identity as well as
++  // portable original-DSH plugin resources. Ordinary DSH releases are unchanged.
++  const yenraBrand = packagesWindows && yenraSeedDir !== undefined
++  // P0 hard stop: never package a YENRA.exe that can silently use stock
++  // DeepSeek's ~/.dsh instead of the one authorized YENRA profile.
++  if (yenraBrand) {
++    const desktopRoot = fileURLToPath(new URL('..', import.meta.url))
++    const compiled = join(desktopRoot,'lib','main.js')
++    const source = join(desktopRoot,'src','main.ts')
++    if (!existsSync(source) || !readFileSync(source,'utf8').includes('YENRA_PACKAGED_IDENTITY_GUARD_V1') ||
++        !existsSync(compiled) ||
++        !readFileSync(compiled,'utf8').includes('YENRA_PACKAGED_IDENTITY_GUARD_V1')) {
++      throw new Error('YENRA_P0_BARE_EXE_WRONG_PROFILE_RELEASE_BLOCKED: rebuild official Electron main with packaged identity guard before NSIS')
++    }
++  }
++  const yenraPng = fileURLToPath(new URL('../resources/yenra-brand/YENRA.png', import.meta.url))
++  const yenraIco = fileURLToPath(new URL('../resources/yenra-brand/YENRA.ico', import.meta.url))
++  if (yenraSeedDir !== undefined) {
++    if (!packagesWindows || !isAbsolute(yenraSeedDir)) throw new Error('YENRA profile seed requires an absolute Windows packaging directory')
++    const required = ['package.json','pnpm-lock.yaml','pnpm-workspace.yaml','cordis.patch.yml']
++    for (const name of required) if (!existsSync(join(yenraSeedDir,name))) throw new Error('YENRA profile seed missing '+name)
++    const manifest = JSON.parse(readFileSync(join(yenraSeedDir,'package.json'),'utf8'))
++    if (manifest.dsh?.profile?.bundles?.filter(x=>x==='@yenra/desktop-ui-candidate').length!==1)
++      throw new Error('YENRA profile seed must declare one original DSH workbench')
++    const local = Object.values(manifest.dependencies??{}).filter(x=>typeof x==='string'&&x.startsWith('file:'))
++    if (local.length<7 || local.some(x=>!/^file:\.\/packages\/[a-zA-Z0-9_.-]+\.tgz$/.test(x)||!existsSync(join(yenraSeedDir,x.slice(5)))))
++      throw new Error('YENRA profile seed must contain exactly seven relative packaged plugins')
++  }
++  if (yenraFriendBridgeDir !== undefined) {
++    if (!yenraBrand || !isAbsolute(yenraFriendBridgeDir))
++      throw new Error('Friend Bridge resources require a branded Windows release and absolute directory')
++    for (const name of ['bridge-manifest.json','Install-YENRA-FriendBridge.ps1',
++      'Configure-YENRA-FriendCloud.ps1','Run-YENRA-FriendBridge.ps1',
++      'social-adapters/chatwoot-bridge/src/friend-main.mjs']) {
++      if (!existsSync(join(yenraFriendBridgeDir,name)))throw new Error('Friend Bridge deployment resource missing '+name)
++    }
++    const manifest=JSON.parse(readFileSync(join(yenraFriendBridgeDir,'bridge-manifest.json'),'utf8'))
++    if (manifest.accountId!==196799||manifest.noSecondSender!==true||
++        manifest.noSecondWhatsAppSocket!==true||!Array.isArray(manifest.files)||manifest.files.length<15)
++      throw new Error('Friend Bridge manifest not verified')
++  }
++  if (yenraOfflineGrammarDir !== undefined) {
++    if (!yenraBrand || !isAbsolute(yenraOfflineGrammarDir))
++      throw new Error('YENRA offline grammar resources require branded Windows release and an absolute staging directory')
++    for (const name of ['official/jdk-17.0.21.0.2+1/bin/java.exe',
++      'official/LanguageTool-6.6/languagetool-server.jar',
++      'vendor/languagetool-mcp-api-wrapper/server.mjs',
++      'vendor/languagetool-mcp-api-wrapper/yenra-lt-lifecycle.mjs',
++      'manifest.json']) {
++      if (!existsSync(join(yenraOfflineGrammarDir, name)))
++        throw new Error('YENRA offline grammar resource missing: '+name)
++    }
++  }
++  if (yenraKtNativeDir !== undefined) {
++    if (!yenraBrand || !isAbsolute(yenraKtNativeDir))
++      throw new Error('YENRA KT native resources require a branded Windows release and absolute staging directory')
++    const required = [
++      'kt-direct-session-adapter.mjs','kt-phone-normalize.mjs',
++      'kt-country-input.mjs','kt-country-evidence.mjs','kt-europe-regions.mjs',
++      'package.json','node_modules/libphonenumber-js/package.json',
++      'node_modules/classic-level/package.json','manifest.json',
++    ]
++    for (const name of required) {
++      if (!existsSync(join(yenraKtNativeDir, name)))
++        throw new Error('YENRA KT original resource missing: '+name)
++    }
++    const manifest=JSON.parse(readFileSync(join(yenraKtNativeDir,'manifest.json'),'utf8'))
++    if(manifest.schema!==1||manifest.readOnly!==true||
++        manifest.noCredentials!==true||manifest.noSecondSender!==true)
++      throw new Error('YENRA KT original resource manifest invalid')
++  }
+   const policy = packagesMacOS && unsigned ? undefined : resolveDesktopPolicyEnvironment(env)
+   if (resolvedPlatform === 'win32') installWindowsDirectoryInstaller()
+   const macOSSigning = packagesMacOS && !unsigned ? resolveMacOSSigningEnvironment(env) : undefined
+@@ -105,17 +187,21 @@ export function createElectronBuilderConfig(
+   const packaged = resolveDesktopBuildCommit(env)
+   return {
+     appId,
+-    protocols: [{ name: 'DeepSeek Harness', schemes: ['dsh'] }],
++    protocols: [{ name: yenraBrand ? 'YENRA' : 'DeepSeek Harness', schemes: ['dsh'] }],
+     extraMetadata: {
+       dshDesktopAppId: appId,
++      ...(yenraBrand ? { yenraDesktopBrand: true } : {}),
+       dshDesktopUpdateChannel: update?.channel ?? 'nightly',
+       ...(policy === undefined ? {} : { dshMandatoryUpdatePolicy: policy }),
+       ...buildVersion === productVersion ? {} : { version: buildVersion },
+       ...packaged === undefined ? {} : { dshBuildCommit: packaged.commit, dshBuildDirty: packaged.dirty },
+     },
+-    productName: 'DeepSeek Harness',
+-    // Unsigned builds carry their own suffix so a shared file can never pass for a release artifact.
+-    artifactName: `deepseek-harness-\${version}-\${os}-\${arch}${output.suffix}.\${ext}`,
++    productName: yenraBrand ? 'YENRA' : 'DeepSeek Harness',
++    // An official DeepSeek Harness executable cannot masquerade as a YENRA app.
++    // Keep the original builder and distinguish opt-in YENRA Beta artifacts.
++    artifactName: yenraBrand
++      ? `YENRA-\${version}-\${os}-\${arch}-BETA${output.suffix}.\${ext}`
++      : `deepseek-harness-\${version}-\${os}-\${arch}${output.suffix}.\${ext}`, 
+     directories: { output: output.directory },
+     asar: true,
+     electronDist: buildPaths.electron,
+@@ -152,9 +238,30 @@ export function createElectronBuilderConfig(
+     asarUnpack: unpack,
+     extraResources: [
+       { from: buildPaths.runtime, to: 'runtime' },
+-      { from: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)), to: 'icon.png' },
++      // Original NSIS resources, explicitly enabled by the sole release Owner.
++      // No node_modules, personal DPAPI, W25 snapshot, or private account state.
++      ...(packagesWindows && yenraSeedDir !== undefined ? [{
++        from: yenraSeedDir, to: 'yenra-profile-seed',
++        filter: ['package.json','pnpm-lock.yaml','pnpm-workspace.yaml','cordis.patch.yml','packages/*.tgz'],
++      }] : []),
++      ...(packagesWindows && yenraFriendBridgeDir !== undefined ? [{
++        from: yenraFriendBridgeDir, to: 'yenra-friend-bridge', filter: ['**/*'],
++      }] : []),
++      ...(packagesWindows && yenraOfflineGrammarDir !== undefined ? [{
++        from: yenraOfflineGrammarDir, to: 'yenra-offline-grammar', filter: ['**/*'],
++      }] : []),
++      ...(packagesWindows && yenraKtNativeDir !== undefined ? [{
++        from: yenraKtNativeDir, to: 'yenra-kt-native', filter: ['**/*'],
++      }, {
++        // electron-builder excludes nested node_modules under generic resource globs.
++        // Include the SAME verified original KT dependencies as a dedicated FileSet;
++        // never substitute a second KT engine or an independently installed package.
++        from: join(yenraKtNativeDir, 'node_modules'),
++        to: 'yenra-kt-native/node_modules', filter: ['**/*'],
++      }] : []),
++      { from: yenraBrand ? yenraPng : fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)), to: 'icon.png' },
+       // Windows tray bitmaps; macOS keeps the Dock and ships no menu bar icon.
+-      ...(packagesWindows ? [{ from: fileURLToPath(new URL('../resources/tray-windows.ico', import.meta.url)), to: 'tray.ico' }] : []),
++      ...(packagesWindows ? [{ from: yenraBrand ? yenraIco : fileURLToPath(new URL('../resources/tray-windows.ico', import.meta.url)), to: 'tray.ico' }] : []),
+     ],
+     mac: {
+       icon: fileURLToPath(new URL('../resources/icon-macos.png', import.meta.url)),
+@@ -236,7 +343,7 @@ export function createElectronBuilderConfig(
+       )
+     },
+     win: {
+-      icon: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)),
++      icon: yenraBrand ? yenraIco : fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)), 
+       forceCodeSigning: !unsigned,
+       signtoolOptions: {
+         sign: windowsSigner,
+@@ -250,6 +357,7 @@ export function createElectronBuilderConfig(
+       target: ['AppImage'],
+     },
+     nsis: {
++      ...(yenraBrand ? { shortcutName: 'YENRA', uninstallDisplayName: 'YENRA' } : {}),
+       installerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
+       uninstallerSidebar: join(buildPaths.root, 'installer-ui', 'uninstaller-sidebar.bmp'),
+       include: fileURLToPath(new URL('./installer.nsh', import.meta.url)),
+diff --git a/apps/desktop/scripts/package-target.ts b/apps/desktop/scripts/package-target.ts
+index be2f577e..a73e3927 100644
+--- a/apps/desktop/scripts/package-target.ts
++++ b/apps/desktop/scripts/package-target.ts
+@@ -474,7 +474,9 @@ export async function packageTarget(
+     })
+   }
+   await execute(['run', 'build:official'], buildEnv, REPOSITORY_ROOT)
+-  await execute(['run', 'release:pack', '--family', 'dsh', '--out', buildPaths.packedDsh, ...packArguments], buildEnv, REPOSITORY_ROOT)
++  // pnpm v11 treats bare --family/--out after run as package-manager args.
++  // Invoke the unchanged official release packer directly through pnpm exec.
++  await execute(['exec', 'tsx', 'scripts/release/pack.ts', '--family', 'dsh', '--out', buildPaths.packedDsh, ...packArguments], buildEnv, REPOSITORY_ROOT)
+   await execute([
+     '--dir',
+     'apps/desktop-host',
+@@ -482,7 +484,7 @@ export async function packageTarget(
+     '--pack-destination',
+     buildPaths.packedDsh,
+   ], buildEnv, REPOSITORY_ROOT)
+-  await execute(['run', 'release:pack', '--family', 'vendor', '--out', buildPaths.packedVendor, ...packArguments], buildEnv, REPOSITORY_ROOT)
++  await execute(['exec', 'tsx', 'scripts/release/pack.ts', '--family', 'vendor', '--out', buildPaths.packedVendor, ...packArguments], buildEnv, REPOSITORY_ROOT)
+   rmSync(buildPaths.packedLandlock, { recursive: true, force: true })
+   mkdirSync(buildPaths.packedLandlock, { recursive: true })
+   await execute(['--dir', 'native/system', 'run', 'build:ts'], buildEnv, REPOSITORY_ROOT)
+diff --git a/apps/desktop/scripts/prepare-runtime.ts b/apps/desktop/scripts/prepare-runtime.ts
+index ba92fef0..7697e3bf 100644
+--- a/apps/desktop/scripts/prepare-runtime.ts
++++ b/apps/desktop/scripts/prepare-runtime.ts
+@@ -1,9 +1,9 @@
+ /** Prepare Desktop resources and publish their versions after every preparation stage succeeds. */
+ 
+ import { execFileSync } from 'node:child_process'
+-import { chmodSync, cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
++import { chmodSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+ import { createRequire } from 'node:module'
+-import { join } from 'node:path'
++import { dirname, join } from 'node:path'
+ import { parseArgs } from 'node:util'
+ import { downloadArtifact } from '@electron/get'
+ import extractZip from 'extract-zip'
+@@ -23,10 +23,32 @@ type DesktopTarget = ReturnType<typeof desktopTargetPlatform>
+ async function prepareElectron({ platform, arch }: DesktopTarget): Promise<string> {
+   const require = createRequire(import.meta.url)
+   const { version } = require('electron/package.json') as { version: string }
+-  const archive = await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'download:electron',
+-    () => downloadArtifact({ version, platform, arch, artifactName: 'electron', cacheRoot: BUILD_PATHS.downloads }))
+-  rmSync(BUILD_PATHS.electron, { recursive: true, force: true })
+-  await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'extract:electron', () => extractZip(archive, { dir: BUILD_PATHS.electron }))
++  if (process.env.DSH_DESKTOP_REUSE_INSTALLED_ELECTRON === '1') {
++    // Isolated Windows packaging fallback for a GitHub 504 only. Reuse the
++    // ORIGINAL installed Electron npm distribution, not another runtime.
++    if (platform !== 'win32' || arch !== 'x64' || process.platform !== 'win32' || process.arch !== 'x64')
++      throw new Error('Installed Electron reuse only supports native Windows x64')
++    const originalDist = join(dirname(require.resolve('electron/package.json')), 'dist')
++    const originalExecutable = join(originalDist, 'electron.exe')
++    if (!existsSync(originalExecutable) || !existsSync(join(originalDist, 'resources.pak')))
++      throw new Error('Official installed Electron distribution is incomplete')
++    const originalVersion = execFileSync(originalExecutable, ['-p', 'process.versions.electron'], {
++      encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
++    }).trim()
++    const originalArch = execFileSync(originalExecutable, ['-p', 'process.arch'], {
++      encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
++    }).trim()
++    if (originalVersion !== version || originalArch !== arch)
++      throw new Error('Installed Electron version/architecture does not match official package manifest')
++    rmSync(BUILD_PATHS.electron, { recursive: true, force: true })
++    await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'reuse:installed-official-electron',
++      async () => cpSync(originalDist, BUILD_PATHS.electron, { recursive: true, force: true }))
++  } else {
++    const archive = await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'download:electron',
++      () => downloadArtifact({ version, platform, arch, artifactName: 'electron', cacheRoot: BUILD_PATHS.downloads }))
++    rmSync(BUILD_PATHS.electron, { recursive: true, force: true })
++    await packagingStep(process.env.DSH_DESKTOP_PACKAGING_RUN_DIR, 'extract:electron', () => extractZip(archive, { dir: BUILD_PATHS.electron }))
++  }
+   const executable = join(BUILD_PATHS.electron, platform === 'win32' ? 'electron.exe' : 'Electron.app/Contents/MacOS/Electron')
+   return execFileSync(executable, ['-p', 'process.versions.node'], {
+     encoding: 'utf8', env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+diff --git a/apps/desktop/scripts/prepare-windows-installer.ps1 b/apps/desktop/scripts/prepare-windows-installer.ps1
+index 98e02cf9..eb02e352 100644
+--- a/apps/desktop/scripts/prepare-windows-installer.ps1
++++ b/apps/desktop/scripts/prepare-windows-installer.ps1
+@@ -77,4 +77,9 @@ foreach ($asset in @('brand', 'brand-2x', 'brand-dark', 'brand-dark-2x', 'uninst
+         } finally { $bitmap.Dispose() }
+     } finally { $image.Dispose() }
+ }
++if ($env:DSH_DESKTOP_YENRA_PROFILE_SEED_DIR) {
++    # Brand assets belong only to a YENRA opt-in build, not upstream DSH.
++    & (Join-Path $PSScriptRoot 'render-yenra-installer-brand.ps1') -OutputDirectory $output
++    if ($LASTEXITCODE -and $LASTEXITCODE -ne 0) { throw 'YENRA_INSTALLER_BRAND_RENDER_FAILED' }
++}
+ Write-Output "Prepared native installer resources: $output"
+diff --git a/apps/desktop/scripts/smoke-packaged-runtime.ts b/apps/desktop/scripts/smoke-packaged-runtime.ts
+index 6c3c12c8..3d060ee0 100644
+--- a/apps/desktop/scripts/smoke-packaged-runtime.ts
++++ b/apps/desktop/scripts/smoke-packaged-runtime.ts
+@@ -1,5 +1,6 @@
+ /** Validate the assembled application, including native Office conversion outside ASAR. */
+ import { join } from 'node:path'
++import { existsSync } from 'node:fs'
+ import { parseArgs } from 'node:util'
+ import { desktopArtifactOutput, resolveDesktopBuildTarget, resolveDesktopTargetBuildPaths } from './desktop-build-paths.mjs'
+ import { readDesktopRuntime, verifyDesktopRuntime } from '../src/runtime-tree.ts'
+@@ -15,7 +16,9 @@ const artifacts = desktopArtifactOutput(paths, { unsigned: values.unsigned, skip
+ const application = windows ? join(artifacts, 'win-unpacked')
+   : join(artifacts, target === 'mac-arm64' ? 'mac-arm64' : 'mac', 'DeepSeek Harness.app', 'Contents')
+ const resources = join(application, windows ? 'resources' : 'Resources')
+-const executable = windows ? join(application, 'DeepSeek Harness.exe') : join(application, 'MacOS', 'DeepSeek Harness')
++const executable = windows
++  ? join(application, existsSync(join(application,'YENRA.exe')) ? 'YENRA.exe' : 'DeepSeek Harness.exe')
++  : join(application, 'MacOS', 'DeepSeek Harness')
+ const descriptor = await verifyDesktopRuntime(paths.dsh, readDesktopRuntime(paths.dsh).release.version,
+   resolveDesktopPackageTarget(target))
+ if (windows && !values.unsigned) await verifyWindowsCode(application)
+diff --git a/apps/desktop/src/browser-guests.ts b/apps/desktop/src/browser-guests.ts
+index c3f0b10e..df2b84d5 100644
+--- a/apps/desktop/src/browser-guests.ts
++++ b/apps/desktop/src/browser-guests.ts
+@@ -1,5 +1,7 @@
+ /** Main-process ownership and fixed isolation policy for Sidebar webview guests. */
+-import { randomUUID } from 'node:crypto'
++import { createHash, randomUUID } from 'node:crypto'
++import { readFileSync } from 'node:fs'
++import { join } from 'node:path'
+ import { app, session, type BrowserWindow, type Session, type WebContents } from 'electron'
+ import type { DesktopBrowserLeaseId, DesktopBrowserOpenRequest, DesktopBrowserReservation } from '@deepseek-ai/dsh-client-ui-sidebar-browser/types'
+ import { DESKTOP_IPC } from './ipc.ts'
+@@ -12,6 +14,20 @@ interface GuestLease {
+   releaseInput?: () => void
+ }
+ 
++/** Packaged YENRA uses the SAME explicit manifest brand identity as main.ts.
++ * Previous env-only check silently allocated random in-memory partitions for
++ * the branded NSIS installer, losing Chatwoot login on every desktop restart.
++ * Unbranded upstream DSH stays isolated and ephemeral.
++ */
++function isYenraPersistentGuest(): boolean {
++  if (!app.isPackaged) return process.env.YENRA_DESKTOP_BRAND === '1'
++  try {
++    const manifest: unknown = JSON.parse(readFileSync(join(app.getAppPath(), 'package.json'), 'utf8'))
++    return typeof manifest === 'object' && manifest !== null
++      && 'yenraDesktopBrand' in manifest && manifest.yenraDesktopBrand === true
++  } catch { return false }
++}
++
+ /** Owns workspace storage partitions independently from individual tab guests. */
+ export class DesktopBrowserGuests {
+   private readonly partitions = new Map<string, string>()
+@@ -21,7 +37,7 @@ export class DesktopBrowserGuests {
+   constructor(private readonly hostUrl: () => string | undefined) {}
+ 
+   /**
+-   * Reserve one guest in a workspace's process-lifetime partition.
++   * Reserve one guest in an isolated workspace partition. YENRA retains it across restarts.
+    * @param owner - authenticated primary application WebContents.
+    * @param workspace - workspace identity received over IPC.
+    * @returns opaque lease and the partition approved for it.
+@@ -32,8 +48,10 @@ export class DesktopBrowserGuests {
+     }
+     let partition = this.partitions.get(workspace)
+     if (partition === undefined) {
+-      partition = `dsh-sidebar-browser-${randomUUID()}`
+-      this.configureSession(session.fromPartition(partition))
++      partition = isYenraPersistentGuest()
++        ? `persist:yenra-sidebar-browser-${createHash('sha256').update(workspace).digest('hex')}`
++        : `dsh-sidebar-browser-${randomUUID()}`
++      this.configureSession(session.fromPartition(partition), workspace)
+       this.partitions.set(workspace, partition)
+     }
+     const lease = randomUUID() as DesktopBrowserLeaseId
+@@ -138,9 +156,48 @@ export class DesktopBrowserGuests {
+     owner.once('destroyed', releaseAll)
+   }
+ 
+-  private configureSession(browserSession: Session): void {
+-    browserSession.setPermissionRequestHandler((_contents, _permission, callback) => { callback(false) })
+-    browserSession.setPermissionCheckHandler(() => false)
++  private configureSession(browserSession: Session, workspace: string): void {
++    // Cloud's native Copy action requires the sanitized clipboard WRITE
++    // permission. Grant only to this owner-verified YENRA Cloud workspace,
++    // and only while its main document is an authenticated Cloud account page.
++    // Clipboard READ, every other guest, and every other permission stay denied.
++    const trustedCloudGuest = isYenraPersistentGuest()
++      && workspace === 'yenra:cloud-chatwoot:account:196799'
++    const allowCloudCopy = (contents: WebContents | null, permission: string, requestingUrl: string): boolean => {
++      if (!trustedCloudGuest || permission !== 'clipboard-sanitized-write'
++        || contents === null || contents.isDestroyed()) return false
++      try {
++        const page = new URL(contents.getURL())
++        const requester = new URL(requestingUrl)
++        return page.origin === 'https://app.chatwoot.com'
++          && requester.origin === page.origin
++          && page.pathname.startsWith('/app/accounts/196799/')
++      } catch { return false }
++    }
++    // Reuse Chatwoot Cloud's native push/toast and click-to-conversation
++    // workflow instead of running a second YENRA notification watcher.
++    // Only the dedicated, owner-approved Cloud partition can grant it.
++    // Chromium sometimes checks notifications on behalf of a service worker
++    // (contents === null); the verified partition and exact origin still apply.
++    const allowCloudNotifications = (contents: WebContents | null,
++      permission: string, requestingUrl: string): boolean => {
++      if (!trustedCloudGuest || permission !== 'notifications') return false
++      try {
++        if (new URL(requestingUrl).origin !== 'https://app.chatwoot.com') return false
++        if (contents === null) return true // Cloud service worker in this isolated partition
++        if (contents.isDestroyed()) return false
++        const page = new URL(contents.getURL())
++        return page.origin === 'https://app.chatwoot.com'
++          && page.pathname.startsWith('/app/accounts/196799/')
++      } catch { return false }
++    }
++    browserSession.setPermissionRequestHandler((contents, permission, callback, details) => {
++      callback(allowCloudCopy(contents, permission, details.requestingUrl)
++        || allowCloudNotifications(contents, permission, details.requestingUrl))
++    })
++    browserSession.setPermissionCheckHandler((contents, permission, requestingOrigin) =>
++      allowCloudCopy(contents, permission, requestingOrigin)
++      || allowCloudNotifications(contents, permission, requestingOrigin))
+     browserSession.setDevicePermissionHandler(() => false)
+     browserSession.setDisplayMediaRequestHandler((_request, callback) => { callback({}) })
+     browserSession.on('will-download', (event) => { event.preventDefault() })
+diff --git a/apps/desktop/src/host-process.ts b/apps/desktop/src/host-process.ts
+index 948a88e6..221afcfd 100644
+--- a/apps/desktop/src/host-process.ts
++++ b/apps/desktop/src/host-process.ts
+@@ -23,7 +23,14 @@ interface PlatformSessionEvent {
+   readonly session: PlatformSession | null
+ }
+ 
+-type DesktopHostEvent = ReadyEvent | FatalEvent | PlatformSessionEvent | { readonly type: 'shutdown-complete' } | {
++interface BootInjectionsEvent {
++  readonly type: 'read-boot-injections'
++  readonly requestId: number
++  readonly injections: readonly unknown[]
++  readonly error?: string
++}
++
++type DesktopHostEvent = ReadyEvent | FatalEvent | PlatformSessionEvent | BootInjectionsEvent | { readonly type: 'shutdown-complete' } | {
+   readonly type: 'update-tasks'
+   readonly requestId: number
+   readonly active: boolean
+@@ -56,6 +63,9 @@ function isDesktopHostEvent(message: unknown): message is DesktopHostEvent {
+   switch (candidate.type) {
+     case 'shutdown-complete':
+       return true
++    case 'read-boot-injections':
++      return Number.isSafeInteger(candidate.requestId) && Array.isArray(candidate.injections)
++        && (candidate.error === undefined || typeof candidate.error === 'string')
+     case 'ready':
+       return typeof candidate.url === 'string'
+     case 'platform-session': {
+@@ -234,6 +244,17 @@ export class DesktopHostProcess {
+     return this.readyPromise
+   }
+ 
++  /**
++   * Retrieve current official Host WebServer index injections, rather than
++   * the initial boot snapshot that goes stale after original DSH HMR changes.
++   */
++  async currentBootInjections(): Promise<readonly unknown[]> {
++    const response = await this.control({ type: 'read-boot-injections' }, 8_000,
++      'desktop boot: fresh Host injections timed out')
++    if (response.type !== 'read-boot-injections') throw new Error('desktop boot: invalid Host answer')
++    return response.injections
++  }
++
+   /**
+    * Inspect active work or lock request admission for update handoff.
+    * @param action - Read-only inspection, admission lock, or recovery unlock.
+@@ -258,12 +279,12 @@ export class DesktopHostProcess {
+   }
+ 
+   private async control(
+-    request: { readonly type: 'update-tasks'; readonly action: 'inspect' | 'lock' | 'unlock' } | { readonly type: 'quit-inspection' },
++    request: { readonly type: 'update-tasks'; readonly action: 'inspect' | 'lock' | 'unlock' } | { readonly type: 'quit-inspection' } | { readonly type: 'read-boot-injections' },
+     deadlineMs: number, deadlineMessage: string,
+   ): Promise<DesktopHostControlResponse> {
+     const child = this.child
+     if (child === undefined || !child.connected || this.failureReported || this.stopping) {
+-      throw new Error(`${request.type === 'update-tasks' ? 'desktop update' : 'desktop quit'}: Host is unavailable`)
++      throw new Error(`${request.type === 'update-tasks' ? 'desktop update' : request.type === 'read-boot-injections' ? 'desktop boot' : 'desktop quit'}: Host is unavailable`)
+     }
+     const requestId = this.nextControlId++
+     let timer: ReturnType<typeof setTimeout> | undefined
+diff --git a/apps/desktop/src/ipc.ts b/apps/desktop/src/ipc.ts
+index fc19021f..4f832e56 100644
+--- a/apps/desktop/src/ipc.ts
++++ b/apps/desktop/src/ipc.ts
+@@ -20,6 +20,7 @@ export const DESKTOP_IPC = {
+   browserAcquire: 'dsh-desktop:browser-acquire',
+   browserRelease: 'dsh-desktop:browser-release',
+   browserOpenRequested: 'dsh-desktop:browser-open-requested',
++  cloudNoticeOpen: 'yenra:cloud-notice-open',
+   directoryPick: 'dsh-desktop:directory-pick',
+   deviceInfo: 'dsh-desktop:device-info',
+   localeBootstrap: 'dsh-desktop:locale-bootstrap',
+@@ -72,6 +73,8 @@ export interface DesktopUpdatePresentation {
+ export interface DshDesktopProductApi {
+   readonly protocolVersion: 1
+   readonly browser: DesktopBrowserBridge
++  /** Notification navigation is only emitted by native main's verified Cloud feed. */
++  readonly cloudNotices: {subscribe(listener:(conversationId:number)=>void):()=>void}
+   readonly keyboard: DesktopKeyboardApi
+   readonly shortcuts: DesktopShortcutsApi
+   /**
+diff --git a/apps/desktop/src/main.ts b/apps/desktop/src/main.ts
+index 2afdfd71..b34000ae 100644
+--- a/apps/desktop/src/main.ts
++++ b/apps/desktop/src/main.ts
+@@ -3,6 +3,9 @@ import { WINDOWS_TITLEBAR_HEIGHT } from './windows-layout.ts'
+ /** Electron shell: desktop project ownership, custom protocol, windows, and lifecycle. */
+ 
+ import { readFile, writeFile } from 'node:fs/promises'
++import { readFileSync } from 'node:fs'
++import { homedir } from 'node:os'
++import { resolveYenraPackagedStartupIdentity, yenraIsChosenHome } from './yenra-startup-identity.ts'
+ import { join } from 'node:path'
+ import { fileURLToPath } from 'node:url'
+ import {
+@@ -15,14 +18,15 @@ import {
+   powerMonitor,
+   nativeImage,
+   nativeTheme,
+-  net,
+   protocol,
+   session,
+   shell,
+   type IpcMainInvokeEvent,
+   type MenuItemConstructorOptions,
++  type Rectangle,
+ } from 'electron'
+ import { resolveDesktopPaths } from './paths.ts'
++import { resolveInitialWindow, resolveWindowMinimum, trackWindowState, WINDOW_DEFAULT_HEIGHT, WINDOW_DEFAULT_WIDTH, WINDOW_MIN_HEIGHT, WINDOW_MIN_WIDTH } from './window-state.ts'
+ import { DesktopProjectManager } from './project-manager.ts'
+ import { DesktopHostFatalError, DesktopHostProcess, DesktopHostUncleanExitError } from './host-process.ts'
+ import { DesktopPlatformView, PLATFORM_IPC, platformBounds } from './platform-view.ts'
+@@ -61,6 +65,7 @@ import { DesktopUpdateOverlays } from './update-overlay.ts'
+ import { DesktopQuitConfirmation } from './quit-confirmation.ts'
+ import { DesktopTray } from './tray.ts'
+ import { DesktopBackgroundNotice } from './background-notice.ts'
++import { startYenraCloudNoticeClient } from './yenra-cloud-notices.ts'
+ 
+ let focusPrimaryWindow = (): void => {}
+ let stopForRecovery = async (): Promise<void> => {}
+@@ -80,12 +85,71 @@ let backendReady = false
+ /** Error-level console output of the primary window, attached to crash reports. */
+ const rendererConsole = new RendererConsoleTail()
+ 
++/** YENRA is a private, original-DSH workbench, not a DeepSeek platform-login app.
++ * Opt-in identity is supplied only by the separately branded NSIS package.
++ */
++let cachedYenraBrand: boolean | undefined
++function isYenraBranded(): boolean {
++  // The owner runs the same YENRA workbench through the official unpackaged
++  // Desktop launcher. Brand that one explicitly, not every upstream DSH dev app.
++  if (!app.isPackaged) return process.env.YENRA_DESKTOP_BRAND === '1'
++  if (cachedYenraBrand === undefined) {
++    try {
++      // electron-builder's productName is not necessarily Electron app.name:
++      // on the broken Beta app.name remained @deepseek-ai/dsh-desktop.
++      // Use the explicit packaging metadata instead of relying on that name.
++      const manifest: unknown = JSON.parse(readFileSync(join(app.getAppPath(), 'package.json'), 'utf8'))
++      cachedYenraBrand = typeof manifest === 'object' && manifest !== null
++        && 'yenraDesktopBrand' in manifest && manifest.yenraDesktopBrand === true
++    } catch { cachedYenraBrand = false }
++  }
++  return cachedYenraBrand
++}
++
++// YENRA_PACKAGED_IDENTITY_GUARD_V1: before resolving any DSH profile or
++// Electron userData, recover the one authorized YENRA home. Bare YENRA.exe
++// must NEVER silently open a stock DeepSeek Harness profile.
++let yenraPackagedIdentityError: Error | undefined
++if (process.platform === 'win32' && app.isPackaged && isYenraBranded()) {
++  try {
++    const identity = resolveYenraPackagedStartupIdentity({
++      userProfile: process.env.USERPROFILE ?? homedir(),
++      explicitDshHome: process.env.DSH_HOME,
++      seedDir: join(process.resourcesPath, 'yenra-profile-seed'),
++    })
++    process.env.DSH_HOME = identity.dshHome
++    if (identity.userDataDir !== undefined) {
++      const switchData = app.commandLine.getSwitchValue('user-data-dir').replaceAll('"', '')
++      if (switchData !== '' && !yenraIsChosenHome({ ...identity, dshHome: identity.userDataDir }, switchData)) {
++        throw Error('YENRA_PACKAGED_USER_DATA_ARG_MISMATCH_ABORT')
++      }
++      process.env.DSH_DESKTOP_USER_DATA_DIR = identity.userDataDir
++      app.setPath('userData', identity.userDataDir)
++    }
++    console.info('YENRA_PACKAGED_IDENTITY_GUARD_V1_OK', identity.kind)
++  } catch (error) {
++    yenraPackagedIdentityError = error instanceof Error ? error : Error(String(error))
++    console.error('YENRA_PACKAGED_IDENTITY_GUARD_V1_BLOCKED', yenraPackagedIdentityError.message)
++  }
++}
++
+ // Platform-conventional logs directory (macOS ~/Library/Logs/<name>, otherwise under userData);
+ // set before ready so the first fatal report already resolves under it.
+ app.setAppLogsPath()
+ 
++function yenraVisibleLocale(locale: ReturnType<typeof resolveDesktopLocale>): ReturnType<typeof resolveDesktopLocale> {
++  if (!isYenraBranded()) return locale
++  // Presentation-only branding: preserve the official DSH command, protocol,
++  // runtime, and model/provider identifiers while naming the user's app YENRA.
++  return {
++    ...locale,
++    messages: Object.fromEntries(Object.entries(locale.messages).map(([key, value]) => [
++      key, typeof value === 'string' ? value.replaceAll('DeepSeek Harness', 'YENRA') : value,
++    ])) as typeof locale.messages,
++  }
++}
+ function currentDesktopLocale(): ReturnType<typeof resolveDesktopLocale> {
+-  return resolveDesktopLocale(windowsLanguage ?? app.getLocale())
++  return yenraVisibleLocale(resolveDesktopLocale(windowsLanguage ?? app.getLocale()))
+ }
+ /** Quit without the task confirmation; the caller has already decided the application must stop. */
+ function quitWithoutConfirmation(): void {
+@@ -93,7 +157,15 @@ function quitWithoutConfirmation(): void {
+   app.quit()
+ }
+ const recovery = new DesktopFatalRecovery({
+-  messages: () => currentDesktopLocale().messages,
++  messages: () => {
++    const original = currentDesktopLocale().messages
++    return isYenraBranded()
++      ? { ...original,
++          startupFailed: original.startupFailed.replaceAll('DeepSeek Harness', 'YENRA'),
++          fatalSummary: original.fatalSummary.replaceAll('DeepSeek Harness', 'YENRA'),
++        }
++      : original
++  },
+   show: options => dialog.showMessageBox(options),
+   stop: () => { shuttingDown = true; return stopForRecovery() },
+   disablePlugins: async () => {
+@@ -205,12 +277,13 @@ function platformLoginUrl(authorizeUrl: string): string {
+   return url.href
+ }
+ 
+-function createWindow(preload: string, show = false, primary = false): BrowserWindow {
++function createWindow(preload: string, show = false, primary = false, bounds?: Rectangle, minWidth = WINDOW_MIN_WIDTH, minHeight = WINDOW_MIN_HEIGHT): BrowserWindow {
+   const window = new BrowserWindow({
+-    width: 1280,
+-    height: 820,
+-    minWidth: 520,
+-    minHeight: 600,
++    width: bounds?.width ?? WINDOW_DEFAULT_WIDTH,
++    height: bounds?.height ?? WINDOW_DEFAULT_HEIGHT,
++    ...(bounds === undefined ? {} : { x: bounds.x, y: bounds.y }),
++    minWidth,
++    minHeight,
+     show,
+     ...(process.platform === 'win32' && primary ? {
+       titleBarStyle: 'hidden' as const,
+@@ -315,6 +388,18 @@ function createWindow(preload: string, show = false, primary = false): BrowserWi
+ }
+ 
+ async function main(): Promise<void> {
++  // Fail closed instead of opening the wrong account/profile and giving a false
++  // impression that the authorized inbox, credentials, or contact history vanished.
++  if (yenraPackagedIdentityError !== undefined) throw yenraPackagedIdentityError
++  // Match the existing YENRA Start Menu shortcut so Windows attributes native
++  // Cloud notifications to the single official YENRA window and brand/icon.
++  if (process.platform === 'win32' && isYenraBranded()) {
++    // Official single-window YENRA identity must match the owner Start Menu
++    // shortcut and native Windows toast activation registration exactly.
++    app.setAppUserModelId('com.yenra.desktop')
++    app.setToastActivatorCLSID('{F1A7D927-56CE-4D64-B99A-3E8AB2E91B21}')
++    app.setName('YENRA')
++  }
+   const desktopSettings = readDesktopSettings(app.getPath('userData'))
+   void pruneCrashReports(app.getPath('logs'))
+   const journalDirectory = process.env.DSH_DESKTOP_UPDATE_JOURNAL_DIR
+@@ -326,7 +411,11 @@ async function main(): Promise<void> {
+     ? developmentPrimaryRuntime()
+     : join(process.resourcesPath, 'runtime', 'primary-runtime')
+   const activeProject = paths.profile
+-  const manager = new DesktopProjectManager(paths, resources)
++  const manager = new DesktopProjectManager(paths, resources,
++    development ? undefined : {
++      directory: join(process.resourcesPath,'yenra-profile-seed'),
++      packageManager: resources,
++    })
+   // Dock and Finder launches inherit only launchd's environment; every Host shares one login-shell read.
+   const loginShellRead = new AbortController()
+   // The probe runs in its own process group, which outlives Desktop unless the read is aborted.
+@@ -343,6 +432,8 @@ async function main(): Promise<void> {
+   let startup: Promise<void> | undefined
+   let workspaceRecovery: Promise<void> | undefined
+   let mainWindow: BrowserWindow | undefined
++  let stopYenraNotices:(()=>void)|undefined
++  app.on('will-quit',()=>{stopYenraNotices?.();stopYenraNotices=undefined})
+   let welcomeWindow: BrowserWindow | undefined
+   let enteredWorkspace = false
+   // NSIS passes --updated when it launches the application after installation.
+@@ -353,7 +444,7 @@ async function main(): Promise<void> {
+   let updateStopFailure: DesktopHostUncleanExitError | undefined
+   let updateState: DesktopUpdateState = { phase: 'idle' }
+   const systemLanguages = app.getPreferredSystemLanguages()
+-  let locale = resolveDesktopStartupLocale(null, systemLanguages)
++  let locale = yenraVisibleLocale(resolveDesktopStartupLocale(null, systemLanguages))
+   windowsLanguage = locale.id
+   let mandatoryPolicy: DesktopMandatoryUpdatePolicy | undefined
+   let mandatoryUI: DesktopMandatoryUpdateWindow | undefined
+@@ -385,7 +476,9 @@ async function main(): Promise<void> {
+   // Copy comes from the same locale as the update prompts so the dialog
+   // chrome and its content never mix languages.
+   const showAbout = async (): Promise<void> => {
+-    await ordinaryMessageBox({ type: 'info', title: locale.messages.aboutMenu, message: locale.messages.aboutProduct,
++    const brand = (value: string) => isYenraBranded()
++      ? value.replaceAll('DeepSeek Harness', 'YENRA') : value
++    await ordinaryMessageBox({ type: 'info', title: brand(locale.messages.aboutMenu), message: brand(locale.messages.aboutProduct),
+       detail: formatDesktopMessage(locale.messages.aboutVersion, { version: app.getVersion() }),
+       buttons: [locale.messages.updateAcknowledge], cancelId: 0 })
+   }
+@@ -403,7 +496,6 @@ async function main(): Promise<void> {
+   let hostUrl: string | undefined
+   let hostCookie: string | undefined
+   const browserGuests = new DesktopBrowserGuests(() => hostUrl)
+-  let injections: readonly unknown[] = []
+   let welcomeBackend: DesktopWelcomeBackend | undefined
+   let reportedLaunch = false
+   let analyticsEnabled = false
+@@ -454,13 +546,27 @@ async function main(): Promise<void> {
+         hostCookie = await authenticateWebHost(ready.url)
+         hostUrl = ready.url
+         if (ready.injections === undefined) throw new Error('Desktop Host did not provide boot injections')
+-        injections = ready.injections
+-        welcomeBackend = await connectDesktopWelcome(ready.url, (input, init) => net.fetch(input, init), async () => (await session.defaultSession.cookies.get({ url: ready.url })).map(cookie => `${cookie.name}=${cookie.value}`).join('; '))
++        // Use the existing Host-signed browser cookie already issued by authenticateWebHost.
++        // Do not ask the Electron cookie jar to redeem the launch URL a second time.
++        const verifiedCookie = hostCookie
++        if (verifiedCookie === undefined) throw new Error('Desktop Host authentication cookie missing')
++        welcomeBackend = await connectDesktopWelcome(
++          new URL('/', ready.url).href,
++          (input, init) => {
++            const headers = new Headers(init?.headers)
++            headers.set('cookie', verifiedCookie)
++            return fetch(input, { ...init, headers })
++          },
++          async () => verifiedCookie,
++        )
+         analyticsEnabled = await welcomeBackend.analyticsEnabled().catch(() => false)
+         if (!reportedLaunch) { reportedLaunch = true; void track('desktop_app_launch', {}) }
+         stopAccount?.()
+         const accountBackend = welcomeBackend.account
+-        stopAccount = accountBackend.watch((state) => {
++        // A portable YENRA profile intentionally has no DeepSeek platform
++        // account plugin. Its verified original settings/LLM/credential RPCs
++        // remain available; subscribing to account/watch would only fail.
++        stopAccount = isYenraBranded() ? undefined : accountBackend.watch((state) => {
+           if (quitting) return
+           if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) welcomeWindow.webContents.send(WELCOME_IPC.state, state)
+           const attempt = state.attempt
+@@ -509,6 +615,9 @@ async function main(): Promise<void> {
+       },
+       updateTasks: (action: 'inspect' | 'lock' | 'unlock') => host.updateTasks(action),
+       inspectQuit: () => host.inspectQuit(),
++      // Reuse the original Host's fresh WebServer injection readback; do not
++      // instantiate a second Host when native YENRA plugins are updated.
++      currentBootInjections: () => host.currentBootInjections(),
+     }
+   }, (state) => {
+     if (state.phase === 'error') reportFatal(state.failure, 'host')
+@@ -691,7 +800,9 @@ async function main(): Promise<void> {
+     assertDesktopSender(event, ['app'])
+     await startup
+     if (backend.host === undefined || hostUrl === undefined) throw new Error('Desktop Host is unavailable')
+-    return { injections, streamBaseUrl: new URL(hostUrl).origin }
++    // Never reuse the Host-ready injection snapshot: native plugin HMR changes
++    // bundle revisions in this SAME Host while the original desktop stays open.
++    return { injections: await backend.host.currentBootInjections(), streamBaseUrl: new URL(hostUrl).origin }
+   })
+ 
+   ipcMain.handle(DESKTOP_IPC.bootFailed, (event, message: unknown) => {
+@@ -786,10 +897,13 @@ async function main(): Promise<void> {
+     if (window === undefined || window.isDestroyed() || event.sender !== window.webContents
+       || event.senderFrame !== window.webContents.mainFrame
+       || !event.senderFrame.url.startsWith(`${SCHEME}://app/`) || typeof active !== 'boolean') return
+-    window.setMinimumSize(active ? 960 : 520, 600)
++    // The high-DPI work-area clamp used at launch must also survive onboarding
++    // state changes. A fixed 600-DIP minimum can exceed a 150%-scaled screen.
++    const minimum = resolveWindowMinimum(window.getBounds(), active ? 960 : WINDOW_MIN_WIDTH)
++    window.setMinimumSize(minimum.minWidth, minimum.minHeight)
+     if (active) {
+       const { width, height } = window.getBounds()
+-      if (width < 960) window.setSize(960, height)
++      if (width < minimum.minWidth) window.setSize(minimum.minWidth, height)
+     }
+   })
+   ipcMain.handle(DESKTOP_IPC.updatesOpen, async (event) => {
+@@ -932,7 +1046,7 @@ async function main(): Promise<void> {
+   const applicationIconPath = development ? join(app.getAppPath(), 'resources', 'icon-windows.png')
+     : join(process.resourcesPath, 'icon.png')
+   app.setAboutPanelOptions({
+-    applicationName: 'DeepSeek Harness',
++    applicationName: isYenraBranded() ? 'YENRA' : 'DeepSeek Harness',
+     applicationVersion: app.getVersion(),
+     // The release has no separate build number; omit Electron's bundle version.
+     version: '',
+@@ -955,7 +1069,9 @@ async function main(): Promise<void> {
+     // Windows has no system About panel; Electron's fallback is a plain
+     // message box, so the shell shows its own dimmed dialog instead.
+     process.platform === 'win32'
+-      ? { label: currentDesktopLocale().messages.aboutMenu,
++      ? { label: isYenraBranded()
++            ? currentDesktopLocale().messages.aboutMenu.replaceAll('DeepSeek Harness', 'YENRA')
++            : currentDesktopLocale().messages.aboutMenu,
+         click: () => { void showAbout().catch((error: unknown) => { console.error(error) }) } }
+       : { label: currentDesktopLocale().messages.aboutMenu, role: 'about' },
+     { type: 'separator' },
+@@ -993,6 +1109,7 @@ async function main(): Promise<void> {
+     // The tray is the way back to a hidden window; without it, relaunching the application still focuses it.
+     try {
+       tray = new DesktopTray({ iconPath: trayIconPath, locale: currentDesktopLocale,
++        ...(isYenraBranded() ? { displayName: 'YENRA' as const } : {}),
+         open: () => { focusPrimaryWindow() }, quit: () => { app.quit() } })
+     } catch (error) { console.warn('desktop tray: unavailable', error) }
+   }
+@@ -1070,8 +1187,86 @@ async function main(): Promise<void> {
+     }
+   }
+   const createMainWindow = (): BrowserWindow => {
+-    const window = createWindow(appPreload, false, true)
++    const { bounds, maximized, minWidth, minHeight } = resolveInitialWindow(app.getPath('userData'))
++    const window = createWindow(appPreload, false, true, bounds, minWidth, minHeight)
+     mainWindow = window
++    if(process.platform==='win32'&&isYenraBranded()&&!stopYenraNotices&&process.env.LOCALAPPDATA){
++      let pendingCloudOwnerTone=false
++      stopYenraNotices=startYenraCloudNoticeClient({window:()=>mainWindow,
++        appData:process.env.LOCALAPPDATA,
++        brandIcon:join(process.env.DSH_HOME??app.getPath('userData'),'branding','YENRA-Brand-20261104.ico'),
++        onOwnerSound:function ownerSound(){
++          const w=mainWindow
++          if(!w||w.isDestroyed())return
++          // An inbound event can arrive while Desktop is relaunching and
++          // the existing renderer has not yet finished loading.
++          if(!w.webContents.getURL().startsWith('dsh-app://app/')){
++            if(pendingCloudOwnerTone)return
++            pendingCloudOwnerTone=true
++            const ready=()=>{pendingCloudOwnerTone=false;if(!w.isDestroyed())ownerSound()}
++            w.webContents.once('did-finish-load',ready)
++            const timeout=setTimeout(()=>{
++              if(pendingCloudOwnerTone){
++                pendingCloudOwnerTone=false
++                w.webContents.off('did-finish-load',ready)
++                console.warn('YENRA_CLOUD_OWNER_AUDIO_RENDERER_LOAD_TIMEOUT')
++              }
++            },12000)
++            timeout.unref?.()
++            return
++          }
++          // Same HTML Audio mechanism as the mature messaging-inbox hook.
++          // Read the local private preset in the existing renderer; never transport
++          // the recording, account data or incoming message through IPC.
++          void w.webContents.executeJavaScript(`(async()=>{
++            try {
++              if(localStorage.getItem('whatsapp-inbox-sound-enabled')==='false')return 'muted';
++              const s=JSON.parse(localStorage.getItem('yenra.chatSound.v1')||'null');
++              const u=s?.soundUrl;
++              if(s?.mode!=='custom'||typeof u!=='string'||u.length>400000||
++                !/^data:audio\\/(?:aac|mpeg|mp4|wav|x-wav);base64,[A-Za-z0-9+/=]+$/.test(u))
++                return 'owner-audio-not-configured';
++              const old=window.__yenraOwnerMessageAudio;
++              if(old&&!old.paused){old.pause();old.currentTime=0}
++              const a=new Audio(u);
++              a.volume=typeof s.volume==='number'&&Number.isFinite(s.volume)?
++                Math.max(0,Math.min(1,s.volume)):0.65;
++              window.__yenraOwnerMessageAudio=a;
++              try { await a.play(); return 'playing'; }
++              catch { return 'rejected' }
++            }catch{return 'owner-audio-error'}
++          })()`,true).then(status=>{
++            // Log only the audio outcome, never the message, contact or clip.
++            const state=String(status)
++            if(['playing','rejected','muted','owner-audio-not-configured','owner-audio-error'].includes(state))
++              console.info('YENRA_CLOUD_OWNER_AUDIO_'+state.toUpperCase())
++          }).catch(()=>console.warn('YENRA_CLOUD_OWNER_AUDIO_RENDERER_UNAVAILABLE'))
++        },
++        onOpen:conversationId=>{
++          if(mainWindow&&!mainWindow.isDestroyed())
++            mainWindow.webContents.send(DESKTOP_IPC.cloudNoticeOpen,conversationId)
++        },
++      })
++    }
++    // Track before maximizing so the restore-then-maximize path still schedules a
++    // prompt write; the write itself reads the authoritative isMaximized().
++    trackWindowState(window, app.getPath('userData'))
++    if (maximized) window.maximize()
++    if (isYenraBranded()) {
++      // The official DSH web document retains its upstream title when the
++      // friend has no configured accounts. Branding the NSIS alone is not
++      // enough: keep the native window and the local app document in sync.
++      window.setTitle('YENRA')
++      window.on('page-title-updated', (event) => {
++        event.preventDefault()
++        if (!window.isDestroyed()) window.setTitle('YENRA')
++      })
++      window.webContents.on('did-finish-load', () => {
++        if (window.isDestroyed() || !window.webContents.getURL().startsWith('dsh-app://app/')) return
++        void window.webContents.executeJavaScript('document.title = "YENRA"', true)
++          .catch(() => { /* A navigation may supersede the previous document. */ })
++      })
++    }
+     browserGuests.bind(window, (guest, name) => shortcuts.attachGuest(window, guest, name))
+     shortcuts.attach(window)
+     window.on('focus', automaticCheck)
+@@ -1203,9 +1398,19 @@ async function main(): Promise<void> {
+   }
+   const openInitialWindow = async (): Promise<void> => {
+     if (quitting || recovery.active) return
++    // YENRA owners can configure their own model providers in the ORIGINAL
++    // DSH Settings. The optional DeepSeek platform account/getState service
++    // is absent from the clean portable Profile: never fatal at first launch.
++    if (isYenraBranded()) {
++      locale = yenraVisibleLocale(resolveDesktopStartupLocale(null, systemLanguages))
++      windowsLanguage = locale.id
++      refreshApplicationMenu()
++      await enterWorkspace()
++      return
++    }
+     const state = await readWelcomeState()
+     if (isQuitting() || backend.state.phase !== 'ready') return
+-    locale = resolveDesktopStartupLocale(state.localePreference, systemLanguages)
++    locale = yenraVisibleLocale(resolveDesktopStartupLocale(state.localePreference, systemLanguages))
+     windowsLanguage = locale.id
+     refreshApplicationMenu()
+     if (!enteredWorkspace && needsWelcome({ loggedIn: state.loggedIn, hasApiKey: state.hasApiKey })) {
+diff --git a/apps/desktop/src/preload-app.ts b/apps/desktop/src/preload-app.ts
+index f590b8bc..8ae5ebac 100644
+--- a/apps/desktop/src/preload-app.ts
++++ b/apps/desktop/src/preload-app.ts
+@@ -14,6 +14,13 @@ function createProductApi(): DshDesktopProductApi {
+   return {
+     protocolVersion: 1,
+     browser: createDesktopBrowserBridge(),
++    cloudNotices: {subscribe(listener){
++      const callback=(_event:Electron.IpcRendererEvent,id:unknown):void=>{
++        if(typeof id==='number'&&Number.isSafeInteger(id)&&id>0)listener(id)
++      }
++      ipcRenderer.on(DESKTOP_IPC.cloudNoticeOpen,callback)
++      return ()=>{ipcRenderer.off(DESKTOP_IPC.cloudNoticeOpen,callback)}
++    }},
+     deviceInfo: () => ipcRenderer.invoke(DESKTOP_IPC.deviceInfo) as Promise<string>,
+     keyboard: {
+       closeWindow: revision => ipcRenderer.invoke(DESKTOP_IPC.shortcutsCloseWindow, revision) as Promise<void>,
+diff --git a/apps/desktop/src/project-manager.ts b/apps/desktop/src/project-manager.ts
+index 270d87d6..8b21e44b 100644
+--- a/apps/desktop/src/project-manager.ts
++++ b/apps/desktop/src/project-manager.ts
+@@ -22,6 +22,7 @@ import {
+ import type { DesktopPaths } from './paths.ts'
+ import type { DesktopRelease } from './release.ts'
+ import { readDesktopRuntime } from './runtime-tree.ts'
++import { provisionOriginalDshYenraProfile, type YenraSeedRuntime } from './yenra-profile-seed.ts'
+ import {
+   initProfile, PROFILE_TEMPLATES, removeLinkProjections, sanitizeProfile, type ProfileTemplate,
+ } from '@deepseek-ai/dsh-app-boot'
+@@ -66,6 +67,7 @@ export class DesktopProjectManager {
+   constructor(
+     readonly paths: DesktopPaths,
+     readonly runtime: { readonly dsh: string },
++    readonly originalYenraSeed?: { readonly directory: string; readonly packageManager: YenraSeedRuntime },
+   ) {}
+ 
+   /**
+@@ -81,9 +83,16 @@ export class DesktopProjectManager {
+    * Load application metadata and prepare the external plugin profile without installing packages.
+    */
+   async applyRelease(): Promise<void> {
+-    await this.withLock(() => {
++    await this.withLock(async () => {
+       // Validation only: an unreadable or mismatched runtime descriptor stops preparation before the Host starts.
+       readDesktopRuntime(this.runtime.dsh)
++      // On first launch of an opt-in YENRA NSIS build only: populate the
++      // ORIGINAL per-user DSH profile with vetted plugin packages. Existing
++      // profiles, credentials, contact memory and W25 are never overwritten.
++      if (this.originalYenraSeed !== undefined) {
++        await provisionOriginalDshYenraProfile(this.paths.profile,
++          this.originalYenraSeed.directory,this.originalYenraSeed.packageManager)
++      }
+       migrateProfileSettings(this.paths.profile)
+       createPluginProfile(this.paths.profile)
+       removeLinkProjections(this.paths.profile)
+diff --git a/apps/desktop/src/tray.ts b/apps/desktop/src/tray.ts
+index b2ce416b..3b557721 100644
+--- a/apps/desktop/src/tray.ts
++++ b/apps/desktop/src/tray.ts
+@@ -8,6 +8,8 @@ export interface DesktopTrayOptions {
+   /** Multi-size ICO rendered by `scripts/render-tray-icon.ts`; Windows picks the bitmap for the display scale. */
+   readonly iconPath: string
+   readonly locale: () => DesktopLocale
++  /** Branded opt-in YENRA packages keep the original DSH tray implementation. */
++  readonly displayName?: 'YENRA'
+   /** Show and focus the primary window. */
+   readonly open: () => void
+   /** Request quit through the same confirmation as every other quit entry. */
+@@ -31,11 +33,13 @@ export class DesktopTray {
+     const tray = this.tray
+     if (tray === undefined) return
+     const { messages } = this.options.locale()
+-    tray.setToolTip(messages.aboutProduct)
++    const branded = (value: string): string => this.options.displayName === 'YENRA'
++      ? value.replaceAll('DeepSeek Harness', 'YENRA') : value
++    tray.setToolTip(branded(messages.aboutProduct))
+     tray.setContextMenu(Menu.buildFromTemplate([
+-      { label: messages.openApplication, click: () => { this.options.open() } },
++      { label: branded(messages.openApplication), click: () => { this.options.open() } },
+       { type: 'separator' },
+-      { label: messages.quitApplication, click: () => { this.options.quit() } },
++      { label: branded(messages.quitApplication), click: () => { this.options.quit() } },
+     ]))
+   }
+ 
+diff --git a/apps/desktop/src/welcome-backend.ts b/apps/desktop/src/welcome-backend.ts
+index 54ab46d8..7e8c3b27 100644
+--- a/apps/desktop/src/welcome-backend.ts
++++ b/apps/desktop/src/welcome-backend.ts
+@@ -64,7 +64,13 @@ export async function connectDesktopWelcome(
+     const envelope: unknown = await response.json()
+     if (!record(envelope) || envelope.type !== 'server-response' || envelope.rpcId !== rpcId
+       || !record(envelope.result) || envelope.result.ok !== true) {
+-      throw new Error('desktop welcome: Web RPC failed')
++      // Record only the authenticated RPC route and allowlisted gateway error
++      // code, never server text, request payload, token or account identity.
++      const error = record(envelope) && record(envelope.result)
++        ? envelope.result.error : undefined
++      const rawCode = record(error) && typeof error.code === 'string' ? error.code : ''
++      const code = /^[a-z][a-z0-9/-]{0,79}$/u.test(rawCode) ? rawCode : 'invalid-envelope'
++      throw new Error(`desktop welcome: Web RPC failed at ${method} (${code})`)
+     }
+     return envelope.result.value
+   }
+diff --git a/packages/client/ui-conversation/src/client/apply.ts b/packages/client/ui-conversation/src/client/apply.ts
+index 6594c958..0c750606 100644
+--- a/packages/client/ui-conversation/src/client/apply.ts
++++ b/packages/client/ui-conversation/src/client/apply.ts
+@@ -349,6 +349,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
+       'conversation.composer.bar': { kind: 'single', scope: 'session-maybe' },
+       'conversation.input.dock': { kind: 'list', scope: 'session' },
+       'conversation.hero.brand.mark': { kind: 'single', scope: 'root' },
++      'conversation.hero.owner.welcome': { kind: 'single', scope: 'root' },
+       'conversation.hero.workspace': { kind: 'single', scope: 'root' },
+       'conversation.hero.agentPreset': { kind: 'single', scope: 'session-maybe' },
+       'conversation.hero.options': { kind: 'list', scope: 'session' },
+diff --git a/packages/client/ui-conversation/src/client/contract/slots.ts b/packages/client/ui-conversation/src/client/contract/slots.ts
+index 4a0bd3a7..a0a132bc 100644
+--- a/packages/client/ui-conversation/src/client/contract/slots.ts
++++ b/packages/client/ui-conversation/src/client/contract/slots.ts
+@@ -264,6 +264,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
+     'conversation.hero.workspace': { kind: 'single'; scope: 'root'; owner: EmptyWorkspaceOwnerProps }
+     /** Brand mark shown before the blank-session headline. */
+     'conversation.hero.brand.mark': { kind: 'single'; scope: 'root'; owner: HeroBrandMarkOwnerProps }
++    /** Optional owner greeting in the original native New Session Hero. */
++    'conversation.hero.owner.welcome': { kind: 'single'; scope: 'root' }
+     /** Agent-preset control staged for a New Session. */
+     'conversation.hero.agentPreset': { kind: 'single'; scope: 'session-maybe'; owner: HeroAgentPresetOwnerProps }
+     /** Compact options right-aligned in the New Session row after the workspace and preset controls; rendered only with a Session. */
+@@ -311,6 +313,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
+         'conversation.composer.bar': { kind: 'single'; scope: 'session-maybe' }
+         'conversation.input.dock': { kind: 'list'; scope: 'session' }
+         'conversation.hero.brand.mark': { kind: 'single'; scope: 'root' }
++      'conversation.hero.owner.welcome': { kind: 'single'; scope: 'root' }
+         'conversation.hero.workspace': { kind: 'single'; scope: 'root' }
+         'conversation.hero.agentPreset': { kind: 'single'; scope: 'session-maybe' }
+         'conversation.hero.options': { kind: 'list'; scope: 'session' }
+diff --git a/packages/client/ui-conversation/src/client/locales.ts b/packages/client/ui-conversation/src/client/locales.ts
+index 5a221bc9..018cf3f3 100644
+--- a/packages/client/ui-conversation/src/client/locales.ts
++++ b/packages/client/ui-conversation/src/client/locales.ts
+@@ -74,7 +74,7 @@ export const zh = {
+   'settings.enter.description': '智能体运行时 Enter 键和发送按钮的行为；Cmd/Ctrl+Enter 使用另一行为',
+   'settings.enter.queue': '排队发送',
+   'settings.enter.steer': '插话发送',
+-  'hero.headline': '探索未至之境',
++  'hero.headline': 'YENRA · 我的 AI 工作台',
+   'hero.preview': '预览版',
+   'hero.chooseWorkspace': '选择工作区',
+   'session.hierarchy': '会话层级',
+@@ -455,7 +455,7 @@ export const en = {
+   'settings.enter.description': 'What Enter and the Send button do while the agent is running; Cmd/Ctrl+Enter uses the other behavior',
+   'settings.enter.queue': 'Queue',
+   'settings.enter.steer': 'Steer',
+-  'hero.headline': 'Into the Unknown',
++  'hero.headline': 'YENRA · My AI Workspace',
+   'hero.preview': 'Preview',
+   'hero.chooseWorkspace': 'Choose workspace',
+   'session.hierarchy': 'Session hierarchy',
+diff --git a/packages/client/ui-conversation/src/client/skeleton/EmptyHero.tsx b/packages/client/ui-conversation/src/client/skeleton/EmptyHero.tsx
+index 40df8726..20737fd7 100644
+--- a/packages/client/ui-conversation/src/client/skeleton/EmptyHero.tsx
++++ b/packages/client/ui-conversation/src/client/skeleton/EmptyHero.tsx
+@@ -155,7 +155,12 @@ export function HeroShell({ t, renderSlot, children }: HeroShellProps) {
+             <span className={css.previewBadge}>{t('hero.preview')}</span>
+           </span>
+         </div>
+-        <div className={css.body}>
++        {/* Existing DSH blank-Session Hero is the source of truth for an actually
++            empty native conversation. YENRA contributes its approved owner greeting
++            through this optional OSS slot, not through a second Composer or Agent. */}
++        <div className={css.ownerWelcomeSeat}>
++          {renderSlot('conversation.hero.owner.welcome', {})}
++        </div>        <div className={css.body}>
+           {/* The composer remains mounted outside this component. */}
+         </div>
+       </div>
+diff --git a/packages/client/ui-conversation/src/client/skeleton/HeroShell.module.css b/packages/client/ui-conversation/src/client/skeleton/HeroShell.module.css
+index aac6a5cf..00815e0f 100644
+--- a/packages/client/ui-conversation/src/client/skeleton/HeroShell.module.css
++++ b/packages/client/ui-conversation/src/client/skeleton/HeroShell.module.css
+@@ -230,3 +230,39 @@
+   line-height: 18px;
+   color: var(--dsw-alias-state-error-primary);
+ }
++
++/* YENRA private single-workbench branding. The global YENRA caption already
++ * displays the approved wave mark, so the original DSH fish and preview badge
++ * would be a second, competing product identity. The native composer stays. */
++.fishHitbox,
++.previewBadge { display:none; }
++/* Native original DSH New Session: the YENRA plugin optionally fills this
++ * official slot, without replacing ConversationRoot or its resident Composer. */
++.ownerWelcomeSeat:empty { display: none; }
++.root:has(.ownerWelcomeSeat:not(:empty)) .headline { display: none; }
++.ownerWelcomeSeat:not(:empty) {
++  display: flex;
++  width: 100%;
++  align-items: center;
++  justify-content: center;
++}
++.ownerWelcomeSeat :global(.yenra-native-work-welcome) {
++  display: flex; flex-direction: column; align-items: center; justify-content: center;
++  width: 100%; gap: 7px; text-align: center; color: var(--dsw-alias-label-primary);
++}
++.ownerWelcomeSeat :global(.yenra-native-welcome-mark) { display: block; margin-bottom: 3px; }
++.ownerWelcomeSeat :global([data-yenra-welcome-greeting]) {
++  font-size: clamp(21px, 2.15vw, 27px); font-weight: 600; margin: 0; line-height: 1.4;
++}
++.ownerWelcomeSeat :global(.yenra-native-welcome-subtitle) {
++  font-size: 14px; font-weight: 400; color: var(--dsw-alias-label-secondary); margin: 0;
++}
++.ownerWelcomeSeat :global(.yenra-native-welcome-meta) {
++  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
++  gap: 8px; font-size: 12px; line-height: 1.5; font-weight: 400;
++  color: var(--dsw-alias-label-tertiary); margin: 5px 0 0;
++}
++.ownerWelcomeSeat :global(.yenra-native-welcome-source) {
++  font-size: 10px; font-weight: 400; color: var(--dsw-alias-label-tertiary); text-decoration: none;
++}
++.ownerWelcomeSeat :global(.yenra-native-welcome-source:hover) { text-decoration: underline; }
+\ No newline at end of file
+diff --git a/packages/client/ui-conversation/tests/skeleton.client.spec.tsx b/packages/client/ui-conversation/tests/skeleton.client.spec.tsx
+index d86ad463..25160a59 100644
+--- a/packages/client/ui-conversation/tests/skeleton.client.spec.tsx
++++ b/packages/client/ui-conversation/tests/skeleton.client.spec.tsx
+@@ -411,9 +411,9 @@ describe('Hero chrome', () => {
+   it('renders the English preview badge through the hero locale seat', () => {
+     const renderSlot = vi.fn<HeroShellProps['renderSlot']>(() => null)
+     const view = render(<HeroShell t={makeTranslate(en, commonEn)} renderSlot={renderSlot} />)
+-    expect(view.getByText('Into the Unknown')).toBeTruthy()
++    expect(view.getByText('YENRA · My AI Workspace')).toBeTruthy()
+     expect(view.getByText('Preview')).toBeTruthy()
+-    expect(renderSlot).toHaveBeenCalledOnce()
++    expect(renderSlot).toHaveBeenCalledTimes(2)
+     expect(renderSlot.mock.calls[0]?.[0]).toBe('conversation.hero.brand.mark')
+     const brandMarkOwner = renderSlot.mock.calls[0]?.[1]
+     if (brandMarkOwner === undefined || !('size' in brandMarkOwner) || !('className' in brandMarkOwner)) {
+@@ -422,6 +422,7 @@ describe('Hero chrome', () => {
+     expect(brandMarkOwner.size).toBe(34)
+     expect(brandMarkOwner.className).toBeTypeOf('string')
+     expect(renderSlot.mock.calls[0]?.[2]?.fallback).toBeTruthy()
++    expect(renderSlot.mock.calls[1]?.[0]).toBe('conversation.hero.owner.welcome')
+   })
+ })
+ 
+@@ -575,7 +576,7 @@ describe('ConversationRoot resident composer', () => {
+     expect(b.view.queryByRole('tablist')).toBeNull()
+     expect(b.slotCalls).not.toContain('conversation.session.header.utilities')
+     expect(b.slotCalls).not.toContain('conversation.session.header.actions')
+-    expect(b.view.getByText('探索未至之境')).toBeTruthy()
++    expect(b.view.getByText('YENRA · 我的 AI 工作台')).toBeTruthy()
+     expect(b.view.getByText('预览版')).toBeTruthy()
+     expect(b.view.queryByTestId('view-chat')).toBeNull()
+     // The same machine-backed textarea is live in the hero, and the
+@@ -609,7 +610,7 @@ describe('ConversationRoot resident composer', () => {
+     expect(conversationPhase(failed, EMPTY_CONVERSATION_SNAPSHOT)).toBe('engaging')
+     const b = mount(failed, undefined, undefined, { summaryBlank: true })
+     expect(b.view.container.querySelector('[data-phase]')?.getAttribute('data-phase')).toBe('active')
+-    expect(b.view.queryByText('探索未至之境')).toBeNull()
++    expect(b.view.queryByText('YENRA · 我的 AI 工作台')).toBeNull()
+   })
+ 
+   it('settling phase: a summary that does not prove the session blank hides the composer while it opens', () => {
+@@ -641,7 +642,7 @@ describe('ConversationRoot resident composer', () => {
+     // blank the column for the history round-trip.
+     const root = b.view.container.querySelector('[data-phase]')
+     expect(root?.getAttribute('data-phase')).toBe('hero')
+-    expect(b.view.getByText('探索未至之境')).toBeTruthy()
++    expect(b.view.getByText('YENRA · 我的 AI 工作台')).toBeTruthy()
+     expect(b.view.getByRole('textbox')).toBeTruthy()
+   })
+ 
+diff --git a/packages/client/ui-layout/src/client/columns.ts b/packages/client/ui-layout/src/client/columns.ts
+index b5ffd9f7..f4de2c02 100644
+--- a/packages/client/ui-layout/src/client/columns.ts
++++ b/packages/client/ui-layout/src/client/columns.ts
+@@ -10,11 +10,11 @@ export interface Columns { sidebar: number; center: number; rightbar: number }
+ /** Center width protected while the normal right column is open. */
+ export const CENTER_MIN = 400
+ /** Sidebar drag clamp floor. */
+-export const SIDEBAR_MIN = 264
++export const SIDEBAR_MIN = 190
+ /** Sidebar drag clamp ceiling. */
+ export const SIDEBAR_MAX = 420
+ /** Sidebar width before any user drag. */
+-export const SIDEBAR_DEFAULT = 280
++export const SIDEBAR_DEFAULT = 210
+ /** Closed-sidebar rail: a 24px icon column between 16px horizontal paddings. */
+ export const SIDEBAR_COLLAPSED = 56
+ /** Viewport width below which the sidebar auto-collapses to the rail (deepsuite
+diff --git a/packages/client/ui-layout/tests/app-frame.client.spec.tsx b/packages/client/ui-layout/tests/app-frame.client.spec.tsx
+index 1dc7cc85..e2e61ef6 100644
+--- a/packages/client/ui-layout/tests/app-frame.client.spec.tsx
++++ b/packages/client/ui-layout/tests/app-frame.client.spec.tsx
+@@ -204,8 +204,8 @@ describe('AppFrame', () => {
+ 
+   it('renders owner props for the default sidebar and prospective right panel', () => {
+     const { frame, rightOwner, sidebarOwner, slotCalls } = mountFrame()
+-    expect(tracks(frame)).toEqual([280, 0])
+-    expect(sidebarOwner()).toEqual({ collapsed: false, width: 280 })
++    expect(tracks(frame)).toEqual([210, 0])
++    expect(sidebarOwner()).toEqual({ collapsed: false, width: 210 })
+     expect(rightOwner()).toEqual({ width: 864, viewportWidth: 1920, canShow: true })
+     expect(slotCalls.find(c => c.key === 'main')).toEqual({ key: 'main', props: {}, options: { entryKey: 'conversation' } })
+   })
+@@ -217,7 +217,7 @@ describe('AppFrame', () => {
+     expect(getByTestId('sidebar-content')).toBeTruthy()
+     expect(getByTestId('rightbar-content')).toBeTruthy()
+     expect(getByTestId('shell.bottom-content').parentElement?.hasAttribute('data-shell-bottom')).toBe(true)
+-    expect(tracks(frame)).toEqual([280, 0])
++    expect(tracks(frame)).toEqual([210, 0])
+   })
+ 
+   it('renders both occupants before workspace baselines settle', () => {
+@@ -283,7 +283,7 @@ describe('AppFrame', () => {
+       expect(getByTestId('main-content').getAttribute('data-entry-key')).toBe(panelId ?? 'conversation')
+       expect(instance.getSnapshot().panelInfo).toEqual({ activePanelId: panelId })
+       expect(instance.getSnapshot().layoutInfo).toBe(layoutInfo)
+-      expect(tracks(frame)).toEqual([280, 0])
++      expect(tracks(frame)).toEqual([210, 0])
+       expect(selectedSession).toBe(sessionId)
+       expect(document.title).toBe(panelId === null ? 'Session title — DSH Local Build' : 'DSH Local Build')
+     }
+@@ -328,7 +328,7 @@ describe('AppFrame normal width concessions', () => {
+     frameWidth = 800
+     const { frame, instance, rightOwner } = mountFrame()
+     act(() => { instance.actions.toggleSidebar() })
+-    expect(tracks(frame)).toEqual([280, 0])
++    expect(tracks(frame)).toEqual([210, 0])
+     expect(rightOwner()).toEqual({ width: 344, viewportWidth: 800, canShow: true })
+     act(() => { instance.actions.openRightbar(true, false) })
+     expect(tracks(frame)).toEqual([56, 360])
+@@ -372,7 +372,7 @@ describe('AppFrame normal width concessions', () => {
+     act(() => { instance.actions.toggleSidebar() })
+     resize(980)
+     act(() => { instance.actions.toggleSidebar() })
+-    expect(tracks(frame)[0]).toBe(280)
++    expect(tracks(frame)[0]).toBe(210)
+     expect(instance.getSnapshot().layoutInfo.sidebar).toBe(0)
+   })
+ })
+@@ -381,9 +381,9 @@ describe('AppFrame right panel presentation', () => {
+   it('releases the fullscreen track with the instant marker while clearing fullscreen', () => {
+     const { frame, instance } = mountFrame()
+     act(() => { instance.actions.openRightbar(true, true) })
+-    expect(tracks(frame)).toEqual([280, 864])
++    expect(tracks(frame)).toEqual([210, 864])
+     act(() => { instance.actions.closeRightbar() })
+-    expect(tracks(frame)).toEqual([280, 0])
++    expect(tracks(frame)).toEqual([210, 0])
+     expect(frame.dataset.rightbarFullscreen).toBeUndefined()
+     expect(frame.dataset.rightbarInstant).toBe('true')
+     expect(frame.querySelector('[data-side="rightbar"]')).toBeNull()
+@@ -395,11 +395,11 @@ describe('AppFrame right panel presentation', () => {
+     const { frame, instance } = mountFrame()
+     act(() => { instance.actions.openRightbar(true, true) })
+     act(() => { instance.actions.openRightbar(true, false) })
+-    expect(tracks(frame)).toEqual([280, 864])
++    expect(tracks(frame)).toEqual([210, 864])
+     expect(frame.dataset.rightbarFullscreen).toBeUndefined()
+     expect(frame.dataset.rightbarInstant).toBe('true')
+     act(() => { instance.actions.closeRightbar() })
+-    expect(tracks(frame)).toEqual([280, 0])
++    expect(tracks(frame)).toEqual([210, 0])
+     expect(frame.dataset.rightbarFullscreen).toBeUndefined()
+     expect(frame.dataset.rightbarInstant).toBeUndefined()
+   })
+@@ -475,33 +475,33 @@ describe('AppFrame right panel presentation', () => {
+   it('preserves normal tracks through fullscreen and hides the outer resize handle', () => {
+     const { frame, instance, rightOwner } = mountFrame()
+     act(() => { instance.actions.openRightbar(true, false) })
+-    expect(tracks(frame)).toEqual([280, 864])
++    expect(tracks(frame)).toEqual([210, 864])
+     expect(handleFor(frame, 'rightbar').style.left).toBe('1056px')
+     act(() => { instance.actions.openRightbar(true, true) })
+-    expect(tracks(frame)).toEqual([280, 864])
++    expect(tracks(frame)).toEqual([210, 864])
+     expect(rightOwner().width).toBe(864)
+     expect(frame.dataset.rightbarFullscreen).toBe('true')
+     expect(frame.querySelector('[data-side="rightbar"]')).toBeNull()
+     act(() => { instance.actions.openRightbar(true, false) })
+-    expect(tracks(frame)).toEqual([280, 864])
++    expect(tracks(frame)).toEqual([210, 864])
+     expect(handleFor(frame, 'rightbar').style.left).toBe('1056px')
+     expect(frame.dataset.rightbarFullscreen).toBeUndefined()
+     act(() => { instance.actions.closeRightbar() })
+-    expect(tracks(frame)).toEqual([280, 0])
++    expect(tracks(frame)).toEqual([210, 0])
+     expect(frame.querySelector('[data-side="rightbar"]')).toBeNull()
+     expect(frame.dataset.rightbarFullscreen).toBeUndefined()
+   })
+ 
+   it('inserts a fullscreen track and its transition-suppression marker in the same render', () => {
+     const { frame, instance } = mountFrame()
+-    expect(tracks(frame)).toEqual([280, 0])
++    expect(tracks(frame)).toEqual([210, 0])
+     expect(frame.dataset.rightbarFullscreen).toBeUndefined()
+     act(() => { instance.actions.openRightbar(true, true) })
+-    expect(tracks(frame)).toEqual([280, 864])
++    expect(tracks(frame)).toEqual([210, 864])
+     expect(frame.dataset.rightbarFullscreen).toBe('true')
+     expect(frame.querySelector('[data-side="rightbar"]')).toBeNull()
+     act(() => { instance.actions.openRightbar(true, false) })
+-    expect(tracks(frame)).toEqual([280, 864])
++    expect(tracks(frame)).toEqual([210, 864])
+     expect(frame.dataset.rightbarFullscreen).toBeUndefined()
+   })
+ 
+@@ -519,11 +519,11 @@ describe('AppFrame right panel presentation', () => {
+     const { frame, instance, rightOwner } = mountFrame()
+     act(() => { instance.actions.openRightbar(false, false) })
+     resize(1100)
+-    expect(tracks(frame)).toEqual([280, 0])
+-    expect(rightOwner().width).toBe(420)
+-    drag(handleFor(frame, 'rightbar'), 680, 690)
+-    expect(instance.getSnapshot().layoutInfo.rightbar).toBe(410)
+-    expect(rightOwner().width).toBe(410)
++    expect(tracks(frame)).toEqual([210, 0])
++    expect(rightOwner().width).toBe(490)
++    drag(handleFor(frame, 'rightbar'), 610, 620)
++    expect(instance.getSnapshot().layoutInfo.rightbar).toBe(480)
++    expect(rightOwner().width).toBe(480)
+     expect(tracks(frame)[1]).toBe(0)
+   })
+ })
+@@ -538,12 +538,12 @@ describe('AppFrame pointer resizing', () => {
+     pointer(handle, 'pointermove', 340)
+     expect(animationFrames.size).toBe(1)
+     act(flushFrames)
+-    expect(tracks(frame)[0]).toBe(340)
++    expect(tracks(frame)[0]).toBe(270)
+     pointer(handle, 'pointermove', 360)
+     act(flushFrames)
+-    expect(tracks(frame)[0]).toBe(360)
++    expect(tracks(frame)[0]).toBe(290)
+     pointer(handle, 'pointerup', 360)
+-    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(360)
++    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(290)
+     expect(frame.dataset.dragging).toBeUndefined()
+     expect(handle.hasPointerCapture(1)).toBe(false)
+   })
+@@ -553,14 +553,14 @@ describe('AppFrame pointer resizing', () => {
+     act(() => { instance.actions.openRightbar(true, false) })
+     resize(1100)
+     const handle = handleFor(frame, 'rightbar')
+-    expect(rightOwner().width).toBe(420)
++    expect(rightOwner().width).toBe(490)
+     expect(tracks(frame)[1]).toBe(770)
+-    expect(handle.style.left).toBe('680px')
+-    drag(handle, 680, 690)
+-    expect(instance.getSnapshot().layoutInfo.rightbar).toBe(410)
+-    expect(rightOwner().width).toBe(410)
+-    expect(tracks(frame)[1]).toBe(410)
+-    expect(handle.style.left).toBe('690px')
++    expect(handle.style.left).toBe('610px')
++    drag(handle, 610, 620)
++    expect(instance.getSnapshot().layoutInfo.rightbar).toBe(480)
++    expect(rightOwner().width).toBe(480)
++    expect(tracks(frame)[1]).toBe(480)
++    expect(handle.style.left).toBe('620px')
+   })
+ 
+   it('widens to the 70% limit and shrinks to 300px through pointer input', () => {
+@@ -581,10 +581,10 @@ describe('AppFrame pointer resizing', () => {
+     pointer(handle, 'pointerdown', 280)
+     pointer(handle, 'pointermove', 320)
+     pointer(handle, 'pointerup', 360)
+-    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(360)
++    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(290)
+     expect(animationFrames.size).toBe(0)
+     act(flushFrames)
+-    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(360)
++    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(290)
+   })
+ 
+   it('ignores uncaptured motion, secondary buttons, and a second pointer', () => {
+@@ -600,9 +600,9 @@ describe('AppFrame pointer resizing', () => {
+     pointer(handle, 'pointermove', 500, 9)
+     pointer(handle, 'pointerup', 500, 9)
+     expect(animationFrames.size).toBe(0)
+-    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(280)
++    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(210)
+     pointer(handle, 'pointerup', 300)
+-    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(300)
++    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(230)
+   })
+ 
+   it.each(['pointercancel', 'lostpointercapture'])('ends %s without committing queued motion', (event) => {
+@@ -613,7 +613,7 @@ describe('AppFrame pointer resizing', () => {
+     if (event === 'lostpointercapture') handle.releasePointerCapture(1)
+     pointer(handle, event, 340)
+     act(flushFrames)
+-    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(280)
++    expect(instance.getSnapshot().layoutInfo.sidebar).toBe(210)
+     expect(animationFrames.size).toBe(0)
+     expect(frame.dataset.dragging).toBeUndefined()
+     expect(handle.hasPointerCapture(1)).toBe(false)
+diff --git a/packages/client/ui-layout/tests/columns.client.spec.ts b/packages/client/ui-layout/tests/columns.client.spec.ts
+index 4278516f..d2524ab5 100644
+--- a/packages/client/ui-layout/tests/columns.client.spec.ts
++++ b/packages/client/ui-layout/tests/columns.client.spec.ts
+@@ -20,7 +20,7 @@ describe('computeColumns', () => {
+ 
+   it('clamps sidebar preferences and limits the right panel to 70% of the frame', () => {
+     expect(computeColumns(3000, 9999, 9999)).toEqual({ sidebar: 420, center: 480, rightbar: 2100 })
+-    expect(computeColumns(1920, 1, 1)).toEqual({ sidebar: 264, center: 1356, rightbar: 300 })
++    expect(computeColumns(1920, 1, 1)).toEqual({ sidebar: 190, center: 1430, rightbar: 300 })
+   })
+ 
+   it.each([
+diff --git a/packages/client/ui-layout/tests/layout-store.client.spec.ts b/packages/client/ui-layout/tests/layout-store.client.spec.ts
+index edf2a5a3..2aba366a 100644
+--- a/packages/client/ui-layout/tests/layout-store.client.spec.ts
++++ b/packages/client/ui-layout/tests/layout-store.client.spec.ts
+@@ -13,7 +13,7 @@ describe('createLayoutStore', () => {
+     expect(store.getSnapshot()).toEqual({
+       panelInfo: { activePanelId: null },
+       layoutInfo: {
+-        sidebar: 280,
++        sidebar: 210,
+         viewportWidth: 1920,
+         narrowExpanded: false,
+         rightbar: null,
+@@ -31,15 +31,15 @@ describe('createLayoutStore', () => {
+     const b = createLayoutStore().create()
+     a.actions.setSidebar(400)
+     a.actions.openRightbar(true, false)
+-    expect(b.store.getSnapshot().layoutInfo.sidebar).toBe(280)
++    expect(b.store.getSnapshot().layoutInfo.sidebar).toBe(210)
+     expect(b.store.getSnapshot().layoutInfo.rightbar).toBeNull()
+     expect(write).not.toHaveBeenCalled()
+   })
+ 
+-  it('clamps the sidebar to 264–420px', () => {
++  it('clamps the sidebar to 190–420px', () => {
+     const { store, actions } = createLayoutStore().create()
+     actions.setSidebar(1)
+-    expect(store.getSnapshot().layoutInfo.sidebar).toBe(264)
++    expect(store.getSnapshot().layoutInfo.sidebar).toBe(190)
+     actions.setSidebar(9999)
+     expect(store.getSnapshot().layoutInfo.sidebar).toBe(420)
+   })
+@@ -50,7 +50,7 @@ describe('createLayoutStore', () => {
+     actions.toggleSidebar()
+     expect(store.getSnapshot().layoutInfo.sidebar).toBe(0)
+     actions.toggleSidebar()
+-    expect(store.getSnapshot().layoutInfo.sidebar).toBe(280)
++    expect(store.getSnapshot().layoutInfo.sidebar).toBe(210)
+   })
+ 
+   it('keeps the sidebar preference while toggling its narrow override', () => {

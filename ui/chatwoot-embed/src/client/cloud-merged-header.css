@@ -1,0 +1,65 @@
+/* Single native Windows caption, enabled only for the authenticated desktop
+   conversation workspace. All Cloud controls are the original DOM/handlers. */
+@media(min-width:768px){
+  aside:has(>nav){padding-top:50px}
+  /* Global YENRA caption draws the only full-width y=40 rule. No second
+     segment inside the Cloud guest: that caused one-pixel double lines. */
+  .conversations-list-wrap>div:first-child{
+    height:40px;min-height:40px;border-bottom:0!important;box-shadow:none!important;
+  }
+  .conversations-list-wrap>div:first-child>div:first-child{display:none}
+  .conversations-list-wrap>div:first-child>div:last-child{margin-inline-start:auto}
+  .conversations-list-wrap>div:first-child>div:last-child>button{display:none}
+  /* Cloud's unselected-conversation view is content, never a header. Leave
+     its native centering intact below the single Windows caption. */
+  .conversation-details-wrap>div:first-child:has(img[alt="No Chat"]){
+    box-sizing:border-box;padding-top:40px;
+  }
+  body:has(.conversations-list-wrap) aside:has(>nav)>section a[href$="/search"]{
+    position:absolute;left:48px;top:6px;width:172px;height:28px;padding:6px 8px;
+    display:flex;justify-content:flex-start;align-items:center;gap:8px;z-index:45;
+    border-radius:7px;outline:0;background:rgb(var(--slate-2));
+  }
+  body:has(.conversations-list-wrap) aside:has(>nav)>section a[href$="/search"]>span:nth-child(2){
+    display:block;position:static;width:auto;height:auto;padding:0;margin:0;
+    overflow:hidden;clip-path:none;white-space:nowrap;text-overflow:ellipsis;font-size:12px;
+  }
+  body:has(.conversations-list-wrap) aside:has(>nav)>section a[href$="/search"]>span:last-child{display:none}
+  .conversation-details-wrap>div:first-child:has(>div>span[class~="group/avatar"]){
+    position:relative;flex:0 0 40px;height:40px!important;min-height:40px;padding:4px 10px!important;
+    border-bottom:0!important;box-shadow:none!important;
+  }
+  .conversation-details-wrap>div:first-child:has(>div>span[class~="group/avatar"])>div:first-child{padding-inline-end:76px}
+  .conversation-details-wrap>div:first-child:has(>div>span[class~="group/avatar"])>div:first-child>span,
+  .conversation-details-wrap>div:first-child:has(>div>span[class~="group/avatar"])>div:first-child>span>[role=img]{width:32px!important;height:32px!important}
+  .conversation-details-wrap>div:first-child:has(>div>span[class~="group/avatar"])>div:first-child>div:last-child>div:first-child{
+    max-width:max(36px,calc(var(--yenra-caption-mode-center) - 413px));min-width:0;
+  }
+  .conversation-details-wrap>div:last-child>div.absolute:has(button .i-ph-user-bold){
+    top:6px!important;right:calc(8px + var(--yenra-caption-window-inset))!important;
+  }
+  .conversation-details-wrap>div:last-child>div.absolute:has(button .i-ph-user-bold)>button{
+    width:28px!important;min-width:28px!important;height:28px!important;min-height:28px!important;
+  }
+  .yenra-cloud-conversation-tools{width:28px;height:28px}
+  /* Explicit secondary tools stay available below the single caption row. */
+  .conversation-details-wrap .header-actions-wrap{
+    position:absolute;top:44px;right:72px;margin:0;z-index:30;
+    padding:4px;border:1px solid rgb(var(--border-weak));border-radius:9px;
+    background:rgb(var(--surface-1));width:auto!important;
+  }
+  /* The native contact detail pane is a fourth column. Its redundant heading
+     yields to the global mode switch, while its real close action stays clear
+     of Windows controls when the AI pane is closed. */
+  body:has([channel-type]){--yenra-caption-window-inset:0px}
+  div:has(>[channel-type])>div:first-child{
+    height:40px!important;min-height:40px;padding:4px 8px!important;
+    padding-inline-end:calc(8px + var(--yenra-window-controls-inset))!important;
+  }
+  div:has(>[channel-type])>div:first-child>div>span{opacity:0}
+}
+
+
+/* No per-panel empty-state pseudo-rule: the desktop shell now owns one
+   continuous line under the native Windows caption for all three columns.
+   This file is injected only when mergedHeader is enabled. */

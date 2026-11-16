@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "classic-level": "3.0.0",
+    "libphonenumber-js": "1.13.15"
+  }
+}

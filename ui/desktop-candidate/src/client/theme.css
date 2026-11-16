@@ -1,0 +1,376 @@
+/* YENRA Graphite Glow — one cohesive ChatScope/DSH presentation layer.
+ * Visual tokens come from the official DSH ui-theme (0.2.1-rc.5).
+ * Native Sidebar, Settings, Conversation and Composer internal DOM are not skinned.
+ * No independent theme/layout/animation engine. Honors reduced motion.
+ */
+.yenra-root,.yenra-product-page {
+ --yn-paper:var(--dsw-alias-bg-base,#fff);
+ --yn-raised:var(--dsw-alias-bg-layer-1,#fff);
+ --yn-layer:var(--dsw-alias-bg-layer-2,#f7f8fa);
+ --yn-ink:var(--dsw-alias-label-primary,#252a32);
+ --yn-sub:var(--dsw-alias-label-secondary,#606875);
+ --yn-dim:var(--dsw-alias-label-tertiary,#9298a3);
+ --yn-border:var(--dsw-alias-border-l2,rgba(27,37,50,.12));
+ --yn-soft:color-mix(in srgb,var(--yn-paper) 94%,var(--yn-ink) 6%);
+ --yn-hover:color-mix(in srgb,var(--yn-paper) 89%,var(--yn-ink) 11%);
+ --yn-graphite:#252d38;
+ --yn-silver:#d1d9e4;
+ --yn-glow:color-mix(in srgb,var(--yn-ink) 15%,transparent);
+ font-family:var(--dsw-font-family,system-ui,"Segoe UI",sans-serif);
+ color:var(--yn-ink);background:var(--yn-paper);
+}
+.yenra-root{display:flex;flex-direction:column;width:100%;height:100%;min-height:0;min-width:0;overflow:hidden;container-type:inline-size}
+.yenra-root *,.yenra-product-page *{box-sizing:border-box}
+.yenra-root button,.yenra-product-page button{font:inherit}
+.yenra-root button:focus-visible,.yenra-root :is(input,textarea,summary):focus-visible,
+.yenra-product-page button:focus-visible{outline:2px solid var(--dsw-focus-ring-color,#9aaecb);outline-offset:2px}
+.yenra-top{flex:none;display:flex;align-items:center;gap:12px;min-width:0;height:59px;padding:0 17px;
+ background:linear-gradient(112deg,#202733,#353f4c);color:#f4f6f9;
+ border-bottom:1px solid #1c212b}
+.yenra-identity{min-width:0;display:flex;align-items:center}
+.yenra-name{font-size:14px!important;font-weight:680;letter-spacing:.015em!important;color:#f6f7fa!important;white-space:nowrap}
+.yenra-topnav{display:flex;gap:4px;align-items:center;padding:4px;margin-left:clamp(0px,1.8vw,18px);
+ border-radius:11px;background:rgba(8,12,20,.24)}
+.yenra-tab{border:0;border-radius:8px;background:transparent;color:#bac2ce;
+ font-size:12px;font-weight:600;padding:7px 15px;line-height:21px;cursor:pointer;white-space:nowrap;
+ transition:background-color .16s ease,color .16s ease}
+.yenra-tab:hover{background:rgba(255,255,255,.09);color:white}
+.yenra-tab[data-current=true]{background:#f5f6f8;color:#262e39;box-shadow:0 2px 9px #111a2742}
+.yenra-topmeta{display:flex;align-items:center;gap:8px;margin-left:auto;white-space:nowrap;min-width:0}
+.yenra-pill{display:inline-flex;align-items:center;border:1px solid #ffffff37;
+ background:#ffffff0c;border-radius:100px;padding:5px 10px;color:#d4dae4;font-size:11px}
+.yenra-online-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#9ba5b5;margin-right:7px}
+.yenra-iconbtn{padding:7px 10px;border:1px solid #ffffff37;border-radius:9px;
+ background:#ffffff12;color:#f7f8fa;font-size:11px;white-space:nowrap;cursor:pointer;transition:background .17s ease}
+.yenra-iconbtn:hover{background:#ffffff24}
+.yenra-layout{flex:1;min-width:0;min-height:0;display:grid;position:relative;
+ grid-template-columns:minmax(0,56%) minmax(355px,44%);overflow:hidden}
+.yenra-layout[data-brain=false]{grid-template-columns:minmax(0,1fr)}
+.yenra-social{position:relative;min-width:0;min-height:0;overflow:hidden;border-right:1px solid var(--yn-border);background:var(--yn-paper)}
+.yenra-social .cs-main-container{height:100%;min-width:0;min-height:0;border:0}
+.yenra-social .cs-sidebar{flex:0 0 210px;min-width:185px;max-width:210px;background:var(--yn-layer);
+ border-right:1px solid var(--yn-border);color:var(--yn-ink)}
+/* V2: switch the same ChatScope roster between full, native avatar column and hidden.
+   Layout-only: neither contact state nor DSH Session identity changes. */
+.yenra-social[data-contact-layout="full"] .cs-sidebar{flex:0 0 264px;min-width:264px;max-width:264px;width:264px}
+.yenra-social[data-contact-layout="compact"] .cs-sidebar{flex:0 0 78px;min-width:78px;max-width:78px}
+.yenra-social[data-contact-layout="compact"] .yenra-list-head,
+.yenra-social[data-contact-layout="compact"] .yenra-count{display:none}
+.yenra-social[data-contact-layout="compact"] .cs-conversation{display:flex;justify-content:center;align-items:center;padding:9px 1px;min-height:62px;position:relative}
+.yenra-social[data-contact-layout="compact"] .cs-conversation__content{display:none}
+.yenra-social[data-contact-layout="compact"] .cs-conversation__avatar{margin:0}
+.yenra-social[data-contact-layout="compact"] .cs-conversation__unread-count{position:absolute;right:3px;top:3px;transform:scale(.78)}
+.yenra-list-head{padding:15px 11px 9px}
+.yenra-smalltitle{font-size:13px;font-weight:700;color:var(--yn-ink)}
+.yenra-search{width:100%;min-width:0;margin-top:12px;padding:10px 10px;border:1px solid var(--yn-border);
+ border-radius:9px;outline:none;background:var(--yn-raised);color:var(--yn-ink);font-size:12px;line-height:18px;
+ transition:border-color .16s ease,box-shadow .16s ease}
+.yenra-search::placeholder{color:var(--yn-dim)}
+.yenra-search:focus{border-color:var(--yn-glow);box-shadow:0 0 0 3px color-mix(in srgb,var(--yn-ink) 7%,transparent)}
+.yenra-filters{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
+.yenra-filter{border:0;border-radius:7px;background:transparent;color:var(--yn-sub);font-size:10px;
+ line-height:16px;cursor:pointer;padding:5px 7px;transition:background .16s ease}
+.yenra-filter[data-on=true]{background:var(--yn-hover);color:var(--yn-ink);font-weight:700}
+.yenra-filter:hover{background:var(--yn-soft)}
+.yenra-count{padding:7px 14px 7px;color:var(--yn-dim);font-size:10px}
+.yenra-empty{padding:16px 12px;font-size:12px;color:var(--yn-sub)}
+.yenra-social .cs-conversation-list{padding:3px 6px}
+.yenra-social .cs-conversation{min-height:63px;padding:9px 7px;margin:3px 0;
+ border-radius:11px;color:var(--yn-ink);background:transparent;transition:background .16s ease,box-shadow .16s ease}
+.yenra-social .cs-conversation:hover{background:var(--yn-soft);box-shadow:inset 1px 0 0 var(--yn-border)}
+.yenra-social .cs-conversation.cs-conversation--active{background:var(--yn-hover);color:var(--yn-ink);
+ box-shadow:inset 3px 0 0 color-mix(in srgb,var(--yn-ink) 75%,transparent)}
+.yenra-social .cs-conversation__name{font-size:12px;font-weight:680;line-height:19px;color:var(--yn-ink)!important}
+.yenra-social .cs-conversation__info{font-size:10.5px;color:var(--yn-sub)!important}
+.yenra-social .cs-avatar{box-shadow:0 0 0 1px var(--yn-border)}
+.yenra-social .cs-conversation__unread-count{background:var(--yn-graphite);color:#fff}
+.yenra-social .cs-chat-container{flex:1 1 0%;min-width:0;min-height:0;overflow:hidden;background:var(--yn-paper)}
+.yenra-social .cs-conversation-header{flex:none;min-height:64px;padding:0 11px 0 14px;
+ border-bottom:1px solid var(--yn-border);background:var(--yn-raised);min-width:0}
+.yenra-social .cs-conversation-header__user-name{font-size:13px;font-weight:710;color:var(--yn-ink);background:transparent}
+.yenra-social .cs-conversation-header__info{font-size:10px;color:var(--yn-sub);background:transparent}
+.yenra-social .cs-conversation-header__actions{display:flex;align-items:center;gap:4px;min-width:0}
+.yenra-header-control{display:inline-flex;align-items:center;gap:5px;justify-content:center;
+ padding:6px;border-radius:8px;border:1px solid transparent;background:transparent;
+ color:var(--yn-sub);font-size:11px;white-space:nowrap;cursor:pointer}
+.yenra-header-control:hover{background:var(--yn-soft);color:var(--yn-ink)}
+.yenra-call-group{display:flex;gap:3px;border-left:1px solid var(--yn-border);padding-left:5px}
+.yenra-call-group button{border:0;background:transparent;color:var(--yn-dim);font-size:10px;padding:6px 4px;opacity:.58;cursor:not-allowed}
+.yenra-social .cs-message-list{flex:1 1 0%;min-height:0;background:var(--yn-paper)}
+.yenra-social .cs-message{margin-bottom:7px}
+.yenra-social .cs-message__content{border-radius:12px;padding:10px 13px;
+ font-size:var(--dsh-content-font-size,14px);line-height:1.55;overflow-wrap:anywhere;word-break:normal}
+.yenra-social .cs-message--incoming .cs-message__content{background:var(--yn-soft);color:var(--yn-ink)}
+.yenra-social .cs-message--outgoing .cs-message__content{background:var(--yn-graphite);color:#fff}
+.yenra-translation{display:flex;align-items:flex-start;gap:8px;margin:4px 15px 18px 27px;padding-left:10px;
+ border-left:2px solid var(--yn-border);font-size:11px;line-height:1.5;color:var(--yn-sub);overflow-wrap:anywhere}
+.yenra-translation span{flex:none;color:var(--yn-dim);font-size:10px;white-space:nowrap}
+.yenra-sent{margin:3px 14px 13px;text-align:right;color:var(--yn-dim);font-size:10px}
+.yenra-social .cs-message-input{flex:none;min-width:0;margin:0 14px 12px;border-radius:13px;border:1px solid var(--yn-border);
+ background:var(--yn-raised);box-shadow:0 6px 22px rgba(14,21,32,.045);
+ transition:border-color .17s ease,box-shadow .17s ease}
+.yenra-social .cs-message-input:focus-within{border-color:var(--yn-glow);
+ box-shadow:0 0 0 3px color-mix(in srgb,var(--yn-ink) 6%,transparent),0 7px 25px rgba(14,21,32,.065)}
+.yenra-social .cs-message-input__content-editor,.yenra-social .cs-message-input__content-editor-wrapper,
+.yenra-social .cs-message-input__content-editor-container{min-width:0;background:transparent;color:var(--yn-ink);font-size:13px}
+.yenra-social .cs-message-input__content-editor{max-height:min(28vh,170px);overflow-y:auto}
+.yenra-social .cs-message-input__content-editor[data-placeholder]:empty::before{color:var(--yn-dim)}
+.yenra-social .cs-button--send{color:var(--yn-ink)}
+.yenra-brain{display:flex;flex-direction:column;position:relative;min-width:0;min-height:0;overflow:hidden;
+ border-left:1px solid var(--yn-border);background:var(--yn-raised)}
+.yenra-brain-head{padding:12px 14px 10px;flex:none;border-bottom:1px solid var(--yn-border);background:var(--yn-raised)}
+.yenra-brain-headline{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.yenra-brain-title{font-size:14px;font-weight:740;color:var(--yn-ink)}
+.yenra-brain-controls{display:flex;align-items:center;gap:7px}
+.yenra-brain-memory{padding:5px 9px;border-radius:8px;border:1px solid var(--yn-border);
+ background:var(--yn-soft);font-size:10px;color:var(--yn-ink);cursor:pointer}
+.yenra-brain-memory:hover{background:var(--yn-hover)}
+.yenra-ai-status{font-size:10px;color:var(--yn-sub);padding:4px 7px;border:1px solid var(--yn-border);
+ border-radius:999px;background:var(--yn-soft)}
+.yenra-brain-context{margin-top:6px;font-size:10px;color:var(--yn-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.yenra-advice{display:flex;flex:0 1 auto;flex-direction:column;min-height:0;max-height:min(35%,255px);
+ padding:11px 12px 10px;border-bottom:1px solid var(--yn-border);background:var(--yn-raised);overflow:hidden}
+.yenra-advice-head{display:flex;align-items:center;justify-content:space-between;min-width:0;
+ gap:8px;flex:none;margin-bottom:9px;font-size:12px;font-weight:710;color:var(--yn-ink)}
+.yenra-generate{border:1px solid var(--yn-border);border-radius:8px;background:var(--yn-soft);color:var(--yn-ink);
+ padding:6px 9px;font-size:10px;font-weight:630;white-space:nowrap;cursor:pointer}
+.yenra-generate:hover:not(:disabled){background:var(--yn-hover)}
+.yenra-generate:disabled{opacity:.48;cursor:not-allowed}
+.yenra-advice-status{font-size:11px;color:var(--yn-sub)}
+.yenra-advice-issue{margin-bottom:8px;line-height:1.5;overflow-wrap:anywhere}
+.yenra-advice-row{display:flex;flex:1 1 auto;flex-direction:column;gap:8px;min-height:0;
+ padding:0 4px 2px 0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin}
+.yenra-advice-card{flex:0 0 auto;display:grid;grid-template-columns:minmax(0,1fr) max-content;
+ grid-template-areas:"style actions" "message message";min-width:0;
+ padding:11px 12px 10px;gap:6px 9px;border-radius:11px;border:1px solid var(--yn-border);
+ background:var(--yn-soft);position:relative;isolation:isolate;
+ transition:box-shadow .18s ease,background .18s ease,border-color .18s ease,transform .18s ease}
+.yenra-advice-card:hover{background:var(--yn-raised);
+ border-color:color-mix(in srgb,var(--yn-ink) 20%,var(--yn-border));
+ box-shadow:0 5px 20px rgba(21,28,39,.075),inset 0 1px 0 rgba(255,255,255,.06);transform:translateY(-1px)}
+.yenra-advice-style{grid-area:style;min-width:0;align-self:center;font-size:12px;font-weight:690;line-height:1.55;color:var(--yn-ink)}
+.yenra-advice-style span{font-size:10px;color:var(--yn-dim);margin-right:7px}
+.yenra-advice-text{min-width:0;min-height:21px;color:var(--yn-sub);font-size:12px;line-height:1.64;
+ white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;hyphens:auto}
+.yenra-advice-translation{min-width:0;padding-top:6px;border-top:1px solid var(--yn-border);
+ color:var(--yn-sub);font-size:11px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.yenra-advice-actions{grid-area:actions;justify-self:end;align-self:center;display:flex;gap:4px;align-items:center}
+.yenra-advice-actions button{min-width:28px;min-height:27px;padding:4px 7px;border:1px solid var(--yn-border);
+ border-radius:7px;background:var(--yn-raised);color:var(--yn-sub);font-size:10px;cursor:pointer}
+.yenra-advice-actions button:hover:not(:disabled){background:var(--yn-hover);color:var(--yn-ink)}
+.yenra-advice-actions button:disabled{opacity:.44;cursor:not-allowed}
+.yenra-advice-editor{grid-area:message;width:100%;min-width:0;min-height:68px;resize:vertical;
+ padding:8px 10px;background:var(--yn-raised);border:1px solid var(--yn-border);
+ color:var(--yn-ink);font:inherit;font-size:12px;line-height:1.5;border-radius:8px}
+.yenra-dialogue-head{flex:none;padding:9px 14px;border-bottom:1px solid var(--yn-border);
+ background:var(--yn-soft);font-size:11px;font-weight:650;color:var(--yn-sub)}
+.yenra-ai-host{display:flex;flex:1 1 0%;flex-direction:column;min-width:0;min-height:0;overflow:hidden;background:var(--yn-raised)}
+.yenra-ai-host [data-yenra-ai-composer]{display:flex;flex:1 1 0%;flex-direction:column;height:100%;min-width:0;min-height:0;overflow:hidden}
+.yenra-ai-host [data-conversation-scroll]>[data-conversation-region="composer"]{margin-top:auto}
+/* Context tools use a native HTML details disclosure: no duplicated Sender or Composer. */
+.yenra-media-menu{position:relative;flex:none;color:var(--yn-sub)}
+.yenra-media-menu summary{display:inline-flex;align-items:center;gap:4px;list-style:none;cursor:pointer;
+ padding:6px;border-radius:8px;font-size:10px;white-space:nowrap;border:1px solid transparent}
+.yenra-media-menu summary::-webkit-details-marker{display:none}
+.yenra-media-menu summary:hover,.yenra-media-menu[open] summary{background:var(--yn-soft);color:var(--yn-ink)}
+.yenra-caret{color:var(--yn-dim);font-size:13px}
+.yenra-media-sheet{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:min(350px,82vw);
+ padding:11px;border:1px solid var(--yn-border);border-radius:13px;
+ background:var(--yn-raised);box-shadow:0 16px 48px rgba(0,0,0,.15)}
+.yenra-media-title{display:flex;align-items:center;justify-content:space-between;padding:3px 5px 10px;
+ font-weight:710;color:var(--yn-ink);font-size:12px}
+.yenra-media-title small{color:var(--yn-dim);font-weight:400;font-size:10px}
+.yenra-media-row{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:9px;align-items:center;
+ padding:9px 5px;border-top:1px solid var(--yn-border)}
+.yenra-media-glyph{display:flex;align-items:center;justify-content:center;color:var(--yn-sub)}
+.yenra-media-row strong{display:block;font-size:11px;font-weight:640;color:var(--yn-ink)}
+.yenra-media-row small{display:block;margin-top:3px;font-size:10px;line-height:1.4;color:var(--yn-sub)}
+.yenra-media-state{font-size:9px;color:var(--yn-dim)}
+/* Memory is a lightweight presentation over the same brain, not another store. */
+.yenra-memory-overlay{position:absolute;inset:0;z-index:22;display:flex;flex-direction:column;min-height:0;
+ background:var(--yn-raised);box-shadow:-12px 0 34px rgba(0,0,0,.09)}
+.yenra-memory-title{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;
+ padding:18px;border-bottom:1px solid var(--yn-border)}
+.yenra-memory-title h2{margin:5px 0 0;font-size:15px;font-weight:730;color:var(--yn-ink)}
+.yenra-product-breadcrumb{font-size:10px;color:var(--yn-dim);letter-spacing:.02em}
+.yenra-product-breadcrumb span{padding:0 7px}
+.yenra-soft-button{border:1px solid var(--yn-border);border-radius:9px;background:var(--yn-soft);color:var(--yn-ink);
+ padding:7px 11px;cursor:pointer;font-size:11px}
+.yenra-soft-button:hover{background:var(--yn-hover)}
+.yenra-memory-body{overflow:auto;flex:1;min-height:0;padding:15px}
+.yenra-memory-intro{margin:0 0 13px;color:var(--yn-sub);font-size:12px;line-height:1.6}
+.yenra-memory-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;
+ padding:13px 2px;border-bottom:1px solid var(--yn-border)}
+.yenra-memory-row strong{font-size:12px;color:var(--yn-ink);font-weight:670}
+.yenra-memory-row>span:nth-child(2){grid-column:1/-1;grid-row:2;color:var(--yn-sub);font-size:11px;line-height:1.5}
+.yenra-memory-row .yenra-channel-state{grid-column:2;grid-row:1}
+.yenra-memory-actions{display:flex;gap:8px;margin-top:18px}
+.yenra-memory-actions button{border-radius:8px;padding:8px 10px;border:1px solid var(--yn-border);
+ background:var(--yn-soft);color:var(--yn-dim);font-size:11px;cursor:not-allowed}
+/* Native DSH managed-center keyed main panel. Read-only until real provider. */
+.yenra-product-page{height:100%;overflow:hidden;min-height:0}
+.yenra-product-scroll{height:100%;overflow:auto;padding:30px clamp(20px,4vw,48px) 50px}
+.yenra-product-scroll>*{max-width:1040px;margin-left:auto;margin-right:auto}
+.yenra-product-hero{background:linear-gradient(125deg,#222b37,#3b4654);color:#edf1f8;
+ border-radius:17px;padding:24px 28px;margin-bottom:18px;box-shadow:0 14px 44px rgba(23,31,42,.1)}
+.yenra-product-hero .yenra-product-breadcrumb{color:#abb6c6}
+.yenra-product-hero-row{display:flex;align-items:center;gap:15px;margin-top:16px}
+.yenra-product-icon{flex:none;display:flex;align-items:center;justify-content:center;width:48px;height:48px;
+ border-radius:13px;background:#ffffff18;border:1px solid #ffffff28}
+.yenra-product-heading{flex:1;min-width:0}
+.yenra-product-heading h1{margin:0 0 5px;font-size:21px;color:#fff;font-weight:740}
+.yenra-product-heading p{margin:0;font-size:12px;line-height:1.6;color:#d1d7e1}
+.yenra-product-status{align-self:center;flex:none;color:#e7edf5;border:1px solid #ffffff45;padding:6px 10px;border-radius:999px;font-size:11px}
+.yenra-product-notice{display:flex;flex-direction:column;gap:4px;padding:14px 17px;background:var(--yn-soft);
+ border:1px solid var(--yn-border);border-radius:11px;color:var(--yn-sub);
+ margin-bottom:16px;font-size:12px;line-height:1.5}
+.yenra-product-notice strong{color:var(--yn-ink);font-size:12px}
+.yenra-product-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(270px,.85fr);gap:16px;margin-bottom:16px}
+.yenra-product-card{background:var(--yn-raised);border:1px solid var(--yn-border);border-radius:14px;
+ padding:19px 19px;margin-bottom:16px;box-shadow:0 6px 24px rgba(22,32,44,.028)}
+.yenra-product-grid .yenra-product-card{margin-bottom:0}
+.yenra-product-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.yenra-product-card h2{margin:0;font-size:14px;color:var(--yn-ink);font-weight:720}
+.yenra-product-tiny{font-size:10px;color:var(--yn-dim);white-space:nowrap}
+.yenra-product-card p{color:var(--yn-sub);margin:0 0 14px;font-size:11px;line-height:1.55}
+.yenra-switch-row{padding:12px 0;border-top:1px solid var(--yn-border);display:flex;align-items:center;justify-content:space-between;gap:14px}
+.yenra-switch-row strong{display:block;font-size:12px;color:var(--yn-ink);font-weight:660}
+.yenra-switch-row small{display:block;font-size:10px;color:var(--yn-dim);margin-top:4px}
+.yenra-switch{flex:none;width:38px;height:22px;border:0;border-radius:14px;background:var(--yn-hover);
+ position:relative;opacity:.65;cursor:not-allowed}
+.yenra-switch:after{content:"";position:absolute;left:4px;top:4px;width:14px;height:14px;border-radius:50%;background:var(--yn-raised)}
+.yenra-muted-action{padding:7px 10px;border-radius:8px;background:var(--yn-soft);border:1px solid var(--yn-border);
+ font-size:11px;color:var(--yn-dim);cursor:not-allowed}
+.yenra-product-stat{display:flex;align-items:center;justify-content:space-between;padding:12px 1px;
+ border-top:1px solid var(--yn-border);font-size:12px;color:var(--yn-sub)}
+.yenra-product-stat strong{font-size:19px;color:var(--yn-dim)}
+.yenra-channel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:15px}
+.yenra-channel-row{display:flex;align-items:center;gap:8px;border:1px solid var(--yn-border);
+ border-radius:10px;padding:12px 10px;font-size:11px;color:var(--yn-ink);min-width:0}
+.yenra-channel-symbol{display:flex;align-items:center;justify-content:center;width:25px;height:25px;
+ border-radius:8px;color:var(--yn-ink);background:var(--yn-soft);font-weight:800}
+.yenra-channel-state{margin-left:auto;white-space:nowrap;color:var(--yn-dim);font-size:10px}
+.yenra-product-blank{display:flex;flex-direction:column;gap:8px;align-items:center;
+ text-align:center;padding:28px 12px;color:var(--yn-dim);font-size:11px;line-height:1.5}
+.yenra-product-blank strong{font-size:12px;color:var(--yn-sub)}
+.yenra-product-blank span{max-width:430px}
+.yenra-product-back{display:flex;align-items:center;gap:9px;background:var(--yn-raised);
+ border:1px solid var(--yn-border);border-radius:9px;padding:10px 13px;
+ color:var(--yn-ink);font-size:11px;cursor:pointer}
+.yenra-product-back:hover{background:var(--yn-soft)}
+/* Within the user-owned main panel, hide contact list at narrow sizes so chat and native brain keep room.
+   The official DSH Sidebar owns its own 56px collapsed rail and Ctrl+B. */
+@container (max-width:930px){
+ .yenra-layout[data-brain=true]{grid-template-columns:minmax(0,52%) minmax(335px,48%)}
+ .yenra-social .cs-sidebar{max-width:175px;min-width:160px;flex-basis:170px}
+ .yenra-topmeta .yenra-pill{display:none}
+ .yenra-header-control span{display:none}
+ .yenra-advice{padding:10px}
+ .yenra-advice-card{padding:10px}
+}
+@container (max-width:1000px){
+ /* Full contacts appear on demand as a drawer; compact and hidden never cover chat. */
+ .yenra-social[data-contact-layout="full"] .cs-sidebar{position:absolute;z-index:15;left:0;top:0;bottom:0;display:flex;
+   width:264px;flex:0 0 264px;box-shadow:12px 0 36px rgba(12,18,27,.17)}
+ /* Brain becomes an intentionally opened DSH native-panel drawer; chat stays usable. */
+ .yenra-layout[data-brain=true]{grid-template-columns:minmax(0,1fr)}
+ .yenra-brain{position:absolute;right:0;top:0;bottom:0;z-index:12;width:min(430px,90%);
+   box-shadow:-16px 0 40px rgba(12,18,27,.2)}
+}
+@container (max-width:750px){
+ .yenra-layout[data-brain=true]{grid-template-columns:minmax(0,1fr)}
+ .yenra-brain{position:absolute;right:0;top:0;bottom:0;z-index:12;width:min(430px,90%);
+   box-shadow:-16px 0 40px rgba(12,18,27,.2)}
+ .yenra-top{height:53px;padding:0 10px}
+ .yenra-identity{display:none}
+ .yenra-topnav{margin-left:0}
+ .yenra-social[data-contacts-open=true] .cs-sidebar{position:absolute;z-index:15;left:0;top:0;bottom:0;
+   display:flex;width:min(210px,70%);max-width:210px;box-shadow:9px 0 30px rgba(0,0,0,.15)}
+ .yenra-product-grid{grid-template-columns:1fr}
+ .yenra-channel-grid{grid-template-columns:1fr}
+}
+@media (max-height:650px){
+ .yenra-advice{max-height:32%}
+}
+@media(prefers-reduced-motion:reduce){
+ .yenra-root :is(.yenra-tab,.yenra-iconbtn,.yenra-advice-card,.yenra-social .cs-conversation,
+ .yenra-social .cs-message-input){transition:none;transform:none}
+}
+
+/* Social composer: ChatScope InputToolbox and original MessageInput/AttachmentButton.
+   Only the presentation of verified upstream components and local QA metadata is added. */
+.yenra-social .cs-input-toolbox.yenra-composer-toolbox{
+  position:relative;z-index:7;flex:none;min-width:0;
+  margin:0 14px 6px;padding:3px 6px;border:1px solid var(--yn-border);
+  border-radius:10px;background:var(--yn-raised);overflow:visible;
+}
+.yenra-composer-toolbar{display:flex;align-items:center;gap:3px;min-width:0;flex-wrap:nowrap}
+.yenra-composer-toolbar .yenra-tool-action,.yenra-composer-tool-status>summary{
+  display:inline-flex;align-items:center;gap:5px;justify-content:center;
+  min-height:30px;padding:4px 9px;border:0;border-radius:7px;
+  color:var(--yn-sub);background:transparent;white-space:nowrap;
+  font-family:inherit;font-size:11px;line-height:19px;cursor:pointer;
+}
+.yenra-composer-toolbar .yenra-tool-action:hover,.yenra-composer-tool-status>summary:hover{
+  color:var(--yn-ink);background:var(--yn-soft)
+}
+.yenra-composer-toolbar .yenra-tool-action:focus-visible,.yenra-composer-tool-status>summary:focus-visible{
+  outline:2px solid var(--dsw-focus-ring-color,#9aaecb);outline-offset:-2px
+}
+.yenra-emoji-anchor,.yenra-composer-tool-status{position:relative;flex:none;min-width:0}
+.yenra-composer-tool-status>summary{list-style:none}
+.yenra-composer-tool-status>summary::-webkit-details-marker{display:none}
+.yenra-emoji-pop{position:absolute;z-index:20;left:0;bottom:calc(100% + 9px);
+  max-width:calc(100vw - 34px);border:1px solid var(--yn-border);
+  border-radius:13px;box-shadow:0 16px 40px rgba(10,18,30,.23);
+  background:var(--yn-raised);overflow:hidden}
+.yenra-emoji-pop .epr-main{max-width:100%}
+.yenra-composer-tool-pop{position:absolute;z-index:20;left:0;bottom:calc(100% + 9px);
+  width:min(290px,65vw);min-width:210px;display:flex;flex-direction:column;gap:5px;
+  padding:14px;border:1px solid var(--yn-border);border-radius:11px;
+  color:var(--yn-sub);background:var(--yn-raised);
+  box-shadow:0 16px 42px rgba(15,25,40,.16);font-size:11px;line-height:1.55}
+.yenra-composer-tool-pop strong{font-size:12px;color:var(--yn-ink)}
+.yenra-composer-tool-hint{margin-left:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;
+  color:var(--yn-dim);white-space:nowrap;font-size:10px;padding-right:3px}
+.yenra-composer-toolbox .yenra-media-menu>summary{min-height:30px;padding:4px 9px;font-size:11px}
+.yenra-composer-toolbox .yenra-media-sheet{top:auto;bottom:calc(100% + 9px);z-index:20;right:0}
+.yenra-file-preview{display:flex;flex:none;align-items:center;gap:9px;min-width:0;margin:0 14px 7px;
+  padding:7px 9px;border:1px solid var(--yn-border);border-radius:10px;background:var(--yn-soft)}
+.yenra-file-preview img{width:46px;height:40px;flex:none;border-radius:7px;object-fit:cover}
+.yenra-file-type{flex:none;border-radius:7px;background:var(--yn-hover);font-size:10px;padding:10px 7px}
+.yenra-file-meta{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.yenra-file-meta strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--yn-ink);font-size:11px}
+.yenra-file-meta span{color:var(--yn-sub);font-size:10px}
+.yenra-file-preview button{flex:none;display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:8px;border:1px solid var(--yn-border);
+  background:var(--yn-raised);color:var(--yn-sub);cursor:pointer}
+.yenra-file-preview button:hover{background:var(--yn-hover);color:var(--yn-ink)}
+/* Native details give accessible expand/collapse without an additional suggestion state engine. */
+.yenra-advice-details{grid-area:message;min-width:0;overflow-wrap:anywhere}
+.yenra-advice-preview{display:flex;flex-direction:column;gap:3px;min-width:0;
+  list-style:none;cursor:pointer;border-radius:7px;outline-offset:3px}
+.yenra-advice-preview::-webkit-details-marker{display:none}
+.yenra-advice-snippet{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;
+  -webkit-line-clamp:2;font-size:12px;line-height:1.5;color:var(--yn-ink);
+  white-space:pre-wrap;word-break:normal;overflow-wrap:anywhere}
+.yenra-advice-snippet-cn{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;
+  -webkit-line-clamp:1;font-size:10.5px;line-height:1.5;color:var(--yn-sub);overflow-wrap:anywhere}
+.yenra-advice-preview:after{content:"展开全文";display:block;text-align:right;
+  color:var(--yn-dim);font-size:10px;line-height:15px}
+.yenra-advice-details[open] .yenra-advice-preview:after{content:"收起全文"}
+.yenra-advice-details[open] .yenra-advice-snippet,
+.yenra-advice-details[open] .yenra-advice-snippet-cn{display:none}
+.yenra-advice-full{padding-top:7px;display:flex;flex-direction:column;gap:7px}
+.yenra-advice-details:not([open]) .yenra-advice-full{display:none}
+.yenra-advice-full .yenra-advice-text{color:var(--yn-ink);line-height:1.68}
+.yenra-advice-full .yenra-advice-translation{line-height:1.6}
+@container(max-width:930px){
+ .yenra-composer-tool-hint{display:none}
+ .yenra-composer-toolbox .yenra-media-menu>summary{padding-inline:6px}
+ .yenra-composer-toolbar .yenra-tool-action,.yenra-composer-tool-status>summary{padding-inline:6px}
+}
+@media(max-height:700px){
+ .yenra-advice{max-height:min(34%,215px)}
+}

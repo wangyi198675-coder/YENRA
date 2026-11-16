@@ -1,0 +1,378 @@
+﻿{
+    "version":  "0.2.1-rc.5.20261116.18",
+    "status":  "source-import-not-reproducible-build",
+    "bridgeFiles":  [
+                        {
+                            "sha256":  "08cb22ab9ef41b5224725e50ac7f986e7abaeb0a9757667563f45503edc7c14e",
+                            "file":  "social-adapters/chatwoot-bridge/src/channel-presentation.mjs",
+                            "bytes":  3298
+                        },
+                        {
+                            "sha256":  "58629a13a75d5be68966c2870809784fc1df4f008b7513cf1629059e683e63d5",
+                            "file":  "social-adapters/chatwoot-bridge/src/chatwoot-client.mjs",
+                            "bytes":  14186
+                        },
+                        {
+                            "sha256":  "ebda7d5395eb27e78afcecfbeddb59ae4bdd30cb7b38964e1148f137cad40379",
+                            "file":  "social-adapters/chatwoot-bridge/src/cloud-native-page.mjs",
+                            "bytes":  3296
+                        },
+                        {
+                            "sha256":  "8bc8626473e98a06145e5ecde41245841b253e7ae06321f9f9db05f9f7e82f3b",
+                            "file":  "social-adapters/chatwoot-bridge/src/cloud-notice-feed.mjs",
+                            "bytes":  6848
+                        },
+                        {
+                            "sha256":  "a94914645a15a9ae99e422140b78eefa2b456b48eb940e1142b1d4b600c6a2cc",
+                            "file":  "social-adapters/chatwoot-bridge/src/config.mjs",
+                            "bytes":  7495
+                        },
+                        {
+                            "sha256":  "b1aff1c9a913f3b4e4bba3617329bd2000b0fda88823cc060ce8c794dae629eb",
+                            "file":  "social-adapters/chatwoot-bridge/src/contract.mjs",
+                            "bytes":  15538
+                        },
+                        {
+                            "sha256":  "efb6ca6d5064d5be6029c34c77df6d19454191344615140d96b2f2145fc834ec",
+                            "file":  "social-adapters/chatwoot-bridge/src/friend-host-discovery.mjs",
+                            "bytes":  2850
+                        },
+                        {
+                            "sha256":  "6fd32d2d811ad611f2e21081e90587d6a2f8b16eb50aae6ec486768124ec3dfc",
+                            "file":  "social-adapters/chatwoot-bridge/src/friend-main.mjs",
+                            "bytes":  13690
+                        },
+                        {
+                            "sha256":  "5ff53b16c4442eb0dffc91dcdbecf5e23778320460ea531e8f9a21109f8062a6",
+                            "file":  "social-adapters/chatwoot-bridge/src/host-client.mjs",
+                            "bytes":  28879
+                        },
+                        {
+                            "sha256":  "978f86d834f84d83e00e21324f1e1f5742c1413a2bf05b4cd5c1357da4c6635d",
+                            "file":  "social-adapters/chatwoot-bridge/src/inbound.mjs",
+                            "bytes":  34081
+                        },
+                        {
+                            "sha256":  "27baf3f7590f2e8d26c4f817cd5d72f2a2e345a46ea3c474638558eefb8b0b15",
+                            "file":  "social-adapters/chatwoot-bridge/src/inbox-map.mjs",
+                            "bytes":  8550
+                        },
+                        {
+                            "sha256":  "00029e08b5d738bfaec9fe5272ce93a57a0037aaee4638517ba94d3a22eeb588",
+                            "file":  "social-adapters/chatwoot-bridge/src/index.mjs",
+                            "bytes":  34634
+                        },
+                        {
+                            "sha256":  "4353ac6253f27a0176f0c1b294f90adf2d4db178ecee3a2eb87939997dfb3315",
+                            "file":  "social-adapters/chatwoot-bridge/src/logger.mjs",
+                            "bytes":  3292
+                        },
+                        {
+                            "sha256":  "6176b309ad3358f372bf0a07e63a0d0de04223609e330e7297aaae5d5d00e869",
+                            "file":  "social-adapters/chatwoot-bridge/src/media-transfer.mjs",
+                            "bytes":  4538
+                        },
+                        {
+                            "sha256":  "bb1aaa169bd04c2acfb6d39b8e7b84745cf563aa5cea222c689a2c702aa6deec",
+                            "file":  "social-adapters/chatwoot-bridge/src/native-authorized-host-fetch.mjs",
+                            "bytes":  9582
+                        },
+                        {
+                            "sha256":  "18b8f10b7eed865d5d646d6b98d0d990bac5ca28abcc85ed1aa41b3d906ead4e",
+                            "file":  "social-adapters/chatwoot-bridge/src/native-delivery.mjs",
+                            "bytes":  7649
+                        },
+                        {
+                            "sha256":  "654d7c031a8d1d6d2a0effaa7a4102bfaf0625e6a764ca8942d181241adf39bd",
+                            "file":  "social-adapters/chatwoot-bridge/src/outbound.mjs",
+                            "bytes":  16436
+                        },
+                        {
+                            "sha256":  "ed5c4796ede949c0be2fbafc8969722218c0d429612e08be4abc361d5ab35d6f",
+                            "file":  "social-adapters/chatwoot-bridge/src/page-contact-avatar.mjs",
+                            "bytes":  2569
+                        },
+                        {
+                            "sha256":  "ec7eabe8533d3e9f0f2688cab74c95eb7d723fe1465ba2f3d51812ab047ae4f1",
+                            "file":  "social-adapters/chatwoot-bridge/src/page-contact.mjs",
+                            "bytes":  4035
+                        },
+                        {
+                            "sha256":  "6d742feb6a07fb02d0540a609cafb88db520c095e57afeb1dd98c366f551ea6c",
+                            "file":  "social-adapters/chatwoot-bridge/src/platform-ack.mjs",
+                            "bytes":  7758
+                        },
+                        {
+                            "sha256":  "cceee757d7cc16e579c7d41952ed8fa25550fc8fb949970cf30029e4990f2cfd",
+                            "file":  "social-adapters/chatwoot-bridge/src/selection.mjs",
+                            "bytes":  4023
+                        },
+                        {
+                            "sha256":  "571060ede869ed52e3c58b754bb83ae45f27e0b2ca542739d0e6086c7cb7de8a",
+                            "file":  "social-adapters/chatwoot-bridge/src/sender-gate.mjs",
+                            "bytes":  6185
+                        },
+                        {
+                            "sha256":  "1c42d1c68a11c590d227562a6020c3e3f7906c482485b67d7fd81ee9a1e5a39d",
+                            "file":  "social-adapters/chatwoot-bridge/src/sendpulse-page-migration.mjs",
+                            "bytes":  9537
+                        },
+                        {
+                            "sha256":  "4f34cfc325a8547d56e62f4b6c83ad273a286ed1e036e625a71db0a082c20230",
+                            "file":  "social-adapters/chatwoot-bridge/src/sendpulse-page-roster.mjs",
+                            "bytes":  5683
+                        },
+                        {
+                            "sha256":  "7c56cd4dfb99c0d3c02a053d40808311dde92cfe6eca52a927bd1d8f1194924b",
+                            "file":  "social-adapters/chatwoot-bridge/src/server.mjs",
+                            "bytes":  34321
+                        },
+                        {
+                            "sha256":  "d9ba383ddcc1a6d6b5d632405e929de7a3615d6abfe9cea903f48b0ecfe66137",
+                            "file":  "social-adapters/chatwoot-bridge/src/translation-proof.mjs",
+                            "bytes":  2385
+                        },
+                        {
+                            "sha256":  "d560ec522daf2348ab0440711849e6103a0307ca13d12f18c3634165c61a6ba5",
+                            "file":  "social-adapters/chatwoot-bridge/src/verified-wa-room.mjs",
+                            "bytes":  2685
+                        },
+                        {
+                            "sha256":  "b9d1ec4e430537284e301ff3a555067aec0d84221fe5292cb64cf964fb6e1ba1",
+                            "file":  "social-adapters/chatwoot-bridge/src/whatsapp-contact-avatar.mjs",
+                            "bytes":  2545
+                        },
+                        {
+                            "sha256":  "518e71985297ad430747998394757d557b9b09f9e01167b61797762ec240e7d1",
+                            "file":  "social-adapters/chatwoot-bridge/src/whatsapp-peer-presence.mjs",
+                            "bytes":  2895
+                        },
+                        {
+                            "sha256":  "442cbc2bea2f3d37d7bfc84fbbb1fbd1eb889aaa7cdce7f41a7e311240323a5a",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-api-channel-callback.mjs",
+                            "bytes":  3689
+                        },
+                        {
+                            "sha256":  "53d39fcb8017c566f8a0c743174beef6a598f7624eca1853e205b7259664839d",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-api-reader.mjs",
+                            "bytes":  3168
+                        },
+                        {
+                            "sha256":  "f7e0db1f4e5eb2faff69e22d4912dc95681cc3a528466d5353783ef6cd0a43c6",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-conversation-export.mjs",
+                            "bytes":  5097
+                        },
+                        {
+                            "sha256":  "79f327c4130fcb3bc45abe12258c65fae46533121f2ad8564b84a4b34ed997c9",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-conversation-preview.mjs",
+                            "bytes":  3735
+                        },
+                        {
+                            "sha256":  "fb3999594448a89c8d5170395301150be2dcb2c53bf9e84aad485005a75d4599",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-event-processor.mjs",
+                            "bytes":  3412
+                        },
+                        {
+                            "sha256":  "07027a9acd1c7d664b533a35b8c091ce566e59b5cd8039e1317b11a122266b59",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-fb-photo-preview.mjs",
+                            "bytes":  2154
+                        },
+                        {
+                            "sha256":  "67704d2c922be1a5e8d6619fe0a403d14876bcc943bc95f945d7c733f977f110",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-fb-share-fallback.mjs",
+                            "bytes":  2859
+                        },
+                        {
+                            "sha256":  "662a0a624aae6a47879d30fbf5f1d0e7c35322d67a17fb96bcc4e676c83adf83",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-inbound-bootstrap.mjs",
+                            "bytes":  2883
+                        },
+                        {
+                            "sha256":  "97a8fec057514693d5cba66bbd6e0e2515fa937db4bb9bface5c8ebc25f0431e",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-inbound-projection.mjs",
+                            "bytes":  13730
+                        },
+                        {
+                            "sha256":  "ab218f855097127c45b6bdb17535cf29ff5dc9f21677efd025a972d5690222a1",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-native-selection.mjs",
+                            "bytes":  7157
+                        },
+                        {
+                            "sha256":  "e7e783339a4497003dc874a6cefd9423dbe28c5f00b304e3cbb243f05f8ddf5b",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-page-memory-scope.mjs",
+                            "bytes":  3808
+                        },
+                        {
+                            "sha256":  "cdb4cc377c56d909105f5b9de65afc9e77d025f612fbbc9d95a4e9929789623d",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-page-sent-proof.mjs",
+                            "bytes":  2709
+                        },
+                        {
+                            "sha256":  "333032bc3f6e4db0a858e8d8cf5e015ecae0a57d23a0e0a4907be954de2fb676",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-platform-ack.mjs",
+                            "bytes":  7460
+                        },
+                        {
+                            "sha256":  "f51b9ce03b1db2592cf6e06bba12177b65f2272bb231957d534a1725cbd4c03b",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-remote-page-scope.mjs",
+                            "bytes":  5793
+                        },
+                        {
+                            "sha256":  "a6efa4e2187d3b5f7f29e181d56e1073ee501aab81421db21fcdbe3bf1113fc6",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-remote-personal-scope.mjs",
+                            "bytes":  6104
+                        },
+                        {
+                            "sha256":  "c7d3433a9054ce337dafb643fe124f70aab0b233992c521e6f81696c4521e0aa",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-remote-wa-scope.mjs",
+                            "bytes":  7284
+                        },
+                        {
+                            "sha256":  "3eed33d5df4605d4119f024049daa48755b8b172c03b984975bdf15f8a375f74",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-wa-message-actions.mjs",
+                            "bytes":  6110
+                        },
+                        {
+                            "sha256":  "70bb060d6ec467533d6cd30c85d212de3606a30f7bf6640f777604d57bf869d7",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-wa-outbound.mjs",
+                            "bytes":  11789
+                        },
+                        {
+                            "sha256":  "2a8a489522f6e3b72f4377ba43e63ac0433620c54c3a340b8d7d3160184d9378",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-wa-recent-sync.mjs",
+                            "bytes":  14275
+                        },
+                        {
+                            "sha256":  "b61ec3807afa2591f6d85e7f2d51c94b786971dd126463e9b45a84d7a3641874",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-webhook-contract.mjs",
+                            "bytes":  2600
+                        },
+                        {
+                            "sha256":  "5b6a22147127484871ec467afc2b263ce367353a8ff7ada19630e01709ea980c",
+                            "file":  "social-adapters/chatwoot-cloud-direct/cloud-whatsapp-avatar-sync.mjs",
+                            "bytes":  2582
+                        },
+                        {
+                            "sha256":  "e67688b118e3b40ac19532d3a10d62b7c083cf0674fca230451700a36c786744",
+                            "file":  "social-adapters/chatwoot-cloud-direct/read-cloud-channel-secrets-dpapi.ps1",
+                            "bytes":  471
+                        },
+                        {
+                            "sha256":  "f5b3e4a31f5876fe15bccbf24ce091b86c427512e119ef393c4cf039eb764644",
+                            "file":  "social-adapters/chatwoot-cloud-direct/read-cloud-dpapi.ps1",
+                            "bytes":  488
+                        },
+                        {
+                            "sha256":  "aed1e2ebd7f8d4a5630a983150040131012534d1510727620a6e193a3dbe6121",
+                            "file":  "social-adapters/chatwoot-cloud-direct/read-cloud-four-account-map-dpapi.ps1",
+                            "bytes":  476
+                        },
+                        {
+                            "sha256":  "0be9072f1b2a565867b7539038b670b0cd1fedf0ecf099e9e4c64ad5f5fd2f40",
+                            "file":  "social-adapters/chatwoot-cloud-direct/read-cloud-webhook-dpapi.ps1",
+                            "bytes":  504
+                        },
+                        {
+                            "sha256":  "82ba443bfb40ef407aecce01ea7773e99e45e4c854ded5c9fd73f5815989fef0",
+                            "file":  "social-adapters/chatwoot-cloud-direct/shared-friend-whatsapp-provision.mjs",
+                            "bytes":  6630
+                        },
+                        {
+                            "sha256":  "093af1010d176ff874dccf682c5a1e865a97ccfe57de2cfb7d5f7f981767fb36",
+                            "file":  "social-adapters/chatwoot-cloud-direct/shared-friend-whatsapp-runtime.mjs",
+                            "bytes":  9295
+                        },
+                        {
+                            "sha256":  "5648867f3adb15925039cb8eedc28b3592cc796252b48c5e8a8d332b477134f4",
+                            "file":  "social-adapters/sendpulse-bridge/read-sendpulse-dpapi.ps1",
+                            "bytes":  1125
+                        },
+                        {
+                            "sha256":  "3b15024b39ab075ba584546eef3f4db94b8da48db052bf79bad833d9b5d0f7af",
+                            "file":  "social-adapters/sendpulse-bridge/sendpulse-official-reader.mjs",
+                            "bytes":  7388
+                        }
+                    ],
+    "latestFormalSources":  [
+                                {
+                                    "sha256":  "1680b110a00571d4ed1c4d9c53aceda292c9dc142b7542fb1c1bda663e7cc5fe",
+                                    "file":  "ui/chatwoot-embed/desktop-integration-candidate/src/client/ui.tsx"
+                                },
+                                {
+                                    "sha256":  "0677a48483aace26ab31d761c7ad1279192373f81e66e9565bd9842e8f335fe5",
+                                    "file":  "ui/chatwoot-embed/desktop-integration-candidate/src/client/advice-bridge.ts"
+                                },
+                                {
+                                    "sha256":  "d95edbd6b55fe85b8f6cf5f66aca24217b1e31f886c97a19c9c3d053336d484e",
+                                    "file":  "ui/chatwoot-embed/desktop-integration-candidate/src/memory-commands.ts"
+                                },
+                                {
+                                    "sha256":  "6c56549095c9bf45c7d09746d537aeca3b1b00cbca7b6793244b2ac3ee4dda72",
+                                    "file":  "ui/chatwoot-embed/desktop-integration-candidate/src/native-memory-adopt-singleflight.ts"
+                                },
+                                {
+                                    "sha256":  "73a97aa8971aaa00f22a5e4872ba799e16e7ddf4c96c9f73714113c132ea2db2",
+                                    "file":  "ui/chatwoot-embed/desktop-integration-candidate/src/client/brain-light-halo.tsx"
+                                },
+                                {
+                                    "sha256":  "4a4711548f7ac467d5b72b74d2a7b48ef5ac8035adacd20ae750307a953b3869",
+                                    "file":  "ui/chatwoot-embed/src/client/cloud-contact-navigation.css"
+                                },
+                                {
+                                    "sha256":  "6e06e2a450d315e65cedf568867499a10414bc148cb66423413c91e23facdfa8",
+                                    "file":  "ui/chatwoot-embed/src/client/cloud-native-inbox.tsx"
+                                },
+                                {
+                                    "sha256":  "4f7d6a13c031fe74ae9f0ca58be4145949e5af40988c07409b8f2ebc50200c5d",
+                                    "file":  "ui/chatwoot-embed/src/client/cloud-export-translation-policy.ts"
+                                },
+                                {
+                                    "sha256":  "2e380f475c90868db296f8c4bfacf4ef2b647c15cbb084a3393d28d1ede0b20b",
+                                    "file":  "ui/chatwoot-embed/src/client/cloud-native-theme.css"
+                                },
+                                {
+                                    "sha256":  "ea2c7cab18dea809d929fa250552954bd4917ab1c929b247fec038485f979d21",
+                                    "file":  "ui/chatwoot-embed/src/client/cloud-merged-header.css"
+                                },
+                                {
+                                    "sha256":  "96df9857a9e69ea7f7ae22f1edfa465f0a78d5e2eb32509cb300c96d2dbb2e9f",
+                                    "file":  "ui/chatwoot-embed/desktop-integration-candidate/src/client/v2-desktop.css"
+                                },
+                                {
+                                    "sha256":  "32f6cbf47bc28bb82c3daf9a9e651fe510e86cb5de7065647c6f16284d575860",
+                                    "file":  "ui/chatwoot-embed/desktop-integration-candidate/src/client/draggable-brain-launcher.tsx"
+                                },
+                                {
+                                    "sha256":  "86ced839d4d148575863c62e9411e9502f3f982b578c9e9a5cfb5157d7dc698b",
+                                    "file":  "ui/chatwoot-embed/desktop-integration-candidate/src/client/brain-launcher-position.ts"
+                                },
+                                {
+                                    "sha256":  "9078f498a2e4b7c96d1efce381a9f097e77093a598bb35d6441235aded09c3d7",
+                                    "file":  "ui/chatwoot-embed/src/client/cloud-dsh-translator-script.ts"
+                                },
+                                {
+                                    "sha256":  "7a84874d21e8961f77d300ef9869452915a62c1e336c15bfcea199c21184fae7",
+                                    "file":  "ui/chatwoot-embed/src/client/cloud-saved-preview-script.ts"
+                                },
+                                {
+                                    "sha256":  "c8e6511a41c02145c121c4275f847d259768cd7fa8029b2af94e20744fa7a77a",
+                                    "file":  "ui/chatwoot-embed/src/index.ts"
+                                },
+                                {
+                                    "sha256":  "b519ae70013cfab995fdd1722c99ac1ce60c6f4e8ce206c919223d6713699f2c",
+                                    "file":  "ui/personal-chrome/contact-strip.js"
+                                },
+                                {
+                                    "sha256":  "c6245f135927490bc575b19718c50334c80a3ddfc83cba744dc784f85eb75376",
+                                    "file":  "ui/personal-chrome/caption.css"
+                                },
+                                {
+                                    "sha256":  "629b196e900114eaa33140c89afd486202eb7893248f41e8800be9e0aac71aa0",
+                                    "file":  "ui/personal-chrome/client-v101.js"
+                                },
+                                {
+                                    "sha256":  "0e46b03050c6904b5d652c0edd1efcd071cda3360407a02a609b88ba9f792164",
+                                    "file":  "ui/personal-chrome/package.json"
+                                }
+                            ]
+}

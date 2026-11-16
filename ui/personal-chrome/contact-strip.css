@@ -1,0 +1,8 @@
+.conversations-list-wrap [data-yenra-personal-strip]{height:32px!important;min-height:32px!important;margin:0!important;padding:0!important;flex-shrink:0;border-bottom:1px solid rgb(var(--slate-6) / .45)!important}
+.conversations-list-wrap [data-yenra-personal-tabs]{display:flex!important;align-items:center;justify-content:space-between;width:100%;min-height:32px;margin:0!important;padding:0 10px!important;overflow:visible!important}
+.conversations-list-wrap [data-yenra-personal-tabs]::after{content:attr(data-yenra-all-label);font-family:var(--yenra-font-family,inherit);font-size:var(--yenra-font-caption,11px);line-height:1.4;color:rgb(var(--slate-11));font-weight:400}
+.conversations-list-wrap [data-yenra-personal-hidden]{display:none!important}
+.conversations-list-wrap [data-yenra-personal-all]{margin:0!important;padding:0!important;flex:0 1 auto;min-width:0}
+.conversations-list-wrap [data-yenra-personal-heading]{font-family:var(--yenra-font-family,inherit)!important;font-size:max(11px,var(--yenra-font-body,14px))!important;font-weight:600!important;line-height:1.4!important;padding:0!important;color:rgb(var(--slate-12))!important;cursor:default!important;gap:6px}
+.conversations-list-wrap [data-yenra-personal-heading]::after{display:none!important}
+.conversations-list-wrap [data-yenra-personal-count]{background:transparent!important;color:rgb(var(--slate-11))!important;font-size:var(--yenra-font-caption,11px)!important;font-weight:400!important;min-width:0!important;height:auto!important;padding:0!important;margin:0!important;border-radius:0!important}

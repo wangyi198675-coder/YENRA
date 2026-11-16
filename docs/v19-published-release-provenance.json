@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "status": "PUBLISHED_V19_OWNER_NSIS_PROVENANCE_GITHUB_RECONCILIATION_PENDING",
+  "publishedVersion": "0.2.1-rc.5.20261116.19",
+  "publishedSource": {
+    "snapshotFileCount": 96,
+    "snapshotSha256": "5376e69488b9782037027cb22ec7e824b4a143367800f8347bd8e75348f2944b",
+    "frozenBridgeCount": 59,
+    "frozenBridgeManifestSha256": "f685d1d55254a69c69f541a497305015226d8ca8d2b196d401579a51a72cf7e6",
+    "ownerSourceDriftAtAudit": 0,
+    "releaseBridgeDriftAtAudit": 0
+  },
+  "officialWindowsNSIS": {
+    "fileName": "YENRA-0.2.1-rc.5.20261116.19-win-x64-BETA-unsigned.exe",
+    "bytes": 707406885,
+    "sha256": "8eab5ffdedbc04726e551a2bab853ff43ebbcf171a61b3147979457562144e64",
+    "builtByOwner": true,
+    "sourceIntegrityChecksPassed": 87,
+    "sourceIntegrityChecksTotal": 87,
+    "signed": false,
+    "independentGitHubRebuildProven": false
+  },
+  "repoDelta": {
+    "publishedSourceSha256": [
+      {
+        "path": "social-adapters/chatwoot-cloud-direct/cloud-wa-recent-sync.mjs",
+        "sha256": "4a6418728e26e93ecde086c91c5f3b60c6c83b324fcd179caa4505fbd746617c"
+      },
+      {
+        "path": "social-adapters/chatwoot-cloud-direct/cloud-wa-recent-sync.test.mjs",
+        "sha256": "3cc8368b031edbfb8f3c21508c4aeeda9b7ae848ae0f9754af76d9985abd457e"
+      },
+      {
+        "path": "ui/chatwoot-embed/src/client/cloud-dsh-translator-script.ts",
+        "sha256": "cc08d0c160ee9f31f0503dff23fbe05f5c625d26a2ae492ed5a9e6e4c41aa063"
+      },
+      {
+        "path": "ui/chatwoot-embed/src/client/cloud-translation-rightclick-fallback-v19.test.mjs",
+        "sha256": "919337b45c820a3af16806cde90364fd07f4870cb4bffa4ec4e7f84fe204acc4"
+      },
+      {
+        "path": "ui/chatwoot-embed/tsdown.yen-11-translation-qa-20261116.config.ts",
+        "sha256": "1d633862925a1975de982cac4de659b61f0361073802689990145a360d9acea7"
+      }
+    ],
+    "privacyOrNonportableExclusions": [
+      {
+        "path": "social-adapters/chatwoot-cloud-direct/cloud-webhook-contract.test.mjs",
+        "reason": "public fixture has a privacy-safe synthetic secret; original frozen fixture not copied verbatim"
+      },
+      {
+        "path": "social-adapters/chatwoot-cloud-direct/cloud-whatsapp-roster-hydration.test.mjs",
+        "reason": "private contact fixture not suitable for public repository"
+      },
+      {
+        "path": "ui/chatwoot-embed/qa/p1-real-host-caption-hover-preview-20261116.mjs",
+        "reason": "runtime-only CDP QA not required for reproducible source build"
+      },
+      {
+        "path": "ui/chatwoot-embed/qa/p1-yen12-owner-candidate-manifest-20261116.mjs",
+        "reason": "owner-local artifact generator and old v18-only QA receipt"
+      }
+    ]
+  },
+  "security": {
+    "noPrivateTarballsInPublicRepo": true,
+    "noRealContactTestSends": true,
+    "v18ImmutableFrozenBaselineUnchanged": true,
+    "ownerInstallerNotRebuiltByGitHub": true
+  },
+  "notes": "Owner NSIS verifies the published Windows package. GitHub CI checks source receipts and independently provisioned input hashes; it does not reproduce the full installer until authorized private archives and platform resources are supplied."
+}

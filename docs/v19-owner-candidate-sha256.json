@@ -1,0 +1,177 @@
+{
+  "label": "v19-candidate-not-published",
+  "baselineVersion": "0.2.1-rc.5.20261116.18",
+  "ownerRootNotModified": true,
+  "excludedPrivacyFixtures": [
+    {
+      "path": "social-adapters/chatwoot-cloud-direct/cloud-whatsapp-roster-hydration.test.mjs",
+      "reason": [
+        "private_contact"
+      ]
+    },
+    {
+      "path": "ui/chatwoot-embed/qa/cloud-memory-model-scope-20261116.test.mjs",
+      "reason": [
+        "owner_local_path"
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "social-adapters/chatwoot-bridge/src/index.mjs",
+      "ownerTask": "YEN-9/YEN-10/YEN-14",
+      "v19Sha256": "56343f0edb14e31da20038ed4e4aa9ce56eead1eaa1a43dfa45091e7731ba769",
+      "previousCandidateSha256": "e40c195408d4c7851b317a38176728c6be6df6d45f552cff9569ec17f44a3491",
+      "bytes": 36593
+    },
+    {
+      "path": "social-adapters/chatwoot-cloud-direct/cloud-inbound-projection.mjs",
+      "ownerTask": "YEN-9/YEN-10/YEN-14",
+      "v19Sha256": "d5d7970c5cc466c15287da7e7008b8a3257f2f8bc0147e1c24b73ee9e7f581af",
+      "previousCandidateSha256": "ebf5fa08755f26df2d7b6b65d9d97203bd88c1c1cff7f91b77a49562add7a1c3",
+      "bytes": 18682
+    },
+    {
+      "path": "social-adapters/chatwoot-cloud-direct/cloud-native-selection.mjs",
+      "ownerTask": "YEN-9/YEN-10/YEN-14",
+      "v19Sha256": "8752b3ec8b2e5cc0cf897e8fe807a7709f40a78394861411f0ce2dcec4341704",
+      "previousCandidateSha256": "ab218f855097127c45b6bdb17535cf29ff5dc9f21677efd025a972d5690222a1",
+      "bytes": 7390
+    },
+    {
+      "path": "social-adapters/chatwoot-cloud-direct/cloud-native-selection.test.mjs",
+      "ownerTask": "YEN-9/YEN-10/YEN-14",
+      "v19Sha256": "2d53c3dce0a3d94b34dc66a03a0c57aa4591fbb1f9defb7d09a40d67a4e799c6",
+      "previousCandidateSha256": "8c4c58839b16efc9a6b03d234514451bc9a326a84aed8a2f2ce6da0e08748ede",
+      "bytes": 4437
+    },
+    {
+      "path": "social-adapters/chatwoot-cloud-direct/cloud-wa-original-mid-recovery.mjs",
+      "ownerTask": "YEN-9/YEN-10/YEN-14",
+      "v19Sha256": "cf7bfc8d20808bd54889386d8ddfaa304f461d681eb7a40fb6bba5e2f0ab34c6",
+      "previousCandidateSha256": null,
+      "bytes": 2342
+    },
+    {
+      "path": "social-adapters/chatwoot-cloud-direct/cloud-wa-original-mid-recovery.test.mjs",
+      "ownerTask": "YEN-9/YEN-10/YEN-14",
+      "v19Sha256": "c50c4fa312d17c7133d67b59afbc5da06a721ba66a438c7cc14afb5763873e4b",
+      "previousCandidateSha256": null,
+      "bytes": 2741
+    },
+    {
+      "path": "social-adapters/chatwoot-cloud-direct/cloud-wa-outbound.mjs",
+      "ownerTask": "YEN-9/YEN-10/YEN-14",
+      "v19Sha256": "4c9a0059d30127f75f392d99454344be70f3668ad8045327a772fc2d2242e9a5",
+      "previousCandidateSha256": "70bb060d6ec467533d6cd30c85d212de3606a30f7bf6640f777604d57bf869d7",
+      "bytes": 13254
+    },
+    {
+      "path": "social-adapters/chatwoot-cloud-direct/cloud-wa-outbound.test.mjs",
+      "ownerTask": "YEN-9/YEN-10/YEN-14",
+      "v19Sha256": "ab7985c5df7dc772b81634fcbd7c607545a6411cd638acef422a5e82f8914034",
+      "previousCandidateSha256": "51f3efa63295ffcf53bdcb220e4c98bf99238c68f4e1da4dae66226fa17af6d3",
+      "bytes": 15443
+    },
+    {
+      "path": "social-adapters/chatwoot-cloud-direct/cloud-webhook-contract.mjs",
+      "ownerTask": "YEN-9/YEN-10/YEN-14",
+      "v19Sha256": "fa3470b3d6992d9753216a5715abcb654ccd9302feb7a4f7dab1e88c2b38f809",
+      "previousCandidateSha256": "03943232042d825e7f55b46fc87973726fdf6aa252a80ea179a2803440de648a",
+      "bytes": 3802
+    },
+    {
+      "path": "social-adapters/chatwoot-cloud-direct/cloud-webhook-contract.test.mjs",
+      "ownerTask": "YEN-9/YEN-10/YEN-14",
+      "v19Sha256": "8c07e3d23f4fbf81c248f1568266c9a4e8990cada7246a6206e5c18cc92e3a4a",
+      "previousCandidateSha256": null,
+      "bytes": 4045,
+      "ownerSourceSha256": "c6ffa2f7a707d537c6120224b631a88d7b083743c7c0a2686f04bdc55e05552c",
+      "privacySanitizedFixture": true
+    },
+    {
+      "path": "ui/chatwoot-embed/desktop-integration-candidate/src/client/advice-bridge.ts",
+      "ownerTask": "YEN-7",
+      "v19Sha256": "554aa2d9ea48bce05e307482b182d757120f4a3e184ee568497bdd63eab0f833",
+      "previousCandidateSha256": "0677a48483aace26ab31d761c7ad1279192373f81e66e9565bd9842e8f335fe5",
+      "bytes": 22499
+    },
+    {
+      "path": "ui/chatwoot-embed/desktop-integration-candidate/src/client/native-reply-cards.tsx",
+      "ownerTask": "YEN-7",
+      "v19Sha256": "0eca13e4e9488943fced29d876f7669896fa539d8e5d678c3125a28a7b870f2d",
+      "previousCandidateSha256": "b8b2002ba7775bed71b47e06f2a3729e5fa8c227395cf25446472750fc5a25a1",
+      "bytes": 15445
+    },
+    {
+      "path": "ui/chatwoot-embed/desktop-integration-candidate/src/client/ui.tsx",
+      "ownerTask": "YEN-7/YEN-12",
+      "v19Sha256": "0e0e70a453e03b61a8c04e5dca47f86769d635140d761f5d14f2ae22592d1a0d",
+      "previousCandidateSha256": "1680b110a00571d4ed1c4d9c53aceda292c9dc142b7542fb1c1bda663e7cc5fe",
+      "bytes": 163487
+    },
+    {
+      "path": "ui/chatwoot-embed/desktop-integration-candidate/src/client/v2-desktop.css",
+      "ownerTask": "YEN-12",
+      "v19Sha256": "2cfbeecec918d334e6fc03333776fc4762e5bccf2c4b801db623184570f862c0",
+      "previousCandidateSha256": "96df9857a9e69ea7f7ae22f1edfa465f0a78d5e2eb32509cb300c96d2dbb2e9f",
+      "bytes": 114531
+    },
+    {
+      "path": "ui/chatwoot-embed/desktop-integration-candidate/src/cloud-memory-model-scope.ts",
+      "ownerTask": "YEN-7/YEN-8",
+      "v19Sha256": "feecc37fdaa7a3687c9e31a1115b25c82bff837640f91d40f17e5c2320e85b63",
+      "previousCandidateSha256": null,
+      "bytes": 1569
+    },
+    {
+      "path": "ui/chatwoot-embed/desktop-integration-candidate/src/social-agent-actions.ts",
+      "ownerTask": "YEN-7/YEN-8",
+      "v19Sha256": "0ae02378f8069763d76a18477428cb6c0cf0bdeb59116b1cfd2cade991c5fa33",
+      "previousCandidateSha256": "ea1cfd47a3f472ec578a92dde91fc0f1249432f25217c2f81f71f7b5df476416",
+      "bytes": 45946
+    },
+    {
+      "path": "ui/chatwoot-embed/qa/brain-reply-distinctness-20261116.test.mjs",
+      "ownerTask": "YEN-7",
+      "v19Sha256": "29e9a2e92aeba73585754aeb6b56062caa9d627721b8a497375e354c0fc83706",
+      "previousCandidateSha256": null,
+      "bytes": 3200
+    },
+    {
+      "path": "ui/chatwoot-embed/qa/native-contact-public-source.test.mjs",
+      "ownerTask": "YEN-12",
+      "v19Sha256": "0491b816e0e958be23bf2e062842a56aafd83e6ece3f876619635c023e8f193f",
+      "previousCandidateSha256": "91f41610bc3f3995cc54951de1b2a2f8becef356b529be24d9b8c8058acabcae",
+      "bytes": 1952
+    },
+    {
+      "path": "ui/chatwoot-embed/qa/p1-native-caption-drag-zone-20261116.test.mjs",
+      "ownerTask": "YEN-12",
+      "v19Sha256": "f8427308ec4799a76cd025f2c988e58327dc2a1a6e4794a8bb6e5a1b8eea202f",
+      "previousCandidateSha256": null,
+      "bytes": 3967
+    },
+    {
+      "path": "ui/chatwoot-embed/src/client/cloud-native-inbox.tsx",
+      "ownerTask": "YEN-11",
+      "v19Sha256": "912ce41d7ad749f2d899d26723f5b89d3132f027d446028861d7849d218c590e",
+      "previousCandidateSha256": "54fbe62e6cd6c302b502a3580042ee1d913a58311cdd45240b6e264117d3bdb0",
+      "bytes": 80760
+    },
+    {
+      "path": "ui/chatwoot-embed/src/client/cloud-preview-live-miss-20261116.test.mjs",
+      "ownerTask": "YEN-11",
+      "v19Sha256": "51952dc123d32b1add7d3a139473f7edb83cac339d78ec82671d11ace6259e1f",
+      "previousCandidateSha256": null,
+      "bytes": 3505
+    },
+    {
+      "path": "ui/chatwoot-embed/src/client/cloud-translation-auto-restore-20261115.test.mjs",
+      "ownerTask": "YEN-11",
+      "v19Sha256": "12e1c4bafb5a1273174cc8091e19da1d7f6a8033d9116a2228960ac2580f4603",
+      "previousCandidateSha256": "544d1e2199c70e09b2761435d1c63d75a7f43ce65fbeff4a9d87799fe331cb59",
+      "bytes": 4701
+    }
+  ]
+}

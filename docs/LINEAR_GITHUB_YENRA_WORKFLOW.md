@@ -7,7 +7,7 @@
 - Linear 工作区：[YENRA](https://linear.app/yenra)
 - 唯一项目：[YENRA · Core](https://linear.app/yenra/project/yenra-core-013990e3f8c0)
 - 唯一私有源码仓库：`wangyi198675-coder/YENRA`
-- 正式本机目录：`C:\Users\1\Documents\YENRA`
+- 正式本机目录：`YENRA_SOURCE_ROOT`
 - 机器：`DESKTOP-029FH47` / `SJKJ-20260928ZL`
 - 源码尚未通过安全审计并正式同步时，不得声明已实现源码追踪。
 

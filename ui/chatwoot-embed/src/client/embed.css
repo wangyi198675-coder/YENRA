@@ -1,0 +1,230 @@
+/*
+ * YENRA · Chatwoot embed candidate — presentation only.
+ *
+ * Colours come from the official DSH Theme tokens (registered by the theme
+ * plugin), so this surface follows the native light/dark appearance without
+ * forcing a YENRA colour namespace or a second theme store.
+ */
+
+.yenra-cw-seat {
+  position: absolute;
+  z-index: 0;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+}
+
+.yenra-cw-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  background: var(--dsw-alias-bg-base, #fff);
+  color: var(--dsw-alias-label-primary, #1b1b1b);
+  font: inherit;
+}
+
+/* ---------- top bar ---------- */
+
+.yenra-cw-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  flex: 0 0 38px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--dsw-alias-border-l2, #d9dee6);
+  background: var(--dsw-alias-bg-layer-1, #fff);
+}
+
+.yenra-cw-brand {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.yenra-cw-modes {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 7px;
+  background: var(--dsw-alias-bg-layer-2, #f2f4f7);
+}
+
+.yenra-cw-modes button {
+  border: 0;
+  border-radius: 5px;
+  padding: 3px 12px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #5b6472);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.yenra-cw-modes button[aria-current='page'] {
+  background: var(--dsw-alias-bg-base, #fff);
+  color: var(--dsw-alias-label-primary, #1b1b1b);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+}
+
+.yenra-cw-spacer { flex: 1 1 auto; min-width: 8px; }
+
+.yenra-cw-status {
+  font-size: 11px;
+  color: var(--dsw-alias-label-tertiary, #7b8593);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40%;
+}
+
+.yenra-cw-status[data-status='slow'] { color: #b45309; }
+
+.yenra-cw-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary, #5b6472);
+  font-size: 13px;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.yenra-cw-icon:hover,
+.yenra-cw-icon[aria-pressed='true'] {
+  border-color: var(--dsw-alias-border-l2, #d9dee6);
+  background: var(--dsw-alias-bg-layer-2, #f2f4f7);
+  color: var(--dsw-alias-label-primary, #1b1b1b);
+}
+
+/* ---------- body: Chatwoot page + native DSH brain ---------- */
+
+.yenra-cw-body {
+  display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+
+.yenra-cw-inbox {
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  background: #fff;
+}
+
+/* The frame is a plain element: it is never unmounted by a Chat/Work switch. */
+.yenra-cw-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
+.yenra-cw-blocked {
+  position: absolute;
+  inset: auto 16px 16px 16px;
+  max-width: 620px;
+  padding: 12px 14px;
+  border: 1px solid #f0c36d;
+  border-radius: 10px;
+  background: #fff8e6;
+  color: #6b4b00;
+  font-size: 12px;
+  line-height: 1.55;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 12%);
+}
+
+.yenra-cw-blocked p { margin: 6px 0 0; }
+.yenra-cw-mono { font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace; }
+
+.yenra-cw-grip {
+  width: 5px;
+  cursor: col-resize;
+  background: var(--dsw-alias-border-l2, #d9dee6);
+  touch-action: none;
+}
+
+.yenra-cw-grip:hover { background: var(--dsw-alias-brand-primary, #28303a); }
+
+/* ---------- brain column (official DSH native Conversation) ---------- */
+
+.yenra-cw-brain {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--dsw-alias-bg-base, #fff);
+}
+
+.yenra-cw-brain-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  flex: 0 0 32px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--dsw-alias-border-l2, #d9dee6);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.yenra-cw-brain-head small {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--dsw-alias-label-tertiary, #7b8593);
+}
+
+.yenra-cw-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dsw-alias-label-tertiary, #7b8593);
+}
+
+.yenra-cw-dot[data-native='true'] { background: #16a34a; }
+
+.yenra-cw-brain-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.yenra-cw-native {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.yenra-cw-pending {
+  margin: 14px;
+  padding: 12px;
+  border: 1px dashed var(--dsw-alias-border-l2, #d9dee6);
+  border-radius: 10px;
+  color: var(--dsw-alias-label-secondary, #5b6472);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* Narrow windows: the brain column stacks under the inbox instead of squeezing
+   Chatwoot below its own usable width. */
+@media (max-width: 1100px) {
+  .yenra-cw-body { grid-template-columns: minmax(0, 1fr) !important; }
+  .yenra-cw-brain { display: none; }
+  .yenra-cw-grip { display: none; }
+}

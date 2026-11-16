@@ -1,0 +1,60 @@
+{
+  "name": "@yenra/desktop-ui-candidate",
+  "version": "0.1.0-chatwoot.compat.1",
+  "private": true,
+  "files": [
+    "lib/*.js",
+    "lib/oss/messaging-inbox.umd.js",
+    "lib/oss/messaging-inbox.css",
+    "lib/oss/notification.wav",
+    "lib/pancake-sdk/**/*",
+    "lib/personal-matrix/**/*",
+    "cordis.patch.yml",
+    "src/legacy-persona/yeonhee-persona.ccv3.json",
+    "src/legacy-persona/persona-context-adapter.mjs",
+    "src/legacy-persona/yeonhee-full-ccv3.ts"
+  ],
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-session",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-theme",
+        "@deepseek-ai/dsh-client-ui-plugin-manager",
+        "@deepseek-ai/dsh-api-remotes",
+        "@yenra/chatwoot-embed"
+      ]
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown --config tsdown.config.ts"
+  },
+  "dependencies": {
+    "@use-gesture/react": "10.3.1",
+    "p-queue": "10.0.0",
+    "react": "^18.2.0",
+    "react-dom": "18.3.1"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "~4.0.4",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "tsdown": "0.22.2"
+  }
+}
