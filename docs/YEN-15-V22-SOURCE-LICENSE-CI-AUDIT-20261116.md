@@ -101,3 +101,16 @@ Read-only inspection of the 13 active `file:./packages/` offline plugin tarballs
 - **The remaining 19 declared dependency nodes and transitive packages were not fully licensed/audited by this archive-only check.** The public KT lockfile 13-node metadata check is a separate, smaller dependency graph and must not be treated as covering the entire app.
 
 The previously reported root YENRA original-work license decision and upstream redistribution clearance therefore remain **release blockers**.
+
+## Additional public-branch exposure / source-audit rule gap
+
+Ran a **read-only all-tracked-files scan** on the isolated PR #13 review checkout, rather than only the v22 release-critical 60-file Bridge subset. This checked 500 tracked source and documentation files for the *owner deployment's known Cloud account/Inbox numeric identifiers*. Results:
+
+- **132 of 500 tracked files** contain at least one deployment-specific identifier.
+- **735 literal matches** across those files, including preserved historical v18 baseline code, original DSH patch and active review source modules.
+- These identifiers are **not authentication secrets** by themselves; the scan did not prove credential leakage, public API access, or any account compromise.
+- Nevertheless the existing generic `audit-public-source.mjs` passed **500 / 0 rejected** because this deployment-identifier rule **was not part of its denial rules**. Thus passing generic credential scans does **not** establish full compliance with YENRA's private deployment-config policy.
+- Do not publish new unreviewed source containing identifiers. If redacting or migrating already-public branches, recognize that replacing strings on a new HEAD does **not** remove them from earlier Git history and that ordinary git history rewriting may conflict with protected main and existing worktrees. Plan any cleanup and public-version portability review separately, with Owner authorization and no forced branch rewrite.
+- Keep the platform/API session boundaries as the actual authorization controls. Deployment IDs alone should never act as authorization tokens. No credential rotation is implied solely by a numeric identifier occurrence.
+
+The present report intentionally does not repeat any owner identifiers or private values. This is a **privacy portability/review blocker**, not a claim that the repository exposes a login credential.
