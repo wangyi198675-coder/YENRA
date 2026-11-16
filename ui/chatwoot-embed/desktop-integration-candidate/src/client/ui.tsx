@@ -20,6 +20,7 @@ import { captainActionIds, captainActionLabels, captainActionPrompt, type Captai
 import { installNativeReplyCards } from './native-reply-cards'
 import { createCloudMemoryBindGate } from './cloud-memory-bind-gate'
 import { resolveCloudContextWithRetry } from './cloud-context-retry'
+import { selectVerifiedCloudVisibleRead } from './cloud-visible-read-gate.mjs'
 import { PersonaHeaderMenu } from './persona-header-menu'
 import { ensureNativeYeonheeCore, revalidateNativePersonaBeforeGeneration } from './native-persona-core'
 import { emitBrainTiming } from './brain-timing'
@@ -767,6 +768,105 @@ function makeV2Panel(host:ClientContext){
     // while the Cloud identity request was in flight.
     const selectSocialRoomRef=useRef(selectSocialRoom)
     selectSocialRoomRef.current=selectSocialRoom
+    // The Cloud Guest owns the visible transcript, but does not issue DSH
+    // original-platform read receipts. Do so only for a REAL visible Personal
+    // conversation after BOTH the original room and its newest Cloud inbound
+    // message have been independently verified. Matrix HTTP acceptance is NOT
+    // Meta Messenger read confirmation; never show a false Meta "Seen" badge.
+    const cloudPersonalReadAccepted=useRef(new Set<string>())
+    const cloudPersonalReadPending=useRef(new Set<string>())
+    const cloudPersonalReadRetryAt=useRef(new Map<string,number>())
+    useEffect(()=>{
+      if(!cloudSeat||workspaceMode!=='chat'||!surfaceVisible||
+         cloudContextPhase!=='verified'||!sessionId||
+         !/^session-[a-f0-9-]{36}$/.test(String(sessionId))||
+         !selectedRoom||!selectedSocial||
+         document.visibilityState!=='visible')return
+      const account=socialRoster?.accounts.find(a=>
+        a.accountRef===selectedSocial.accountRef)
+      if(account?.channel!=='Personal'||String(selectedRoom.channel)!=='Personal'||
+         selectedRoom.accountRef!==selectedSocial.accountRef||
+         selectedRoom.roomRef!==selectedSocial.roomRef)return
+      const conversationId=cloudHintRef.current?.conversationId
+      if(!Number.isSafeInteger(conversationId)||!conversationId||conversationId<=0)return
+      const scope={accountRef:selectedSocial.accountRef,roomRef:selectedSocial.roomRef}
+      const epoch=cloudResolveEpoch.current
+      const controller=new AbortController()
+      const current=()=>!controller.signal.aborted&&cloudSeatRef.current&&
+        cloudResolveEpoch.current===epoch&&
+        cloudHintRef.current?.conversationId===conversationId&&
+        selectedSocialRef.current?.accountRef===scope.accountRef&&
+        selectedSocialRef.current?.roomRef===scope.roomRef&&
+        document.visibilityState==='visible'
+      const syncVisibleRead=async()=>{
+        // The original DSH Cloud export is an owner-verified Cloud API reader.
+        // Never guess an original provider MID from a Cloud message ID.
+        if(!current())return
+        const response=await fetch('/api/yenra/cloud-export/page',{
+          method:'POST',credentials:'same-origin',cache:'no-store',
+          headers:{'content-type':'application/json',
+            ...(window.location.origin==='dsh-app://app'
+              ?{'x-yenra-desktop-origin':'dsh-app://app'}:{})},
+          body:JSON.stringify({accountId:196799,conversationId}),
+          signal:controller.signal
+        })
+        if(!response.ok||!current())return
+        const cloud=await response.json()
+        if(!current())return
+        const verified=selectVerifiedCloudVisibleRead({
+          cloud,original:selectedRoom,accountRef:scope.accountRef,
+          roomRef:scope.roomRef,channel:'Personal',conversationId
+        })
+        if(!verified)return
+        const key=conversationId+'|'+verified.mid
+        if(cloudPersonalReadAccepted.current.has(key)||
+           cloudPersonalReadPending.current.has(key)||
+           (cloudPersonalReadRetryAt.current.get(key)??0)>Date.now())return
+        cloudPersonalReadPending.current.add(key)
+        try{
+          if(!current())return
+          const receipt=await fetch('/api/yenra/social-native-read',{
+            method:'POST',credentials:'same-origin',cache:'no-store',
+            headers:{'content-type':'application/json'},
+            body:JSON.stringify({channel:'Personal',
+              accountRef:scope.accountRef,roomRef:scope.roomRef,
+              mid:verified.mid,sessionId}),
+            signal:controller.signal
+          })
+          const result=await receipt.json()
+          if(!receipt.ok||result?.ok!==true||
+             result.channel!=='Personal'||
+             result.accountRef!==scope.accountRef||
+             result.roomRef!==scope.roomRef||
+             result.mid!==verified.mid||
+             result.state!=='MATRIX_RECEIPT_ACCEPTED')
+             throw Error('CLOUD_PERSONAL_MATRIX_READ_UNCONFIRMED')
+          cloudPersonalReadAccepted.current.add(key)
+          if(cloudPersonalReadAccepted.current.size>256)
+            cloudPersonalReadAccepted.current.delete(
+              cloudPersonalReadAccepted.current.values().next().value!)
+          // Deliberately do NOT record Meta read confirmation here. Original
+          // mautrix-meta upstream FB binding may not have acknowledged it.
+        }catch{
+          cloudPersonalReadRetryAt.current.set(key,Date.now()+60000)
+          if(cloudPersonalReadRetryAt.current.size>256)
+            cloudPersonalReadRetryAt.current.delete(
+              cloudPersonalReadRetryAt.current.keys().next().value!)
+        }finally{
+          cloudPersonalReadPending.current.delete(key)
+        }
+      }
+      // The route is emitted only after a real visible Cloud selection; wait
+      // until its own Guest has had two frames to paint the conversation.
+      let second=0
+      const one=requestAnimationFrame(()=>{
+        second=requestAnimationFrame(()=>{
+          if(current())void syncVisibleRead().catch(()=>{})
+        })
+      })
+      return()=>{cancelAnimationFrame(one);cancelAnimationFrame(second);controller.abort()}
+    },[cloudSeat,workspaceMode,surfaceVisible,cloudContextPhase,
+        sessionId,selectedRoom,selectedSocial,socialRoster])
     const sendManualSocial=useCallback(async()=>{
       if(sendingRef.current)return
       if(!selectedSocial||!socialRoster?.accounts.some(a=>a.accountRef===selectedSocial.accountRef&&
@@ -2103,7 +2203,7 @@ function makeV2Panel(host:ClientContext){
     return <div ref={rootRef} className="yenra-v2" data-yenra-v2="native" data-channel-data={socialDataState}
       data-yenra-cloud-chat={cloudSeat&&workspaceMode==='chat'&&surfaceVisible}
       data-yenra-merged-header={mergedCaption}
-      style={{'--yenra-caption-mode-center':captionModeCenter+'px'} as React.CSSProperties}
+      style={{'--yenra-caption-mode-center':captionModeCenter+'px','--yenra-caption-brain-width':visibleBrainWidth+'px'} as React.CSSProperties}
       data-yenra-social-readonly="false" data-yenra-account-count={visibleAccountCount} data-yenra-mode={workspaceMode}
       data-yenra-selected-account={selectedSocial?.accountRef} data-yenra-selected-room={selectedSocial?.roomRef}>
       {/* Windows DSH intentionally hides its sidebar completely when collapsed.
