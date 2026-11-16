@@ -39,3 +39,9 @@ These source-file comparisons do **not** by themselves prove the exact installed
 5. Get **all required jobs green**, native release Owner approval, and actual Windows installed runtime verification before any release or Linear Done.
 
 **Status: BLOCKED / In Progress.** Existing Windows v21 and contact data were not changed by this source review.
+
+## Additional verified Page native-read source gap
+
+A read-only diff of current owner source vs PR #13 identifies the `ui.tsx` delta as **71 added lines** of the Page human-visible native-read request to the original DSH Host. Its corresponding `ui/desktop-candidate/src/social-media-host-route.ts` has **58 additions and 1 deletion** in the owner source relative to PR #13 (SHA-256 owner `bfd4f5bbb2e6997d003d16c2554c50fd6c2999024b22603e96426acfd221a9ba`, PR #13 `2b9681c36a3947e5f49e9346899ddc81d66789cf81254b18b2b81dbb0d0ed1c0`). PR #13's currently reviewed source does not contain the corresponding Page-read endpoint string, so front-end-only copying would introduce an unsupported route.
+
+Review the **paired Host and UI changes** together against the immutable v21 packaging inputs; preserve the visible-open, identity, original Meta provider and refusal semantics. Deployment-specific Cloud inbox identifiers must not be introduced unreviewed into public source. A provider-level accepted request must not be misrepresented as a recipient-side independently confirmed read. These results do not prove that the post-v19 candidate or the latest owner source is byte-for-byte the installed v21 bundle.
