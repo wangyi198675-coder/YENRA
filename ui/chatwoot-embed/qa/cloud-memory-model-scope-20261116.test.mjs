@@ -26,7 +26,7 @@ test('YEN-8: owner fallback, mismatched contact, cross channel, and malformed Cl
     const valid={...relation,channel,[field]:hash('a')}
     for(const bad of [
       {...valid,kind:'owner'},
-      {...valid,workspace:'C:/Users/1/Documents/YENRA'},
+      {...valid,workspace:'synthetic-invalid-workspace'},
       {...valid,channel:channel==='Page'?'WhatsApp':'Page'},
       {...valid,[field]:hash('b')},
       {...valid,[field]:undefined},
