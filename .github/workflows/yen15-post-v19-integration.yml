@@ -94,3 +94,20 @@ jobs:
       - name: Require original-code LICENSE, third-party notices and approval
         if: always()
         run: node scripts/ci/check-v22-license-admission.mjs
+
+  v23-private-pilot-admission:
+    name: v23 installed pilot / independent NSIS release gate (fail closed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Require frozen 60-file current Bridge parity
+        run: node scripts/ci/verify-v22-bridge-source.mjs
+      - name: Validate v23 installed hashes and require independent confidential NSIS approval
+        if: always()
+        run: node scripts/ci/check-v23-release-admission.mjs
