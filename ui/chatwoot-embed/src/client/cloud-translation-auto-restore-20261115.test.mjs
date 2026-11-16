@@ -84,7 +84,7 @@ test('current contact backoff is cleared on navigation and pending Host request 
 
 test('YEN-11: persisted translation invalidates exact preview cache misses immediately',()=>{
  const start=source.indexOf('    const invalidatePreviewMisses=');
- const end=source.indexOf('    // Cloud preview rows hold authoritative saved',start);
+ const end=source.indexOf('    // Cloud saved zh_CN wins.',start);
  assert(start>0&&end>start);
  const js=ts.transpileModule(source.slice(start,end),{
   compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.None}
