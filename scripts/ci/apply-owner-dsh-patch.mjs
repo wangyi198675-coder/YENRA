@@ -9,6 +9,12 @@ if(!fs.existsSync(patch))throw Error('missing YENRA DSH integration patch');
 if(!fs.existsSync(path.join(upstream,'.git')))throw Error('missing pinned DSH checkout');
 const base=execFileSync('git',['-C',upstream,'rev-parse','HEAD'],{encoding:'utf8'}).trim();
 if(base!==expectedBase)throw Error('DSH base mismatch; refusing to apply YENRA overlay: '+base);
+// Fresh Windows runners can have core.autocrlf=true, while the pinned patch
+// is generated from Git blobs with LF. Normalize ONLY this disposable CI checkout.
+if(process.platform==='win32'){
+  execFileSync('git',['-C',upstream,'config','core.autocrlf','false'],{stdio:'pipe'});
+  execFileSync('git',['-C',upstream,'checkout-index','--all','--force'],{stdio:'pipe'});
+}
 const data=fs.readFileSync(patch,'utf8');
 const names=[...data.matchAll(/^diff --git a\/([^\r\n]+) b\/([^\r\n]+)/gm)].map(x=>x[1]);
 if(names.length!==27)throw Error('expected exactly 27 YENRA DSH source paths; got '+names.length);
