@@ -67,7 +67,7 @@ jobs:
         with:
           version: 11.28.5
       - name: Resolve pinned original DSH root build preset dependencies
-        run: pnpm -C upstream/official-source install --frozen-lockfile --ignore-scripts --filter .
+        run: pnpm -C upstream/official-source install --frozen-lockfile --ignore-scripts
       - name: Install Chatwoot UI plugin exactly from lockfile
         run: pnpm -C ui/chatwoot-embed install --frozen-lockfile --ignore-scripts
       - name: Bundle Chatwoot UI TypeScript source
