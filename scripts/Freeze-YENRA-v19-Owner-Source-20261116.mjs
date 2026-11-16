@@ -9,7 +9,7 @@ import { auditOwner, BASE_VERSION } from './Assert-YENRA-Owner-ReleaseGate-20261
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const V18 = 'artifacts/YENRA_DUAL_MACHINE_UNIFICATION_20261114/unified-release-candidate-20261116-18';
-const V19 = 'artifacts/YENRA_V19_OWNER_INTAKE_20261116/v19-owner-source-04';
+const V19 = 'artifacts/YENRA_V19_OWNER_INTAKE_20261116/v19-owner-source-05';
 const FROZEN_SHA = '3f0cd933f3d6658fc6ce78b0fd5221861d78106af27bb4cc3932215a836cbce1';
 const BASELINE_CLAIMS = Object.freeze({
   'ui/desktop-candidate/src/client/oss-native-social.tsx': ['YEN-6-v18-original-read-preserved', '9a6bd06ca499b39c4754484990bfe796b7df6d8e373d76f93ef96dd282b92761'],
@@ -22,6 +22,7 @@ const BASELINE_CLAIMS = Object.freeze({
   'social-adapters/chatwoot-bridge/src/index.mjs': ['YEN-9/YEN-10/YEN-14', '56343f0edb14e31da20038ed4e4aa9ce56eead1eaa1a43dfa45091e7731ba769'],
   'social-adapters/chatwoot-cloud-direct/cloud-inbound-projection.mjs': ['YEN-9/YEN-10/YEN-14', 'd5d7970c5cc466c15287da7e7008b8a3257f2f8bc0147e1c24b73ee9e7f581af'],
   'social-adapters/chatwoot-cloud-direct/cloud-wa-outbound.mjs': ['YEN-9', '4c9a0059d30127f75f392d99454344be70f3668ad8045327a772fc2d2242e9a5'],
+  'social-adapters/chatwoot-cloud-direct/cloud-wa-recent-sync.mjs': ['YEN-9', '4a6418728e26e93ecde086c91c5f3b60c6c83b324fcd179caa4505fbd746617c'],
   'social-adapters/chatwoot-cloud-direct/cloud-wa-original-mid-recovery.mjs': ['YEN-9', 'cf7bfc8d20808bd54889386d8ddfaa304f461d681eb7a40fb6bba5e2f0ab34c6'],
   'social-adapters/chatwoot-cloud-direct/cloud-webhook-contract.mjs': ['YEN-10', 'fa3470b3d6992d9753216a5715abcb654ccd9302feb7a4f7dab1e88c2b38f809'],
   'social-adapters/chatwoot-cloud-direct/cloud-native-selection.mjs': ['YEN-10', '8752b3ec8b2e5cc0cf897e8fe807a7709f40a78394861411f0ce2dcec4341704'],
@@ -38,6 +39,7 @@ const TEST_FILES = [
   'ui/chatwoot-embed/tsdown.yen-11-translation-qa-20261116.config.ts',
   'social-adapters/chatwoot-cloud-direct/cloud-whatsapp-roster-hydration.test.mjs',
   'social-adapters/chatwoot-cloud-direct/cloud-wa-outbound.test.mjs',
+  'social-adapters/chatwoot-cloud-direct/cloud-wa-recent-sync.test.mjs',
   'social-adapters/chatwoot-cloud-direct/cloud-wa-original-mid-recovery.test.mjs',
   'social-adapters/chatwoot-cloud-direct/cloud-webhook-contract.test.mjs',
   'social-adapters/chatwoot-cloud-direct/cloud-native-selection.test.mjs',
