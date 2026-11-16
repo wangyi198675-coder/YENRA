@@ -39,6 +39,8 @@ test('official Page Cloud PSID opens an independently scoped read-only DSH Brain
   readMessages:async()=>[
    {id:100,message_type:0,content:'Guten Morgen',created_at:1794500000,private:false},
    {id:101,message_type:1,content:'Hallo',created_at:1794500040,private:false,status:'delivered'},
+   {id:104,message_type:1,content:'Cannot deliver',created_at:1794500050,private:false,status:'failed',
+      source_id:null,content_attributes:{external_error:'Meta (#551)'}},
    {id:102,message_type:0,content:'Wie geht es dir?',created_at:1794500100,private:false},
    {id:103,message_type:0,content:'Secret note',created_at:1794500200,private:true},
   ]
@@ -48,8 +50,9 @@ test('official Page Cloud PSID opens an independently scoped read-only DSH Brain
  assert.equal(result.ok,true);
  assert.equal(result.selection.kind,'CLOUD_PAGE');
  assert.equal(result.selection.cloudInboxId,155865);
- assert.equal(result.selection.messages.length,3);
+ assert.equal(result.selection.messages.length,4);
  assert.equal(result.selection.messages.find(m=>m.id===101).status,'delivered');
+ assert.equal(result.selection.messages.find(m=>m.id===104).status,'failed');
  assert.equal(result.selection.messages.find(m=>m.id===100).status,'unknown');
  assert.match(result.selection.pageIdentityHash,/^[a-f0-9]{64}$/);
  assert.equal(JSON.stringify(result.selection).includes('12345678901234567'),false);
