@@ -1,0 +1,39 @@
+name: YENRA post-v19 source integration review (not an installer)
+on:
+  pull_request:
+    branches: [main, yen-15-v18-batch-source-ci]
+  push:
+    branches: [yen-15-v19-s8-integrated-review]
+permissions:
+  contents: read
+jobs:
+  public-integration:
+    name: Sensitive-source and immutable-release review
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Disallow real data and unsafe public paths
+        run: node scripts/ci/audit-public-source.mjs
+      - name: Require one native Agent, Electron, Sender and chat database
+        run: node scripts/ci/check-architecture.mjs
+      - name: Check JavaScript parser on imported sources
+        run: node scripts/ci/check-source-syntax.mjs
+      - name: Validate immutable published v19 reference separately from later fixes
+        run: node scripts/ci/verify-v19-published-receipt.mjs
+      - name: Require v19 historical source references to stay immutable
+        run: node scripts/ci/verify-v18-published-baseline.mjs
+      - name: Verify synthetic message, callback, account, and visible-read regressions without real sends
+        run: |
+          node --test social-adapters/chatwoot-cloud-direct/cloud-wa-recent-sync.test.mjs social-adapters/chatwoot-cloud-direct/cloud-wa-outbound.test.mjs social-adapters/chatwoot-cloud-direct/cloud-webhook-contract.test.mjs social-adapters/chatwoot-cloud-direct/cloud-whatsapp-roster-hydration.test.mjs
+          node --test ui/chatwoot-embed/desktop-integration-candidate/src/client/cloud-visible-read-gate.test.mjs ui/chatwoot-embed/qa/brain-manual-modify-retry-20261116.test.mjs ui/chatwoot-embed/qa/cloud-memory-model-scope-20261116.test.mjs
+      - name: Privacy boundary for the unprovisioned public runner
+        shell: pwsh
+        run: |
+          if (Test-Path 'runtime') { throw 'Private runtime paths must not be checked in' }
+          Write-Output 'Public CI checks reviewed source only. Official NSIS remains unbuilt.'
