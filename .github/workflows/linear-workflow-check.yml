@@ -24,3 +24,16 @@ jobs:
           node-version: '22'
       - name: Validate Linear issue and guarded file paths
         run: node scripts/check-linear-workflow.mjs
+
+  public-source-tests:
+    name: Reviewed UI source checks (not production acceptance)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test reviewed native contact-toggle source
+        run: node --test ui/chatwoot-embed/qa/native-contact-public-source.test.mjs

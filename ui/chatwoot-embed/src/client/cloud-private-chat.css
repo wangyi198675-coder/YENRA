@@ -1,0 +1,97 @@
+/* Default personal-chat presentation. Omitting this stylesheet reveals the
+   original Cloud conversation tools with their real labels and handlers. */
+/* Desktop-only heading consolidation. On a narrow Cloud guest the upstream
+   mobile list/header/back controls must remain visible and clickable. */
+@media (min-width:768px){
+  .conversations-list-wrap>div:first-child>div:first-child{display:none}
+  .conversations-list-wrap>div:first-child>div:last-child{margin-inline-start:auto}
+}
+/* Preserve Chatwoot's native conversation filters: never hide an entire
+   list child by ordinal position. Only explicit duplicate controls are hidden. */
+
+@media(min-width:768px){
+  /* Reposition the one ORIGINAL Cloud search link; no duplicate search input. */
+  body:has(.conversations-list-wrap) aside:has(>nav)>section a[href$="/search"]{
+    position:absolute;top:1px;left:52px;z-index:45;
+    /* Reserve both ORIGINAL filter and sort controls alongside search. */
+    width:calc(256px - 116px);height:22px;
+    padding:2px 8px;justify-content:flex-start;gap:8px;
+    background:rgb(var(--slate-1));border-radius:7px;
+  }
+  body:has(.conversations-list-wrap) aside:has(>nav)>section a[href$="/search"]>span:nth-child(2){display:block;font-size:12px}
+  body:has(.conversations-list-wrap) aside:has(>nav)>section a[href$="/search"]>span:last-child{display:none}
+  aside:has(>nav) nav li:has(>div>button[title="频道"]){display:none}
+}
+
+/* Leave native unread badges intact; only remove the two service-age clocks. */
+.conversations-list .conversation>div:nth-child(2){grid-template-columns:minmax(0,1fr) auto}
+.conversations-list .conversation>div:nth-child(2)>div:first-child{display:none}
+.conversations-list .conversation>div:nth-child(2)>div.absolute>span:first-child:has(>div.v-popper--has-tooltip){display:none}
+
+/* Status/assignment remain available via the explicit conversation-tools toggle.
+   Pending API inbox labels remain visible: appearance must not imply cutover. */
+.conversation-details-wrap .header-actions-wrap{display:none}
+.conversation-details-wrap>div:first-child:has(>div>span[class~="group/avatar"])>div:first-child{padding-inline-end:64px}
+.conversation--header--actions:not(:has([title*="接线中"])){display:none}
+.message-bubble-container:has([data-bubble-name="activity"]){display:none}
+
+/* Use the native contact button in the header rather than a floating CRM pill.
+   Cloud Captain is retained in the secondary conversation-tools presentation. */
+.conversation-details-wrap>div:last-child>div.absolute button:has(.i-woot-captain){display:none}
+
+/* In a personal conversation the owner's repeated avatar is redundant. */
+.message-bubble-container.justify-end [class*="grid-area:avatar"]{display:none}
+.message-bubble-container.justify-end>div:first-child{grid-template-columns:minmax(0,1fr) 0!important;column-gap:0!important}
+.message-bubble-container .prose-bubble p:first-child{margin-top:0}
+.message-bubble-container .prose-bubble p:last-child{margin-bottom:0}
+
+/* A note must ALWAYS retain its native mode switch, warning color and label.
+   Ordinary replies have a quiet input surface; all native tools remain below. */
+.reply-box:not(.is-private)>div:first-child{display:none}
+.reply-box:not(.is-private) .resizable-editor-body>p.empty-node:first-child::before{
+  content:"写点什么…"!important;color:rgb(var(--slate-11));
+}
+
+/* YENRA private contact detail density. Native headings are matched against
+   the actual Cloud labels at runtime; reordered / partial modules fail open. */
+.list-group > .flex.flex-col.gap-3 > [data-draggable="true"][data-yenra-private-section="hide"]{display:none!important}
+[channel-type] [data-yenra-empty-contact="true"]{display:none!important}
+.list-group .yenra-cloud-export{width:100%;margin-top:2px;flex:0 0 auto}
+.list-group .yenra-cloud-export-button{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;min-height:36px;padding:8px 12px;
+  border:1px solid rgb(var(--border-strong)/.70);border-radius:9px;
+  background:rgb(var(--surface-2));color:rgb(var(--slate-12));
+  font:600 13px/18px "Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+  cursor:pointer;
+}
+.list-group .yenra-cloud-export-button:hover{background:rgb(var(--surface-3))}
+.list-group .yenra-cloud-export-button:focus-visible{
+  outline:2px solid rgb(var(--blue-9));outline-offset:2px
+}
+
+/* Only a shortcut to Cloud's existing edit-contact / avatar picker. */
+[channel-type] .yenra-avatar-edit-button{
+  position:absolute;right:-3px;bottom:-3px;z-index:2;
+  width:22px;height:22px;padding:0;border:1px solid rgb(var(--border-strong));
+  border-radius:50%;color:rgb(var(--slate-12));background:rgb(var(--surface-2));
+  cursor:pointer;font-size:13px;line-height:21px;text-align:center;
+}
+[channel-type] .yenra-avatar-edit-button:focus-visible{
+  outline:2px solid rgb(var(--blue-9));outline-offset:2px
+}
+
+/* Cloud profile: the metadata group is not identity or the action toolbar. */
+[channel-type] [data-yenra-contact-metadata="hide"]{display:none!important}
+/* Retain the ORIGINAL Chatwoot social-profile links; suppress only empty
+   CRM field rows. They share the former hidden metadata container. */
+[channel-type] [data-yenra-contact-metadata="native-details"]{
+  display:flex!important;flex-direction:column;gap:0!important
+}
+[channel-type] [data-yenra-contact-metadata="native-details"] > :not([data-yenra-contact-social-links="keep"]):not([data-yenra-contact-phone="keep"]){display:none!important}
+[channel-type] [data-yenra-contact-metadata="native-details"] > [data-yenra-contact-social-links="keep"]{
+  display:flex!important;margin:4px 0 0!important;align-items:center
+}
+[channel-type] [data-yenra-contact-metadata="native-details"] > [data-yenra-contact-phone="keep"]{
+  display:flex!important;align-items:center;max-width:100%;gap:8px;margin:4px 0!important
+}
