@@ -1,0 +1,26 @@
+name: YENRA Linear workflow gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  traceability:
+    name: YENRA traceability (not production acceptance)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Linear issue and guarded file paths
+        run: node scripts/check-linear-workflow.mjs
