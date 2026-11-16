@@ -94,6 +94,19 @@ foreach($rel in ($copy | Sort-Object)) {
  if($a -ne $b){throw "Copy mismatch: $rel"}
  $counter++
 }
+# Recreate optional Meta navigation source with neutral official URLs, never owner ads account IDs.
+foreach($rel in @('ui/chatwoot-embed/desktop-integration-candidate/src/client/meta-ads-panel.tsx','ui/desktop-candidate/src/client/meta-ads-panel.tsx')) {
+ $formal = Join-Path $SourceRoot ($rel -replace '/','\')
+ if(!(Test-Path -LiteralPath $formal)){continue}
+ $raw = [IO.File]::ReadAllText($formal)
+ $safe = $raw -replace 'https://adsmanager.facebook.com/adsmanager/manage/ads\?act=\d+', 'https://adsmanager.facebook.com/adsmanager/manage/ads'
+ $safe = $safe -replace 'https://business.facebook.com/latest/billing_hub/payment_settings/\?asset_id=\d+', 'https://business.facebook.com/latest/billing_hub/payment_settings/'
+ if($safe -eq $raw){throw "Meta account sanitization did not match: $rel"}
+ $dest = Join-Path $StageRoot ($rel -replace '/','\')
+ $parent = Split-Path -Parent $dest
+ if(!(Test-Path -LiteralPath $parent)){New-Item -ItemType Directory -Path $parent -Force | Out-Null}
+ [IO.File]::WriteAllText($dest,$safe)
+}
 $docs = Join-Path $StageRoot 'docs'
 if(!(Test-Path $docs)){New-Item -ItemType Directory -Path $docs -Force | Out-Null}
 $expected | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $docs 'v18-source-hashes.json') -Encoding UTF8

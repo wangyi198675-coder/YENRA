@@ -9,6 +9,7 @@ This repository is the only public GitHub home for the owner-operated YENRA proj
 - Official frozen latest-source map: 20 paths.
 - Selected original YENRA modules: Chatwoot Cloud Bridge and its mocked tests, Cloud inbound/ACK/adapters, typed UI overlays, personal chrome, private themes, typography and KT Europe source. Only source and relevant manifests/locks are copied.
 - Conservative automatic scanner removes test fixtures with phone numbers, identifiable contacts and credential-like literal values from the public candidate. Credentials, DPAPI material, live profiles, messages, media, evidence, installers, runtime, upstream vendor trees and historic backups are not copied.
+- The Meta Ads launcher is included with generic official Meta entry URLs rather than hardcoded owner ad-account identifiers. This is an intentional privacy/portability change from the owner source and requires account selection on Meta's site.
 - Staging is isolated from the live `YENRA_SOURCE_ROOT` repository. The owner app is never installed, restarted or updated by the import.
 
 ## Known blockers: NOT a reproducible v18 release
