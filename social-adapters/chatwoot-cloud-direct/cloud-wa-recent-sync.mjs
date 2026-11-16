@@ -17,7 +17,27 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
     !Array.isArray(roster?.accounts)||!Array.isArray(scopes)||!logger?.warn)
    throw Error('CLOUD_WA_RECENT_SYNC_DEPENDENCIES_INVALID');
  const pending=new Map(),lastRun=new Map();
- const stats={scans:0,missingIncoming:0,missingOutgoing:0,incoming:0,outgoing:0,already:0,correctedSent:0,correctedIncoming:0,matchedSubmitted:0,recoveredPendingMid:0,ambiguousSubmitted:0,errors:0,mediaSkipped:0};
+ const stats={scans:0,missingIncoming:0,missingOutgoing:0,incoming:0,outgoing:0,already:0,correctedSent:0,correctedIncoming:0,matchedSubmitted:0,recoveredPendingMid:0,ambiguousSubmitted:0,errors:0,mediaSkipped:0,statusCorrectionThrottled:0};
+ // When Cloud's API Channel callback cannot connect, it can re-mark a
+ // verified original MID as failed AFTER our successful status PATCH. Without
+ // a per-message cooldown the 12s anti-entropy would continually flip one
+ // Cloud status and call the same API. This is bounded process memory ONLY,
+ // not a second message database, not an ACK, not a platform retry.
+ const STATUS_CORRECTION_COOLDOWN_MS=5*60*1000;
+ const statusCorrectionAttempted=new Map();
+ function allowStatusCorrection(conversationId,messageId){
+   const key=conversationId+'|'+messageId;
+   const time=now(),prior=statusCorrectionAttempted.get(key);
+   if(prior!==undefined&&time-prior<STATUS_CORRECTION_COOLDOWN_MS){
+     stats.statusCorrectionThrottled++;
+     return false;
+   }
+   statusCorrectionAttempted.delete(key);
+   statusCorrectionAttempted.set(key,time);
+   if(statusCorrectionAttempted.size>1024)
+     statusCorrectionAttempted.delete(statusCorrectionAttempted.keys().next().value);
+   return true;
+ }
  // Cloud API-channel messages have no provider MID until original Host readback.
  // A verified durable claim correlates their already-submitted platform MID;
  // importing that Host row again would create a duplicate Cloud bubble.
@@ -148,7 +168,7 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
          current.private!==true&&current.source_id===row.mid&&
          current.status==='failed'&&current.content_attributes?.yenra_history_import===true&&
          current.content_attributes?.yenra_original_platform_mid===row.mid&&
-         current.content===row.text){
+         current.content===row.text&&allowStatusCorrection(cid,current.id)){
         try{
           await cloud.updateMessageStatus(cid,current.id,'sent');
           const latest=(await listNativeMessages(cid)).filter(m=>m.id===current.id);
@@ -174,7 +194,8 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
          current.private!==true&&current.status==='failed'&&
          current.source_id===row.mid&&row.text.trim()&&current.content===row.text&&
          attrs?.yenra_original_platform_mid===row.mid&&
-         (verifiedImported||verifiedLive)){
+         (verifiedImported||verifiedLive)&&
+         allowStatusCorrection(cid,current.id)){
         try{
           await cloud.updateMessageStatus(cid,current.id,'sent');
           const latest=(await listNativeMessages(cid)).filter(m=>m.id===current.id);
@@ -217,7 +238,8 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
           // The original Host has the exact outgoing MID and committed claim.
           // Chatwoot's failed webhook state is not proof of platform failure.
           // Repair at most to 'sent'; never invent delivered/read.
-          if(claimed.message.status==='failed'){
+          if(claimed.message.status==='failed'&&
+             allowStatusCorrection(cid,claimed.message.id)){
             await cloud.updateMessageStatus(cid,claimed.message.id,'sent');
             // A successful PATCH/HTTP 200 alone does not prove durable Cloud
             // status. Re-read the same Cloud message; if it is still red the
@@ -248,7 +270,8 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
           throw Error('CLOUD_WA_HISTORY_MESSAGE_NOT_CONFIRMED');
         // This is a prior original platform outgoing MID; patch the display
         // state to sent, NEVER claim delivered/read or resubmit to the Sender.
-        if(m.status==='failed'){await cloud.updateMessageStatus(cid,m.id,'sent').catch(()=>{})}
+        if(m.status==='failed'&&allowStatusCorrection(cid,m.id))
+          await cloud.updateMessageStatus(cid,m.id,'sent').catch(()=>{})
         stats.outgoing++;summary.outgoing++;
       }
       nativeByMid.set(row.mid,{id:1,source_id:row.mid});

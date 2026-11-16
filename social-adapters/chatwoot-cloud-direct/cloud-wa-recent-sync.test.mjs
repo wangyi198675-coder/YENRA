@@ -541,3 +541,57 @@ test('v19 exact original status repair never claims success on a nonpersistent C
  assert.equal(f.counts.patched,1);
  assert.equal(f.messages.find(m=>m.id===870).status,'failed');
 });
+
+test('v19 upstream callback repeatedly re-fails a genuine new incoming MID: status PATCH is rate-limited per Cloud message',async()=>{
+ const f=fixture({waInboxId:155902});
+ const at=t-80000;let clock=t;
+ f.messages.push({id:880,source_id:'provider-in-001',message_type:0,
+   private:false,status:'failed',content:'guten morgen',created_at:(at+4000)/1000,
+   content_attributes:{yenra_history_import:false,
+     yenra_original_platform_mid:'provider-in-001',external_created_at:at/1000}});
+ const sync=createCloudWaRecentSync({...f,now:()=>clock});
+ const first=await sync.reconcile(f.selection,{force:true});
+ assert.equal(first.corrected,1);assert.equal(f.counts.patched,1);
+ f.messages.find(m=>m.id===880).status='failed'; // Async Cloud webhook rollback.
+ for(let i=0;i<10;i++){
+   const retry=await sync.reconcile(f.selection,{force:true});
+   assert.equal(retry.corrected,0);
+ }
+ assert.equal(f.counts.patched,1,'ten upstream rollbacks must not trigger another PATCH burst');
+ assert.equal(sync.stats.statusCorrectionThrottled,10);
+ assert.equal(f.counts.inbound,0,'no duplicate real inbound');
+ clock+=5*60*1000+1;
+ const afterCooldown=await sync.reconcile(f.selection,{force:true});
+ assert.equal(afterCooldown.corrected,1);
+ assert.equal(f.counts.patched,2,'bounded single re-attempt only after cooldown');
+ assert.equal(f.messages.find(m=>m.id===880).status,'sent');
+});
+test('v19 original historical outgoing Cloud callback rollback never causes repeated status PATCH or duplicate Sender',async()=>{
+ const f=fixture({waInboxId:155902});
+ f.messages.push({id:881,source_id:'provider-out-002',message_type:1,
+   private:false,status:'failed',content:'Guten Morgen',
+   content_attributes:{yenra_history_import:true,yenra_original_platform_mid:'provider-out-002'}});
+ const sync=createCloudWaRecentSync({...f,now:()=>t});
+ const first=await sync.reconcile(f.selection,{force:true});
+ assert.equal(first.corrected,1);assert.equal(f.counts.patched,1);
+ f.messages.find(m=>m.id===881).status='failed';
+ for(let i=0;i<8;i++)await sync.reconcile(f.selection,{force:true});
+ assert.equal(f.counts.patched,1);
+ assert.equal(sync.stats.statusCorrectionThrottled,8);
+ assert.equal(f.counts.outbound,0,'original sender must never send again');
+ assert.equal(f.messages.find(m=>m.id===881).status,'failed',
+   'Cloud failure remains honest when upstream is broken');
+});
+test('v19 once-only submitted Cloud claim status rollback is bounded without losing sender deduplication',async()=>{
+ const {f,dir}=await withOneCloudClaim({status:'failed'});
+ try{
+  const sync=createCloudWaRecentSync({...f,now:()=>t,claimDirectory:dir});
+  const first=await sync.reconcile(f.selection,{force:true});
+  assert.equal(first.corrected,1);assert.equal(f.counts.patched,1);
+  f.messages.find(m=>m.id===991).status='failed';
+  for(let i=0;i<3;i++)await sync.reconcile(f.selection,{force:true});
+  assert.equal(f.counts.patched,1);
+  assert.equal(f.counts.outbound,0,'never replay original WA send on callback failure');
+  assert.equal(sync.stats.statusCorrectionThrottled,3);
+ }finally{await rm(dir,{recursive:true,force:true})}
+});
