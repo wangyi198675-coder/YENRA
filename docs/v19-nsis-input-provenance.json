@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "version": "0.2.1-rc.5.20261116.19",
+  "status": "HASH_ONLY_PROVENANCE_NOT_INDEPENDENT_REBUILD",
+  "publishedInstallerSha256": "8eab5ffdedbc04726e551a2bab853ff43ebbcf171a61b3147979457562144e64",
+  "releaseSnapshotSha256": "5376e69488b9782037027cb22ec7e824b4a143367800f8347bd8e75348f2944b",
+  "bridgeManifestSha256": "f685d1d55254a69c69f541a497305015226d8ca8d2b196d401579a51a72cf7e6",
+  "rootPackageSha256": "062464408168d07682b861f93188b2bae20b57fe838517317c30b86451b278e5",
+  "rootPnpmLockSha256": "c76b1105f9e6397001d27dec1e90a549154c28b49a78174dd7542eed2128878e",
+  "originalUpstreamDSHCommit": "b830ec950faba0a46dda564be3e2d854afed94f1",
+  "profileBundles": 42,
+  "declaredDependencies": 32,
+  "inputs": [
+    {
+      "id": "@deepseek-ai/dsh-subagent-claude-code",
+      "file": "deepseek-ai-dsh-subagent-claude-code-0.2.1-rc.5.tgz",
+      "bytes": 23367,
+      "sha256": "1a8e59af859541a21dc6190d0063e46f7332d473e5846dca59596c9d6fbd90ad",
+      "lockfileIntegrity": "sha512-ango5amxfL9H2eGTYGZIjPsmENw2YFCqjhURBHQKBYqcnOsc+jEx2HNbBdG9TtLbnJNOqMWS5KzG5BrrLJsYJA=="
+    },
+    {
+      "id": "@deepseek-ai/dsh-subagent-codex",
+      "file": "deepseek-ai-dsh-subagent-codex-0.2.1-rc.5.tgz",
+      "bytes": 25985,
+      "sha256": "bf0857f069401f679f0063587f86943120cf87d05bc947cbae8881abbc42d6b9",
+      "lockfileIntegrity": "sha512-fzjRJOij5jsGbNzBdEmvy0SaRMYgw8PWrRSW8eos7JvUzjgOEmoJHgvjqtjvxv9gW+3zK5gYG6vV7TfhpX39jw=="
+    },
+    {
+      "id": "@guntur-d/dsh-memory",
+      "file": "guntur-d-dsh-memory-0.1.0-yenra.rc5compat.10.tgz",
+      "bytes": 8694,
+      "sha256": "7aaa460d1459d65e0002d9ce16fe4918b282d923d9a1e05e5b0e8e11c9e4b849",
+      "lockfileIntegrity": "sha512-Y482VKPVNnbyHvN7wz3MtzyR1TP2tEAB99/XwQT96zRmRWT87nz3/K2zlO2lRE+5/ZYl0ZwOWQMl4OQP8OtxIA=="
+    },
+    {
+      "id": "@xmanrui/dsh-im",
+      "file": "xmanrui-dsh-im-5.10.0-yenra.rc5compat.13.tgz",
+      "bytes": 10747462,
+      "sha256": "a475863ececaae266a355129b04f90713185fbf43e6cf3e6140f02ce2d958581",
+      "lockfileIntegrity": "sha512-7PIFneMPkdbtbb9Dr8MQQ7uv2a360wNlyMcVOuAfzRdM04UOBBldJPeMO3aMz2X+QEYk3gnklzUPtZvLOVNuJg=="
+    },
+    {
+      "id": "@yenra/brain-host-overlay",
+      "file": "yenra-brain-host-overlay-0.1.0.tgz",
+      "bytes": 6143,
+      "sha256": "65a518f0624a0d4a3657e1afa422108a78337fb3de47ff8919f119f60935cf2e",
+      "lockfileIntegrity": "sha512-6xLLfMmbePKOZP89bnxN+AzmIvclfY3j6Ha6m6JN9mgPojIvnKd2m+x3DKljaGXEsJmLK6Xr4jjy9vsld6yUyQ=="
+    },
+    {
+      "id": "@yenra/chatwoot-embed",
+      "file": "yenra-chatwoot-embed-0.3.0-route.9.tgz",
+      "bytes": 246799,
+      "sha256": "1409eb0167a11eb4edce9864c72f6a578b23b456b1683d2f398d5df0970c6694",
+      "lockfileIntegrity": "sha512-H4I+EKZJ//clYByxaaBmBn6AdgSSKLK8oi5azx7zoTK+2aWwr8oRbz8KJZNECwZ9qRKLv0w7nwvXs6FYhttQdA=="
+    },
+    {
+      "id": "@yenra/desktop-ui-candidate",
+      "file": "yenra-desktop-ui-candidate-0.1.0-yenra.unified.20261116.19.tgz",
+      "bytes": 859750,
+      "sha256": "704bc3b80bc8bfb73478ccdde4a1a34de1dbc179358ace70ecd4801ff32e5edd",
+      "lockfileIntegrity": "sha512-SOY0RQs9MvKIHUqsK6uT6jGrOz5S2ZOGNtWCHUwlM5uH7t0/f1UfwlCgEjIyKuOO04Et/xC7eZhuzgpN5A8ZIQ=="
+    },
+    {
+      "id": "dsh-codex-oauth",
+      "file": "dsh-codex-oauth-0.1.1.tgz",
+      "bytes": 397518,
+      "sha256": "5cc97dbffc3b81e2c38b973bf55a7fda358f6f2796bbb512c77bdbb3030613af",
+      "lockfileIntegrity": "sha512-b60re2JHREvfcCYmpmL6Vsh0Z/OfJ77dpDFoiXKP+akMgb0vvoyfoqc4SQ1duDV82Ix82exqtsVhf9Frl0NhDA=="
+    },
+    {
+      "id": "dsh-model-settings",
+      "file": "dsh-model-settings-0.2.2-yenra.unified.20261115.2.tgz",
+      "bytes": 25593,
+      "sha256": "eb169967aca3f341adc1ca9602ceab4fe4ce152da9be933166562bcc30fd92ec",
+      "lockfileIntegrity": "sha512-lsR1CTrkQMhwoZrw3YZeD0di7fsPC8FdsvEaW/ypqlwizAwZANFLVL2+ke6n0/f6lsETgqF3vAVRs5abnwvB3g=="
+    },
+    {
+      "id": "dsh-plugin-health",
+      "file": "dsh-plugin-health-3.1.1.tgz",
+      "bytes": 423875,
+      "sha256": "7ac94bd546d004eb70433510f8cae9589a31d55e1b9c775b6c5d4048422ea60f",
+      "lockfileIntegrity": "sha512-OUT5PJ3msNvXfWXK3uEXxNzA4nzYH+RzZ5GRcyxM2gBYwPcH7MIDrhrcxGvaMmIo32wCTWuKEfGfd29qvyKrAw=="
+    },
+    {
+      "id": "@local/yenra-private-themes",
+      "file": "local-yenra-private-themes-1.1.1.tgz",
+      "bytes": 774300,
+      "sha256": "c9470c5e8e764e5908702c95415f7c90e848af4bd50567a046370e9c8d6361f5",
+      "lockfileIntegrity": "sha512-3HPIDwGWmr2h0XIwR6yPIIPpVPjkgvifhywub5Pm80tPS2og6EQ6j13Q2Yzg+O85j+HeemOMBQsJFuKgWzPYFA=="
+    },
+    {
+      "id": "@local/yenra-typography-fix",
+      "file": "local-yenra-typography-fix-1.0.1.tgz",
+      "bytes": 9419,
+      "sha256": "612b1f7a583153a0f79af6d4e6e7ccd658424e7c0fcf761b6d33f762351ebe08",
+      "lockfileIntegrity": "sha512-xRhCp7LGo7HB5TFyR1rJ3KBO4tMdLH7k4P4yHfKgXwXHIAyWZ45GsuEu+T6miMNPR6unw1po1LzvUV1mYLhMNA=="
+    },
+    {
+      "id": "@local/yenra-personal-chrome",
+      "file": "local-yenra-personal-chrome-1.0.1.tgz",
+      "bytes": 3623,
+      "sha256": "600767da8ce9cabe99eecfc95671fbf4f18d0fec388b6c3b2e136e186ec43ec5",
+      "lockfileIntegrity": "sha512-9ExhSm3b5W22F7HxVNJybSnPfUGf6aVuFO7NigsKPzRTTuBf+XCaJir4uZbcYkrtSisASAbxtOFviP/mYFntmg=="
+    }
+  ],
+  "resources": [
+    {
+      "kind": "KT",
+      "manifestSha256": "4c39f696529414228c7ca40d20e520ab6f37b892442aee20141899f13c9338a1",
+      "fileCount": 1317
+    },
+    {
+      "kind": "grammar",
+      "manifestSha256": "6854f675750b37610a440db50417d0b67ab9fc96a3c5571c2baa15853ae659c5",
+      "fileCount": 4
+    }
+  ],
+  "publicGithubIncludesPrivateInputs": false,
+  "privateProvisioningNeeded": true,
+  "reproducibleWindowsNsisValidated": false,
+  "limitations": "Hash-only receipt. No original archives or KT/grammar assets are committed. Upstream official DSH, owner overlay, Windows packaging tools and other private inputs still require an independently authorized build environment."
+}

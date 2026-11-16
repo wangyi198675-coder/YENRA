@@ -152,6 +152,62 @@ export const CLOUD_DSH_TRANSLATOR_SCRIPT=String.raw`(()=>{
   },true);
   window[manualKey]=manual;
  }
+ // Chatwoot Cloud may not render a native Translate action when its optional
+ // Google integration is unavailable. Listening for an absent menu click
+ // cannot recover the command. Show one explicit, theme-aware fallback action
+ // on a verified TEXT bubble only when no enabled native action is visible.
+ // Do not prevent the native context menu, intercept Copy, or call the model
+ // until the owner actually clicks the fallback button. The existing manual
+ // MID logger/Host verification remains the sole translation entry point.
+ const fallbackKey='__yenraDshCloudTranslateActionV19';
+ if(!window[fallbackKey]){
+  let action=null;
+  const hide=()=>{action?.remove();action=null;};
+  document.addEventListener('contextmenu',event=>{
+   hide();
+   const row=event.target?.closest?.('[data-message-id]');
+   const mid=Number(row?.getAttribute?.('data-message-id'));
+   const cid=conversation();
+   if(!cid||!Number.isSafeInteger(mid)||mid<=0||
+      !row?.querySelector?.('[data-bubble-name="text"]'))return;
+   const x=Number.isFinite(event.clientX)?event.clientX:8;
+   const y=Number.isFinite(event.clientY)?event.clientY:8;
+   setTimeout(()=>{
+    const active=window[manualKey]?.last;
+    if(!active||active.conversationId!==cid||active.messageId!==mid||
+       cid!==conversation()||Date.now()-active.when>12000)return;
+    const native=[...document.querySelectorAll('[role="menuitem"],button')].some(node=>{
+     if(!/^(?:翻译|Translate)$/iu.test(String(node.textContent??'').trim())||
+        node.disabled||node.getAttribute?.('aria-disabled')==='true')return false;
+     return (node.getClientRects?.().length??0)>0;
+    });
+    if(native)return;
+    const button=document.createElement('button');
+    button.type='button';
+    button.textContent='翻译';
+    button.title='通过 YENRA 原生翻译';
+    button.setAttribute('data-yenra-cloud-translate-action','');
+    const left=Math.min(Math.max(8,x),Math.max(8,(window.innerWidth||1360)-116));
+    const top=Math.min(Math.max(8,y),Math.max(8,(window.innerHeight||720)-50));
+    button.style.cssText='position:fixed;left:'+left+'px;top:'+top+
+      'px;z-index:2147483646;padding:8px 16px;border:1px solid currentColor;'+
+      'border-radius:8px;background:var(--color-surface,Canvas);'+
+      'color:var(--color-text,CanvasText);font:inherit;cursor:pointer;'+
+      'box-shadow:0 5px 18px rgb(0 0 0 / 12%)';
+    document.body.appendChild(button);
+    action=button;
+   },100);
+  },true);
+  document.addEventListener('click',event=>{
+   if(!event.target?.closest?.('[data-yenra-cloud-translate-action]'))
+    hide();
+   else setTimeout(hide,0);
+  },false);
+  document.addEventListener('keydown',event=>{
+   if(event.key==='Escape')hide();
+  },true);
+  window[fallbackKey]={hide};
+ }
  // Upgrade the existing Cloud guest in place: no reload, lost draft or
  // duplicate translation listeners during the DSH client hot reload.
  if(window[key]?.refresh){

@@ -2,8 +2,8 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import{createCloudWaRecentSync}from './cloud-wa-recent-sync.mjs';
 import{stableContactIdentifier}from '../chatwoot-bridge/src/contract.mjs';
 const t=Date.parse('2026-11-12T12:00:00Z');
-function fixture({crossAccount=false,media=false,incomingMedia=false,channel='WhatsApp'}={}){
- const inboxId=channel==='Personal'?155900:155901;
+function fixture({crossAccount=false,media=false,incomingMedia=false,channel='WhatsApp',waInboxId=155901}={}){
+ const inboxId=channel==='Personal'?155900:waInboxId;
  const accountRef='a'.repeat(32),roomRef='b'.repeat(32),
   identifier=stableContactIdentifier(accountRef,roomRef),messages=[];
  const original=[
@@ -36,7 +36,11 @@ function fixture({crossAccount=false,media=false,incomingMedia=false,channel='Wh
     content:b.content,content_attributes:b.content_attributes,status:'sent'};
    messages.push(m);return m
   },
-  updateMessageStatus:async()=>{counts.patched++}
+  updateMessageStatus:async(cid,id,status)=>{
+   assert.equal(cid,8);counts.patched++;
+   const m=messages.find(x=>x.id===id);if(!m)throw Error('CLOUD_TEST_MESSAGE_NOT_FOUND');
+   m.status=status;return m;
+  }
  };
  const host={readRoom:async()=>{counts.readHost++;return{accountRef,roomRef,messages:original}}};
  const cloudInbound={deliver:async m=>{
@@ -250,4 +254,135 @@ test('unproven incoming status never changes when MID provenance, text or privac
   assert.equal(sync.stats.correctedIncoming,0);
   assert.equal(f.counts.patched,0);
  }
+});
+
+async function withPendingOriginalClaim({waInboxId=155901,status='failed',lastState='TRANSPORT_SUBMITTED_MID_PENDING',wrongScope=false,staleClaim=false}={}){
+ const f=fixture({waInboxId}),dir=await mkdtemp(join(tmpdir(),'yenra-midpending-'));
+ const row={id:997,source_id:null,message_type:1,private:false,status,
+   content:'Guten Morgen',created_at:(t-72000)/1000};
+ f.messages.push(row);
+ await mkdir(join(dir,'account-196799'));
+ const midTime=t-70000;
+ const firstAt=staleClaim?midTime-300000:midTime-1000;
+ await writeFile(join(dir,'account-196799','997.jsonl'),[
+   {v:1,account:196799,inbox:wrongScope?155902:waInboxId,conversationId:8,
+    messageId:997,contentSha256:createHash('sha256').update(row.content).digest('hex'),
+    state:'CLAIMED_BEFORE_SEND',at:firstAt},
+   {state:lastState,transportAccepted:true,platformMidPresent:false,at:firstAt+600}
+ ].map(JSON.stringify).join('\n')+'\n');
+ return {f,dir};
+}
+for(const inbox of [155901,155902]){
+ test('red failed bubble of WA Inbox '+inbox+' is repaired from one original MID and durable MID_PENDING claim only, never resent',async()=>{
+  const {f,dir}=await withPendingOriginalClaim({waInboxId:inbox});
+  try{
+   const sync=createCloudWaRecentSync({...f,now:()=>t,claimDirectory:dir});
+   const first=await sync.reconcile(f.selection,{force:true});
+   assert.equal(first.ok,true);assert.equal(first.recoveredPendingMid,1);
+   assert.equal(first.corrected,1);
+   assert.equal(f.messages.find(m=>m.id===997).status,'sent');
+   assert.equal(f.counts.patched,1);
+   assert.equal(f.counts.outbound,0);
+   assert.equal(sync.stats.recoveredPendingMid,1);
+   const lines=(await (await import('node:fs/promises')).readFile(
+    join(dir,'account-196799','997.jsonl'),'utf8')).trim().split('\n').map(JSON.parse);
+   assert.equal(lines.length,3);
+   assert.equal(lines.at(-1).state,'SUBMITTED_UNCONFIRMED');
+   assert.equal(lines.at(-1).recoveredVia,'ONE_ORIGINAL_HOST_ROOM_MID');
+   assert.equal(lines.at(-1).providerMidSha256,
+    createHash('sha256').update('provider-out-002').digest('hex'));
+   assert.equal(JSON.stringify(lines).includes('Guten Morgen'),false);
+   const second=await sync.reconcile(f.selection,{force:true});
+   assert.equal(second.corrected,0);
+   assert.equal(f.counts.patched,1);
+   assert.equal(f.counts.outbound,0);
+  }finally{await rm(dir,{recursive:true,force:true})}
+ });
+}
+for(const option of [
+ {name:'UNKNOWN_NO_RETRY terminal claim',args:{lastState:'UNKNOWN_NO_RETRY'}},
+ {name:'cross-inbox original claim',args:{wrongScope:true}},
+ {name:'stale unrelated original MID',args:{staleClaim:true}},
+]){
+ test('no status upgrade or duplicate import for '+option.name,async()=>{
+  const {f,dir}=await withPendingOriginalClaim(option.args);
+  try{
+   const r=await createCloudWaRecentSync({...f,now:()=>t,claimDirectory:dir})
+     .reconcile(f.selection,{force:true});
+   assert.equal(r.ambiguousSubmitted,1);
+   assert.equal(r.recoveredPendingMid,0);
+   assert.equal(f.counts.patched,0);
+   assert.equal(f.counts.outbound,0);
+  }finally{await rm(dir,{recursive:true,force:true})}
+ });
+}
+test('concurrent original different-text MID prevents false binding and status upgrade',async()=>{
+ const {f,dir}=await withPendingOriginalClaim();
+ try{
+  const previous=f.host.readRoom;
+  f.host.readRoom=async(...args)=>{
+   const room=await previous(...args);
+   return {...room,messages:[...room.messages,
+    {mid:'provider-out-concurrent',direction:'OUTBOUND',text:'Other message',
+     timestamp:t-69000}]};
+  };
+  const result=await createCloudWaRecentSync({...f,now:()=>t,claimDirectory:dir})
+   .reconcile(f.selection,{force:true});
+  assert.equal(result.recoveredPendingMid,0);
+  assert.equal(f.counts.patched,0);
+  assert.equal(f.messages.find(m=>m.id===997).status,'failed');
+ }finally{await rm(dir,{recursive:true,force:true})}
+});
+
+test('owner-exact status repair updates ONLY the selected failed WA2 Cloud message and no platform sender',async()=>{
+ const {f,dir}=await withPendingOriginalClaim({waInboxId:155902});
+ try{
+  const sync=createCloudWaRecentSync({...f,now:()=>t,claimDirectory:dir});
+  const first=await sync.repairExactFailedOutgoing({selection:f.selection,cloudMessageId:997});
+  assert.deepEqual(first,{ok:true,corrected:true,status:'sent',
+   recoveredPendingMid:true,providerMidBound:true,platformSenderInvoked:false});
+  assert.equal(f.messages.find(m=>m.id===997).status,'sent');
+  assert.equal(f.counts.patched,1);
+  assert.equal(f.counts.outbound,0);
+  assert.equal(f.counts.inbound,0);
+  const again=await sync.repairExactFailedOutgoing({selection:f.selection,cloudMessageId:997});
+  assert.equal(again.unchanged,true);
+  assert.equal(f.counts.patched,1);
+ }finally{await rm(dir,{recursive:true,force:true})}
+});
+test('owner-exact status repair refuses unsigned, missing, cross-inbox and UNKNOWN claims',async()=>{
+ for(const variation of [
+  {args:{lastState:'UNKNOWN_NO_RETRY'}},
+  {args:{wrongScope:true}},
+ ]){
+  const {f,dir}=await withPendingOriginalClaim(variation.args);
+  try{
+   const sync=createCloudWaRecentSync({...f,now:()=>t,claimDirectory:dir});
+   await assert.rejects(sync.repairExactFailedOutgoing({
+    selection:f.selection,cloudMessageId:997}),/DURABLE_CLAIM_NOT_VERIFIED/);
+   assert.equal(f.counts.patched,0);
+   assert.equal(f.counts.outbound,0);
+  }finally{await rm(dir,{recursive:true,force:true})}
+ }
+ const {f,dir}=await withPendingOriginalClaim({waInboxId:155902});
+ try{
+  const sync=createCloudWaRecentSync({...f,now:()=>t,claimDirectory:dir});
+  await assert.rejects(sync.repairExactFailedOutgoing({
+   selection:{...f.selection,cloudInboxId:155901},cloudMessageId:997}),/SCOPE_NOT_VERIFIED/);
+  await assert.rejects(sync.repairExactFailedOutgoing({
+   selection:f.selection,cloudMessageId:998}),/MESSAGE_NOT_AUTHORIZED/);
+  assert.equal(f.counts.patched,0);
+ }finally{await rm(dir,{recursive:true,force:true})}
+});
+test('owner-exact status repair refuses a PATCH whose sent state does not persist on Cloud',async()=>{
+ const {f,dir}=await withPendingOriginalClaim();
+ try{
+  f.cloud.updateMessageStatus=async()=>{f.counts.patched++;return {status:'sent'}};
+  const sync=createCloudWaRecentSync({...f,now:()=>t,claimDirectory:dir});
+  await assert.rejects(sync.repairExactFailedOutgoing({
+   selection:f.selection,cloudMessageId:997}),/STATUS_NOT_PERSISTED/);
+  assert.equal(f.counts.patched,1);
+  assert.equal(f.messages.find(m=>m.id===997).status,'failed');
+  assert.equal(f.counts.outbound,0);
+ }finally{await rm(dir,{recursive:true,force:true})}
 });
