@@ -47,8 +47,12 @@ jobs:
           node --test             ui/chatwoot-embed/qa/native-contact-public-source.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-platform-ack.test.mjs             social-adapters/chatwoot-cloud-direct/cloud-inbound-projection.test.mjs             social-adapters/chatwoot-bridge/test/selection.test.mjs             social-adapters/kt-dedupe-native/kt-country-number-disambiguation.test.mjs
 
   plugin-build:
-    name: Locked TypeScript plugin bundles (not Electron installer)
-    runs-on: ubuntu-latest
+    name: Locked TypeScript plugin bundles (${{ matrix.os }}, not installer)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
         with:
