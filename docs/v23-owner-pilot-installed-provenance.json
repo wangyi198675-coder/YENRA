@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "version": "0.2.1-rc.5.20261117.23",
+  "status": "OWNER_PRIVATE_UI_PILOT_NOT_FORMAL_RELEASE",
+  "officialUnsignedNsis": {
+    "bytes": 709991194,
+    "sha256": "5f0c2a5aa12fa5edb719bc20e3a844411bfee81ca9abaf85967add9b30aeb56e",
+    "signed": false
+  },
+  "installedUi": {
+    "archiveSha256": "a7041c3c0aad3345fd657e5eca8f9fa8a6bbad49594890fc5bd71f3290c941c1",
+    "clientSha256": "630134e332b93005ecc2578259417abe96f603faadac5600cd428b5220f45a90",
+    "hostSha256": "ea9020c6d321765ee071fb607343da65dc580f1d302d1a1e9c5bf69b18a4ba7c"
+  },
+  "bridge": {
+    "manifestSha256": "ddfaf629a93333919d9dc2c1639af284ae8323420499e04d7bfb8727dca",
+    "files": 60,
+    "unchangedFromV22": true,
+    "sourceHashManifest": "docs/v22-frozen-bridge-source-hashes.json"
+  },
+  "lock": {
+    "seedPackageSha256": "a33c8f98958b2cafe586f86757cf80049da267a5d9c54c85f1c994f1a0977366",
+    "seedLockSha256": "7fe818231c1aa7d86a502336baffa34a151c9df9835190c8108a0ddbea575234"
+  },
+  "ownerLocalEvidence": {
+    "nsisChecksPassed": 62,
+    "nsisChecksTotal": 62,
+    "installedRuntimeSmokeChecksPassed": 18,
+    "installedRuntimeSmokeChecksTotal": 18,
+    "accounts": 4,
+    "originalSenderUnchanged": true,
+    "originalW25Unchanged": true
+  },
+  "notVerified": {
+    "independentCleanGitHubNsisRebuild": true,
+    "realWin32ClickAndDpi": true,
+    "tenResizes": true,
+    "pageMetaSeen": true,
+    "waProviderAck": true,
+    "privatePilotFormallyApproved": true
+  },
+  "scope": "Owner-installed and on-disk hash receipt only; no runtime profile, secrets, contact records, NSIS binary, or private plugins included."
+}
