@@ -59,3 +59,32 @@ Pure scoped owner-source Page read/identity/ACK-safety tests: **34/34 pass**; no
 5. Provision authorized **confidential** pinned build inputs (never public runner secrets) and perform an independent Windows NSIS build + installed package and four-channel regression checks; only then decide whether to merge PRs and mark YEN-15 Done.
 
 **Disposition:** PR #13 remains Draft; GitHub main and owner installed v22 remain unchanged. No friend-computer action.
+
+## Extended: all 60 released v22 Bridge manifest entries (not just the selected 13)
+
+Independent read-only SHA-256 comparison against the **owner v22 frozen 60-file Bridge manifest**, plus the actual **installed Windows Bridge resource directory**, current owner formal source and the code in the reviewed PR #13 branch:
+
+| Check | Exact results |
+|---|---:|
+| Installed v22 Bridge files present | **60/60** |
+| Installed v22 Bridge files byte-for-byte equal the frozen manifest | **60/60** |
+| Current owner source files present | **60/60** |
+| Current owner source files byte-for-byte equal the frozen manifest | **60/60** |
+| PR #13 Bridge files tracked | **59/60** |
+| PR #13 files byte-for-byte equal v22 release manifest | **55/60** |
+| PR #13 tracked but outdated/different | **4** |
+| PR #13 missing/untracked | **1** |
+
+The five precisely outstanding release-delta paths:
+
+- **Missing:** `social-adapters/chatwoot-cloud-direct/cloud-page-visible-proof.mjs`
+- **Different:** `social-adapters/chatwoot-bridge/src/index.mjs`
+- **Different:** `social-adapters/chatwoot-bridge/src/server.mjs`
+- **Different:** `social-adapters/chatwoot-cloud-direct/cloud-platform-ack.mjs`
+- **Different:** `social-adapters/chatwoot-cloud-direct/cloud-wa-recent-sync.mjs`
+
+This proves **Bridge installed/source release parity** on the owner computer; it is still not full YENRA application, UI/Host, Memory, license or GitHub installer reproducibility parity.
+
+A deliberately limited static regex scan of these 60 owner source files detected **zero** common token, PEM private key, bearer string, personal email, international telephone number, or private local-home path signatures. It found deployment-specific Cloud account/Inbox identifiers in **28 of 60 files** (151 pattern matches). No values or raw source from the owner build are included in this public report. Identifiers are not equivalent to secret tokens, but require a reviewed owner-only config/public-fixture boundary. Do not upload any unreviewed owner files wholesale merely to improve the 55/60 GitHub score.
+
+The prior 13 selected Page/Host/Bridge source comparison includes non-Bridge UI/Host modules and is a separate, overlapping scope; **do not sum their differences**. No runtime, installation, platform send, contact or account state was changed by this comparison.
