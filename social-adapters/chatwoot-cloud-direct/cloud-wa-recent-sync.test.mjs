@@ -225,7 +225,12 @@ test('verified imported INBOUND with callback-timeout failed status is corrected
  f.messages.push({id:501,source_id:'provider-in-001',message_type:0,private:false,
   status:'failed',content:'guten morgen',
   content_attributes:{yenra_history_import:true,yenra_original_platform_mid:'provider-in-001'}});
- f.cloud.updateMessageStatus=async(...args)=>{changes.push(args);f.counts.patched++};
+ f.cloud.updateMessageStatus=async(...args)=>{
+  changes.push(args);f.counts.patched++;
+  const row=f.messages.find(m=>m.id===args[1]);
+  if(!row)throw Error('EXPECTED_CLOUD_PERSISTENCE_TARGET_MISSING');
+  row.status=args[2];return row;
+ };
  const sync=createCloudWaRecentSync({...f,now:()=>t});
  const result=await sync.reconcile(f.selection,{force:true});
  assert.equal(result.ok,true);
@@ -385,4 +390,154 @@ test('owner-exact status repair refuses a PATCH whose sent state does not persis
   assert.equal(f.messages.find(m=>m.id===997).status,'failed');
   assert.equal(f.counts.outbound,0);
  }finally{await rm(dir,{recursive:true,force:true})}
+});
+
+for(const inboxId of [155901,155902]){
+ test('v19 real new INBOUND MID on WhatsApp inbox '+inboxId+' corrects Cloud false failed without Sender or duplicate',async()=>{
+  const f=fixture({waInboxId:inboxId});
+  const expected=t-80000;
+  f.messages.push({id:650,source_id:'provider-in-001',message_type:0,
+   private:false,status:'failed',content:'guten morgen',
+   created_at:(expected+4000)/1000,
+   content_attributes:{yenra_history_import:false,
+    yenra_original_platform_mid:'provider-in-001',
+    external_created_at:expected/1000,
+    external_error:'synthetic webhook failure'}});
+  const sync=createCloudWaRecentSync({...f,now:()=>t});
+  const r=await sync.reconcile(f.selection,{force:true});
+  assert.equal(r.ok,true);assert.equal(r.corrected,1);
+  assert.equal(sync.stats.correctedIncoming,1);
+  assert.equal(f.messages.find(m=>m.id===650).status,'sent');
+  assert.equal(f.counts.patched,1);
+  assert.equal(f.counts.inbound,0,'must not import another inbound or raise a new alert');
+  assert.equal(f.counts.outbound,1,'only unrelated original historical outbound may import');
+  const repeat=await sync.reconcile(f.selection,{force:true});
+  assert.equal(repeat.corrected,0);
+  assert.equal(f.counts.patched,1);
+ });
+}
+for(const alteration of [
+ {name:'no signed original MID marker',attrs:{yenra_original_platform_mid:'wrong-mid'}},
+ {name:'untrusted external original timestamp',attrs:{external_created_at:0}},
+ {name:'stale unrelated Cloud create time',created_at:(t-80000+200000)/1000},
+ {name:'unknown import status',attrs:{yenra_history_import:null}}
+]){
+ test('v19 Cloud incoming failed must stay failed with '+alteration.name,async()=>{
+  const f=fixture();
+  const expected=t-80000;
+  f.messages.push({id:651,source_id:'provider-in-001',message_type:0,
+   private:false,status:'failed',content:'guten morgen',
+   created_at:(expected+4000)/1000,
+   content_attributes:{yenra_history_import:false,
+    yenra_original_platform_mid:'provider-in-001',
+    external_created_at:expected/1000,...alteration.attrs},
+   ...(alteration.created_at?{created_at:alteration.created_at}:{})});
+  const r=await createCloudWaRecentSync({...f,now:()=>t})
+   .reconcile(f.selection,{force:true});
+  assert.equal(r.corrected,0);
+  assert.equal(f.counts.patched,0);
+  assert.equal(f.messages.find(m=>m.id===651).status,'failed');
+ });
+}
+test('v19 original historical OUTBOUND source MID is displayed as sent only after persistent Cloud readback',async()=>{
+ const f=fixture({waInboxId:155902});
+ f.messages.push({id:750,source_id:'provider-out-002',message_type:1,
+   private:false,status:'failed',content:'Guten Morgen',
+   created_at:(t-70000+5000)/1000,
+   content_attributes:{yenra_history_import:true,
+    yenra_original_platform_mid:'provider-out-002',external_error:'synthetic callback timeout'}});
+ const sync=createCloudWaRecentSync({...f,now:()=>t});
+ const r=await sync.reconcile(f.selection,{force:true});
+ assert.equal(r.corrected,1);assert.equal(sync.stats.correctedSent,1);
+ assert.equal(f.messages.find(m=>m.id===750).status,'sent');
+ assert.equal(f.counts.patched,1);
+ assert.equal(f.counts.outbound,0,'no second Cloud bubble for original outbox');
+ assert.equal(f.counts.inbound,1,'only unrelated original incoming can backfill');
+});
+test('v19 original historical OUTBOUND does not claim success if Cloud PATCH is not persisted',async()=>{
+ const f=fixture({waInboxId:155902});
+ f.messages.push({id:751,source_id:'provider-out-002',message_type:1,
+   private:false,status:'failed',content:'Guten Morgen',
+   content_attributes:{yenra_history_import:true,yenra_original_platform_mid:'provider-out-002'}});
+ f.cloud.updateMessageStatus=async()=>{f.counts.patched++;return {status:'sent'}};
+ const sync=createCloudWaRecentSync({...f,now:()=>t});
+ const r=await sync.reconcile(f.selection,{force:true});
+ assert.equal(r.corrected,0);assert.equal(sync.stats.correctedSent,0);
+ assert.equal(f.messages.find(m=>m.id===751).status,'failed');
+ assert.equal(f.counts.outbound,0);
+});
+
+for(const [kind,messageType,mid,text,age] of [
+ ['live inbound',0,'provider-in-001','guten morgen',80000],
+ ['historical outbound',1,'provider-out-002','Guten Morgen',70000]
+]){
+ test('v19 exact owner-only '+kind+' correction checks Cloud GET and original MID, never sends',async()=>{
+  const f=fixture({waInboxId:155902}),created=t-age+4000;
+  f.messages.push({id:850,source_id:mid,message_type:messageType,private:false,
+    status:'failed',content:text,created_at:created/1000,
+    content_attributes:{yenra_history_import:messageType===1,
+      yenra_original_platform_mid:mid,external_created_at:(t-age)/1000}});
+  const sync=createCloudWaRecentSync({...f,now:()=>t});
+  const changed=await sync.repairExactVerifiedSourceBubble({
+    selection:f.selection,cloudMessageId:850});
+  assert.deepEqual(changed,{ok:true,statusObservedNow:'sent',
+    asynchronousCloudCallbackUnverified:true,
+    direction:messageType===0?'INBOUND':'OUTBOUND',
+    platformSenderInvoked:false,providerReadAckNotAsserted:true});
+  assert.equal(f.messages.find(m=>m.id===850).status,'sent');
+  assert.equal(f.counts.patched,1);
+  assert.equal(f.counts.outbound,0);
+  assert.equal(f.counts.inbound,0);
+  const again=await sync.repairExactVerifiedSourceBubble({selection:f.selection,cloudMessageId:850});
+  assert.equal(again.unchanged,true);
+  assert.equal(f.counts.patched,1);
+ });
+}
+for(const bad of [
+ {label:'forged source MID marker',attrs:{yenra_original_platform_mid:'not-real'}},
+ {label:'invalid live original timestamp',attrs:{external_created_at:0}},
+ {label:'unverified live import flag',attrs:{yenra_history_import:null}},
+ {label:'cross contact private message',private:true},
+ {label:'unrelated Cloud content',content:'unrelated'},
+]){
+ test('v19 exact inbound repair refuses '+bad.label,async()=>{
+  const f=fixture({waInboxId:155902});
+  f.messages.push({id:860,source_id:'provider-in-001',message_type:0,
+    private:false,status:'failed',content:'guten morgen',
+    created_at:(t-80000+4000)/1000,
+    content_attributes:{yenra_history_import:false,yenra_original_platform_mid:'provider-in-001',
+      external_created_at:(t-80000)/1000,...bad.attrs},
+    ...(bad.content?{content:bad.content}:{}),
+    ...(bad.private?{private:true}:{})});
+  const sync=createCloudWaRecentSync({...f,now:()=>t});
+  await assert.rejects(sync.repairExactVerifiedSourceBubble({
+    selection:f.selection,cloudMessageId:860}));
+  assert.equal(f.counts.patched,0);
+  assert.equal(f.counts.outbound,0);
+  assert.equal(f.messages.find(m=>m.id===860).status,'failed');
+ });
+}
+test('v19 exact scoped fix refuses cross-inbox selection even when MID exists in Host',async()=>{
+ const f=fixture({waInboxId:155902});
+ f.messages.push({id:861,source_id:'provider-in-001',message_type:0,
+  private:false,status:'failed',content:'guten morgen',
+  created_at:(t-80000+4000)/1000,
+  content_attributes:{yenra_history_import:false,yenra_original_platform_mid:'provider-in-001',
+    external_created_at:(t-80000)/1000}});
+ await assert.rejects(createCloudWaRecentSync({...f,now:()=>t})
+  .repairExactVerifiedSourceBubble({selection:{...f.selection,cloudInboxId:155901},
+    cloudMessageId:861}),/SCOPE_NOT_VERIFIED/);
+ assert.equal(f.counts.patched,0);
+});
+test('v19 exact original status repair never claims success on a nonpersistent Cloud 200',async()=>{
+ const f=fixture({waInboxId:155902});
+ f.messages.push({id:870,source_id:'provider-in-001',message_type:0,
+  private:false,status:'failed',content:'guten morgen',created_at:(t-80000+4000)/1000,
+  content_attributes:{yenra_history_import:false,yenra_original_platform_mid:'provider-in-001',
+    external_created_at:(t-80000)/1000}});
+ f.cloud.updateMessageStatus=async()=>{f.counts.patched++;return {status:'sent'}};
+ await assert.rejects(createCloudWaRecentSync({...f,now:()=>t})
+  .repairExactVerifiedSourceBubble({selection:f.selection,cloudMessageId:870}),/NOT_PERSISTED/);
+ assert.equal(f.counts.patched,1);
+ assert.equal(f.messages.find(m=>m.id===870).status,'failed');
 });
