@@ -5,7 +5,7 @@
 ## Current source-of-truth and actual installed application
 
 - Authorized owner desktop: `DESKTOP-029FH47`; direct running `YENRA.exe` file version: **`0.2.1-rc.5.20261117.23`**.
-- Original owner project `C:\Users\1\Documents\YENRA`: local Git `main` remains `f1b91c2`; existing uncommitted README/.gitignore changes were not touched. The protected public `main` is not equivalent to the complete installed release source.
+- Original owner project `<OWNER_SOURCE_ROOT>`: local Git `main` remains `f1b91c2`; existing uncommitted README/.gitignore changes were not touched. The protected public `main` is not equivalent to the complete installed release source.
 - v23 is explicitly recorded in the owner packaging evidence as **`OWNER_PRIVATE_PILOT_NOT_FORMAL_RELEASE`**.
 - Recomputed SHA-256 from the actual owner-built unsigned NSIS file: **`5f0c2a5aa12fa5edb719bc20e3a844411bfee81ca9abaf85967add9b30aeb56e`**, **709,991,194 bytes**, exact match to original v23 build receipt.
 - Recomputed SHA-256 from the **actually installed** v23 UI tarball: **`a7041c3c0aad3345fd657e5eca8f9fa8a6bbad49594890fc5bd71f3290c941c1`**, exact match to stage and build receipts.
