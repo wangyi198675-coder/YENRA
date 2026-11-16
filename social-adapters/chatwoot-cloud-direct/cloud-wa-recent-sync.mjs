@@ -6,7 +6,7 @@
  */
 import {stableContactIdentifier,buildHistoricalPageOutgoingMessage} from '../chatwoot-bridge/src/contract.mjs';
 import {listRows} from '../chatwoot-bridge/src/chatwoot-client.mjs';
-import {readFile} from 'node:fs/promises';
+import {readFile,appendFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 const valid=x=>Number.isSafeInteger(x)&&x>0;
@@ -17,7 +17,7 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
     !Array.isArray(roster?.accounts)||!Array.isArray(scopes)||!logger?.warn)
    throw Error('CLOUD_WA_RECENT_SYNC_DEPENDENCIES_INVALID');
  const pending=new Map(),lastRun=new Map();
- const stats={scans:0,missingIncoming:0,missingOutgoing:0,incoming:0,outgoing:0,already:0,correctedSent:0,correctedIncoming:0,matchedSubmitted:0,ambiguousSubmitted:0,errors:0,mediaSkipped:0};
+ const stats={scans:0,missingIncoming:0,missingOutgoing:0,incoming:0,outgoing:0,already:0,correctedSent:0,correctedIncoming:0,matchedSubmitted:0,recoveredPendingMid:0,ambiguousSubmitted:0,errors:0,mediaSkipped:0};
  // Cloud API-channel messages have no provider MID until original Host readback.
  // A verified durable claim correlates their already-submitted platform MID;
  // importing that Host row again would create a duplicate Cloud bubble.
@@ -31,35 +31,64 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
      Number.isFinite(m.created_at)&&Math.abs(m.created_at*1000-row.timestamp)<=60000);
    if(!candidates.length)return {kind:'none'};
    if(typeof claimDirectory!=='string'||!claimDirectory)return {kind:'ambiguous'};
-   const validMatches=[];
-   for(const m of candidates){
-     try{
-       const raw=await readFile(join(claimDirectory,'account-196799',String(m.id)+'.jsonl'),'utf8');
-       if(raw.length>8192)continue;
-       const lines=raw.trim().split('\n').map(s=>JSON.parse(s)),claim=lines[0];
-       if(claim?.v!==1||claim.account!==196799||claim.inbox!==selection.cloudInboxId||
-         claim.conversationId!==selection.cloudConversationId||claim.messageId!==m.id||
-         claim.state!=='CLAIMED_BEFORE_SEND'||
-         claim.contentSha256!==createHash('sha256').update(row.text).digest('hex')||
-         !lines.some(x=>x.state==='SUBMITTED_UNCONFIRMED'&&
-           x.platformMidPresent===true&&
-           x.providerMidSha256===createHash('sha256').update(row.mid).digest('hex'))||
-         lines.at(-1)?.state==='UNKNOWN_NO_RETRY')continue;
-       // The original Host must contain exactly ONE candidate in this room
-       // and time window. Identical rapid sends remain ambiguous, not deduped.
-       const originals=originalRows.filter(x=>x?.direction==='OUTBOUND'&&
-         x.text===row.text&&typeof x.mid==='string'&&
-         Number.isFinite(x.timestamp)&&Math.abs(x.timestamp-m.created_at*1000)<=60000);
-       if(originals.length!==1||originals[0].mid!==row.mid)continue;
-       // Text/time and a legacy SUBMITTED flag can never prove the exact
-       // provider MID; only the committed hashed MID above can do so.
-       validMatches.push(m);
-     }catch{/* Missing claim cannot authorize a new history bubble either. */}
+   // A single original platform MID cannot be assigned to two Cloud
+   // messages, even when the text and timestamps are identical.
+   if(candidates.length!==1)return {kind:'ambiguous'};
+   const m=candidates[0];
+   const path=join(claimDirectory,'account-196799',String(m.id)+'.jsonl');
+   try{
+     const raw=await readFile(path,'utf8');
+     if(raw.length>8192)return {kind:'ambiguous'};
+     const lines=raw.trim().split('\n').map(s=>JSON.parse(s));
+     const claim=lines[0],last=lines.at(-1),midHash=createHash('sha256').update(row.mid).digest('hex');
+     if(claim?.v!==1||claim.account!==196799||claim.inbox!==selection.cloudInboxId||
+       claim.conversationId!==selection.cloudConversationId||claim.messageId!==m.id||
+       claim.state!=='CLAIMED_BEFORE_SEND'||
+       claim.contentSha256!==createHash('sha256').update(row.text).digest('hex')||
+       last?.state==='UNKNOWN_NO_RETRY')return {kind:'ambiguous'};
+     // The original authorized Host must contain one and only one exact
+     // MID/text matching this Cloud bubble. Never infer from a provider API
+     // response, webhook HTTP 200, or a historical unverified claim.
+     const originals=originalRows.filter(x=>x?.direction==='OUTBOUND'&&
+       x.text===row.text&&typeof x.mid==='string'&&
+       Number.isFinite(x.timestamp)&&Math.abs(x.timestamp-m.created_at*1000)<=60000);
+     if(originals.length!==1||originals[0].mid!==row.mid)return {kind:'ambiguous'};
+     if(lines.some(x=>x.state==='SUBMITTED_UNCONFIRMED'&&
+       x.platformMidPresent===true&&x.providerMidSha256===midHash))
+       return {kind:'matched',message:m};
+     // V18 could submit successfully but return no MID before the original
+     // Socket outbox populated. Reconcile only the explicit, scoped,
+     // transport-accepted MID_PENDING claim. NEVER recover UNKNOWN_NO_RETRY
+     // or match a different-contact/Sender record.
+     if(selection.channel!=='WhatsApp'||last?.state!=='TRANSPORT_SUBMITTED_MID_PENDING'||
+       last.transportAccepted!==true||last.platformMidPresent!==false||
+       !Number.isFinite(claim.at)||!Number.isFinite(last.at)||last.at<claim.at||
+       row.timestamp<claim.at-5000||row.timestamp>last.at+90000)
+       return {kind:'ambiguous'};
+     // A second original outbound of ANY text in this transport window
+     // prevents assuming which provider MID belongs to the Cloud message.
+     const overlapping=originalRows.filter(x=>x?.direction==='OUTBOUND'&&
+       typeof x.mid==='string'&&Number.isFinite(x.timestamp)&&
+       x.timestamp>=claim.at-5000&&x.timestamp<=last.at+90000);
+     if(overlapping.length!==1||overlapping[0].mid!==row.mid)
+       return {kind:'ambiguous'};
+     const durable={state:'SUBMITTED_UNCONFIRMED',
+       transportAccepted:true,platformMidPresent:true,providerMidSha256:midHash,
+       recoveredVia:'ONE_ORIGINAL_HOST_ROOM_MID',at:now()};
+     await appendFile(path,JSON.stringify(durable)+'\n');
+     const verified=(await readFile(path,'utf8')).trim().split('\n').at(-1);
+     const tail=JSON.parse(verified);
+     if(tail?.state!==durable.state||tail?.providerMidSha256!==midHash)
+       return {kind:'ambiguous'};
+     stats.recoveredPendingMid++;
+     return {kind:'matched',message:m,recoveredPendingMid:true};
+   }catch(error){
+     // Disk error or missing original claim: no silent status patch, no
+     // duplicate history message and above all no automatic platform resend.
+     logger.warn('wa.recent_pending_mid_not_verified',
+       {code:String(error?.code??error?.message??'UNKNOWN').slice(0,64)});
    }
-   // Even with no valid proof, there is a plausible pre-existing outgoing:
-   // hold for manual reconciliation, never fabricate a second Cloud message.
-   return candidates.length===1&&validMatches.length===1?
-     {kind:'matched',message:validMatches[0]}:{kind:'ambiguous'};
+   return {kind:'ambiguous'};
  }
  function authenticated(selection){
    if(!selection||selection.cloudAccountId!==196799||!valid(selection.cloudConversationId)||
@@ -106,7 +135,7 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
    const recent=original.messages.filter(m=>['INBOUND','OUTBOUND'].includes(m?.direction)&&
      Number.isFinite(m.timestamp)&&m.timestamp>=cutoff&&m.timestamp<=now()+300000&&
      typeof m.mid==='string'&&typeof m.text==='string').slice(-40);
-   const summary={scanned:recent.length,incoming:0,outgoing:0,already:0,corrected:0,matchedSubmitted:0,ambiguousSubmitted:0,errors:0,mediaSkipped:0};
+   const summary={scanned:recent.length,incoming:0,outgoing:0,already:0,corrected:0,matchedSubmitted:0,recoveredPendingMid:0,ambiguousSubmitted:0,errors:0,mediaSkipped:0};
    stats.scans++;
    const claimedCloudIdsSeen=new Set();
    for(const row of recent){
@@ -164,11 +193,20 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
         }
         if(claimed.kind==='matched'){
           claimedCloudIdsSeen.add(claimed.message.id);
+          if(claimed.recoveredPendingMid)summary.recoveredPendingMid++;
           // The original Host has the exact outgoing MID and committed claim.
           // Chatwoot's failed webhook state is not proof of platform failure.
           // Repair at most to 'sent'; never invent delivered/read.
           if(claimed.message.status==='failed'){
             await cloud.updateMessageStatus(cid,claimed.message.id,'sent');
+            // A successful PATCH/HTTP 200 alone does not prove durable Cloud
+            // status. Re-read the same Cloud message; if it is still red the
+            // sync remains failed and later owner-controlled recovery can
+            // retry the STATUS ONLY, never resend via platform Socket.
+            const confirmed=await listNativeMessages(cid);
+            const exact=confirmed.filter(m=>m.id===claimed.message.id);
+            if(exact.length!==1||!['sent','delivered','read'].includes(exact[0].status))
+              throw Error('CLOUD_WA_SENT_STATUS_PERSISTENCE_UNVERIFIED');
             summary.corrected++;stats.correctedSent++;
           }
           nativeByMid.set(row.mid,claimed.message);
@@ -204,6 +242,60 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
    }
    return {ok:summary.errors===0,...summary};
  }
+ // Owner-only status repair for a single proven failed Cloud outbound.
+ // Reuses exactly the same original-Host claim binding as live anti-entropy;
+ // unlike full recent sync it NEVER imports any historical messages.
+ async function repairExactFailedOutgoing({selection,cloudMessageId}={}){
+   const account=authenticated(selection);
+   if(account.channel!=='WhatsApp'||!valid(cloudMessageId)||
+      ![155901,155902].includes(selection.cloudInboxId))
+     throw Error('CLOUD_WA_EXACT_REPAIR_SCOPE_INVALID');
+   const cid=selection.cloudConversationId;
+   const conversation=await cloud.getConversation(cid);
+   if(conversation?.id!==cid||conversation.account_id!==196799||
+      Number(conversation.inbox_id??conversation.inbox?.id)!==selection.cloudInboxId||
+      Number(conversation.meta?.sender?.id??conversation.contact_id)!==selection.cloudContactId)
+     throw Error('CLOUD_WA_EXACT_REPAIR_CONVERSATION_CHANGED');
+   const contact=await cloud.getContactById(selection.cloudContactId);
+   const identifier=stableContactIdentifier(selection.accountRef,selection.roomRef);
+   if(contact?.identifier!==identifier||
+      !contact.contact_inboxes?.some(ci=>
+        Number(ci?.inbox?.id??ci?.inbox_id)===selection.cloudInboxId&&
+        ci.source_id===identifier))
+     throw Error('CLOUD_WA_EXACT_REPAIR_CONTACT_CHANGED');
+   const cloudRows=await listNativeMessages(cid);
+   const match=cloudRows.filter(m=>m?.id===cloudMessageId);
+   if(match.length!==1||match[0].message_type!==1||match[0].private===true||
+      match[0].source_id!=null||typeof match[0].content!=='string')
+     throw Error('CLOUD_WA_EXACT_REPAIR_MESSAGE_NOT_AUTHORIZED');
+   if(match[0].status!=='failed')
+     return {ok:true,unchanged:true,status:match[0].status};
+   const original=await host.readRoom({channel:'WhatsApp',
+     accountRef:selection.accountRef,roomRef:selection.roomRef});
+   if(original?.accountRef!==selection.accountRef||original?.roomRef!==selection.roomRef||
+      !Array.isArray(original.messages))
+     throw Error('CLOUD_WA_EXACT_REPAIR_HOST_ROOM_UNAVAILABLE');
+   const source=original.messages.filter(m=>m?.direction==='OUTBOUND'&&
+     typeof m.mid==='string'&&m.text===match[0].content&&
+     Number.isFinite(m.timestamp)&&Number.isFinite(match[0].created_at)&&
+     Math.abs(m.timestamp-match[0].created_at*1000)<=60000);
+   if(source.length!==1)
+     throw Error('CLOUD_WA_EXACT_REPAIR_ORIGINAL_MID_AMBIGUOUS');
+   const claimed=await findClaimedCloudSubmission(
+     source[0],cloudRows,selection,original.messages);
+   if(claimed.kind!=='matched'||claimed.message?.id!==cloudMessageId)
+     throw Error('CLOUD_WA_EXACT_REPAIR_DURABLE_CLAIM_NOT_VERIFIED');
+   await cloud.updateMessageStatus(cid,cloudMessageId,'sent');
+   const after=await listNativeMessages(cid);
+   const verified=after.filter(m=>m.id===cloudMessageId);
+   if(verified.length!==1||!['sent','delivered','read'].includes(verified[0].status))
+     throw Error('CLOUD_WA_EXACT_REPAIR_STATUS_NOT_PERSISTED');
+   stats.correctedSent++;
+   return {ok:true,corrected:true,status:verified[0].status,
+     recoveredPendingMid:claimed.recoveredPendingMid===true,
+     // No provider MID or contact identifiers are ever returned.
+     providerMidBound:true,platformSenderInvoked:false};
+ }
  async function reconcile(selection,{force=false}={}){
    const account=authenticated(selection),key=selection.accountRef+'|'+selection.roomRef;
    if(pending.has(key))return pending.get(key);
@@ -228,5 +320,6 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
    return reconcile({cloudAccountId:196799,cloudInboxId:binding.cloudInboxId,
      cloudConversationId:matching[0].id,cloudContactId:contact.id,channel:account.channel,accountRef,roomRef});
  }
- return {reconcile,byOriginalRoom,stats,drain:()=>Promise.allSettled([...pending.values()])};
+ return {reconcile,byOriginalRoom,repairExactFailedOutgoing,stats,
+   drain:()=>Promise.allSettled([...pending.values()])};
 }
