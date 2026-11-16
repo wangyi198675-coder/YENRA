@@ -74,3 +74,23 @@ jobs:
         run: pnpm -C ui/chatwoot-embed/desktop-integration-candidate install --frozen-lockfile --ignore-scripts
       - name: Bundle latest merged desktop overlay source
         run: pnpm -C ui/chatwoot-embed/desktop-integration-candidate run bundle
+
+  v22-release-admission:
+    name: v22 source / privacy / license admission (fail closed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify frozen installed v22 Bridge hashes against public source
+        run: node scripts/ci/verify-v22-bridge-source.mjs
+      - name: Report unresolved deployment identifiers without printing values
+        if: always()
+        run: node scripts/ci/check-v22-public-deployment-privacy.mjs
+      - name: Require original-code LICENSE, third-party notices and approval
+        if: always()
+        run: node scripts/ci/check-v22-license-admission.mjs
