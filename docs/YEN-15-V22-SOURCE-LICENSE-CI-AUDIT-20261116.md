@@ -88,3 +88,16 @@ This proves **Bridge installed/source release parity** on the owner computer; it
 A deliberately limited static regex scan of these 60 owner source files detected **zero** common token, PEM private key, bearer string, personal email, international telephone number, or private local-home path signatures. It found deployment-specific Cloud account/Inbox identifiers in **28 of 60 files** (151 pattern matches). No values or raw source from the owner build are included in this public report. Identifiers are not equivalent to secret tokens, but require a reviewed owner-only config/public-fixture boundary. Do not upload any unreviewed owner files wholesale merely to improve the 55/60 GitHub score.
 
 The prior 13 selected Page/Host/Bridge source comparison includes non-Bridge UI/Host modules and is a separate, overlapping scope; **do not sum their differences**. No runtime, installation, platform send, contact or account state was changed by this comparison.
+
+## Extended: actual installed v22 offline plugin archive license metadata
+
+Read-only inspection of the 13 active `file:./packages/` offline plugin tarballs referenced by the *installed* v22 profile seed package metadata (archive `package/package.json`, no content copied to GitHub):
+
+- Installed seed lists **32 dependencies**: 13 original local plugin archives and 19 other declared dependencies.
+- Of the **13 actual local archived package manifests**, **7 declare `MIT`**, **6 have no `license` field**, all archive metadata could be read.
+- The 6 undeclared package metadata entries are: `@yenra/brain-host-overlay`, `@yenra/chatwoot-embed`, `@yenra/desktop-ui-candidate`, `@local/yenra-private-themes`, `@local/yenra-typography-fix`, `@local/yenra-personal-chrome`.
+- The seven MIT-declaring packages include the pinned DSH subagent plugins, memory plugin, IM plugin, Codex OAuth, model settings and health plugin.
+- **UNDECLARED metadata is NOT proof of a license violation or a negative licensing determination**. Confirm original ownership, third-party copied source, exact upstream version and actual included license/NOTICE text separately; `package.json` metadata alone is not conclusive.
+- **The remaining 19 declared dependency nodes and transitive packages were not fully licensed/audited by this archive-only check.** The public KT lockfile 13-node metadata check is a separate, smaller dependency graph and must not be treated as covering the entire app.
+
+The previously reported root YENRA original-work license decision and upstream redistribution clearance therefore remain **release blockers**.
