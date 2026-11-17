@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "review": "YEN-15 + YEN-17 owner-private three-phase anti-regression",
+  "currentInstalledVersion": "0.2.1-rc.5.20261117.25",
+  "artifactClassification": "HASH_ONLY_REVIEW_NO_PRIVATE_SOURCE_OR_CREDENTIALS",
+  "newPrivateOwnerScripts": [
+    {
+      "name": "Invoke-YENRA-Owner-Next-ThreePhase-GatedInstall-20261117.ps1",
+      "sha256": "68b01f4d49086ffd039d58ff7e27a3e7707620596ebb1ff8dc69a46477bc3cb6"
+    },
+    {
+      "name": "Assert-YEN15-Private-Whitelist-LicensePrivacy-20261117.mjs",
+      "sha256": "8b3014a7df17e06eb7c47ca5d8d1c8a5f52a70fd2e290006fbb4198adb3b1910"
+    },
+    {
+      "name": "qa-yen15-yen17-threephase-gated-install-20261117.test.mjs",
+      "sha256": "817e0969c2b67e694021c823ca91031399eec9e7fec869bdd8fefdb6e71949a1"
+    }
+  ],
+  "explicitSourcePhaseOrder": [
+    "PREBUILD",
+    "PRIVATE_WHITELIST_LICENSE_PRIVACY",
+    "PREINSTALL",
+    "COMPLETE_NSIS",
+    "AUTHORIZED_PRIVATE_APPLY",
+    "POSTINSTALL"
+  ],
+  "modes": [
+    "PrebuildOnly",
+    "Preview",
+    "Apply",
+    "PostinstallOnly"
+  ],
+  "referenceScripts": [
+    "Admit-YENRA-Next-Official-NSIS-NoRegression-20261117.mjs",
+    "Assert-YEN17-Complete-OfficialNSIS-20261117.mjs",
+    "Assert-YEN17-NextInstalledClient-Postflight-20261117.mjs"
+  ],
+  "validation": {
+    "threePhaseWiringRegression": {
+      "passed": 10,
+      "tested": 10
+    },
+    "originalHostPageHhmmTextButtonsNsisRegression": {
+      "passed": 11,
+      "tested": 11
+    },
+    "phaseSeparationFeatureRegression": {
+      "passed": 8,
+      "tested": 8
+    },
+    "v25PrivateInstalledParity": {
+      "passed": 30,
+      "tested": 30
+    },
+    "v25PrivatePackageIntegrity": {
+      "passed": 76,
+      "tested": 76
+    },
+    "v25RepeatedAsNewerRejected": true,
+    "v24PageHostKnownBugRejected": true,
+    "noLiveInstallPerformedByAudit": true,
+    "noRealMessagesSent": true
+  },
+  "ownerLocalWhitelist": {
+    "pluginArchiveCount": 13,
+    "originalBridgeFileCount": 60,
+    "sourceWhitelistAndArtifactHashChecks": "PASS",
+    "licenseMetadataDeclaredMIT": 7,
+    "licenseMetadataUndeclaredPrivate": 6,
+    "rootPackageNoticeFilesAmongMIT": 6,
+    "privateSdkLicenseUndeclared": true,
+    "privacyPotentialThirdPartyBundledGoogleKeyLikeConstant": 1,
+    "suspectedConstantValueExcluded": true,
+    "privateCandidateReadiness": "BLOCKED_PENDING_TOKEN_ORIGIN_VERIFICATION",
+    "publicSourceDeploymentLikeMatchingFiles": 132,
+    "publicSourceHistoryReviewComplete": false,
+    "publicRedistributionAuthorized": false
+  },
+  "actualNewReleaseInstalled": false,
+  "originalOwnerPrivateInstallerApprovedForNewStage": false,
+  "postinstallRuntimeAllChecksComplete": false,
+  "publicGitHubSourceFullyMatchesV25": false,
+  "formalReleaseGo": false,
+  "friendMachineTouched": false
+}
