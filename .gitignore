@@ -42,3 +42,24 @@ brain-memory/
 legacy-readonly/
 runtime/
 upstream/
+
+# YEN-15/YEN-17: default-deny unreviewed source trees on the PUBLIC remote.
+# Already-tracked reviewed files remain tracked. Any new source requires an
+# exact SHA allowlist, copyright/PII review and explicit per-file force-add.
+# .gitignore does not replace a mandatory pre-publication security review.
+/config/
+/social-adapters/
+/brand/
+/ui/
+/scripts/
+/qa/
+/docs/acceptance/
+/docs/design/
+/docs/handoff/
+/AGENTS.md
+/ARCHITECTURE_REBUILD_OWNER.md
+/SOCIAL_INBOX_NATIVE_INTEGRATION_OWNER.md
+/UI_DESIGN_INTERACTION_OWNER.md
+/YENRA_HIGHEST_EXECUTION_RULE.md
+/qa-*.mjs
+/qa-*.mts
