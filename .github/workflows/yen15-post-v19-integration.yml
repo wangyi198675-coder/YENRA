@@ -131,3 +131,20 @@ jobs:
       - name: Flag public deployment-specific identifiers without displaying matches
         if: always()
         run: node scripts/ci/check-v22-public-deployment-privacy.mjs
+
+  yen15-yen17-threephase-review:
+    name: YEN-15/17 owner-only three-phase gate evidence (release fail closed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check hash-only private owner gate receipt and reported phase QA
+        run: node scripts/ci/check-yen15-yen17-threephase-receipt.mjs --review
+      - name: Require actual license, privacy, public source parity and runtime release GO
+        if: always()
+        run: node scripts/ci/check-yen15-yen17-threephase-receipt.mjs --release
