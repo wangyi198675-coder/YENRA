@@ -95,3 +95,88 @@
 [channel-type] [data-yenra-contact-metadata="native-details"] > [data-yenra-contact-phone="keep"]{
   display:flex!important;align-items:center;max-width:100%;gap:8px;margin:4px 0!important
 }
+
+/*
+ * YEN-12 | Visible polish on the ORIGINAL Chatwoot Guest (public source slice).
+ * This is additive presentation only: no duplicate controls, no sender/route
+ * changes, and no fixed widths that break the native contact-collapse toggle.
+ * The Brain column is owned by the desktop host and is intentionally untouched.
+ */
+@media (min-width:768px) {
+  body:has(.conversations-list-wrap) {
+    --yenra-polish-accent:var(--green-9, var(--blue-9));
+    --yenra-polish-hairline:rgb(var(--border-strong)/.22);
+  }
+
+  /* Readable contact rows: clearer selected state, less visual clutter. */
+  body:has(.conversations-list-wrap) .conversations-list-wrap {
+    background:rgb(var(--slate-1));
+    border-inline-end:1px solid var(--yenra-polish-hairline);
+  }
+  body:has(.conversations-list-wrap) .conversations-list .conversation {
+    min-height:66px;
+    margin:3px 7px;
+    padding:8px 10px;
+    border:0!important;
+    border-radius:12px;
+    transition:background-color .16s ease,box-shadow .16s ease;
+  }
+  body:has(.conversations-list-wrap) .conversations-list .conversation:hover {
+    background:rgb(var(--surface-2));
+  }
+  body:has(.conversations-list-wrap) .conversations-list .conversation:is(
+    .active,.selected,[aria-selected="true"],[data-state="active"]
+  ) {
+    background:rgb(var(--surface-3));
+    box-shadow:inset 3px 0 0 rgb(var(--yenra-polish-accent) / .8);
+  }
+
+  /* Keep the ORIGINAL controls and avatar visible, polish their surrounds. */
+  body:has(.conversations-list-wrap) .conversations-list-wrap>div:first-child {
+    border-bottom:1px solid var(--yenra-polish-hairline);
+  }
+  body:has(.conversations-list-wrap) .conversation-details-wrap>div:first-child {
+    background:rgb(var(--slate-1));
+    border-bottom:1px solid var(--yenra-polish-hairline);
+  }
+
+  /* Preserve the original Chatwoot bubble and its receipt/time elements. */
+  body:has(.conversations-list-wrap) .message-bubble-container .prose-bubble {
+    line-height:1.48;
+    letter-spacing:.005em;
+    border-radius:14px;
+    box-shadow:0 1px 2px rgb(var(--slate-12)/.06);
+  }
+  body:has(.conversations-list-wrap) .message-bubble-container .prose-bubble p {
+    margin-block:0 .28em;
+    overflow-wrap:anywhere;
+  }
+  body:has(.conversations-list-wrap) .message-bubble-container time {
+    font-size:10px;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:.01em;
+  }
+
+  /* Conversational composer: visual frame only, native tools untouched. */
+  body:has(.conversations-list-wrap) .reply-box:not(.is-private) {
+    border-radius:13px;
+    border:1px solid var(--yenra-polish-hairline);
+    background:rgb(var(--slate-1));
+    box-shadow:0 2px 10px rgb(var(--slate-12)/.055);
+  }
+  body:has(.conversations-list-wrap) .reply-box:not(.is-private):focus-within {
+    border-color:rgb(var(--yenra-polish-accent) / .52);
+    box-shadow:0 0 0 2px rgb(var(--yenra-polish-accent) / .10);
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .conversations-list .conversation {transition:none!important}
+}
+
+/* Visible keyboard navigation without changing any native click handler. */
+.conversations-list .conversation:focus-visible,
+.reply-box:not(.is-private) button:focus-visible {
+  outline:2px solid rgb(var(--blue-9));
+  outline-offset:2px;
+}
