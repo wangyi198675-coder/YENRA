@@ -1,0 +1,150 @@
+name: YENRA post-v19 source integration review (not an installer)
+on:
+  pull_request:
+    branches: [main, yen-15-v18-batch-source-ci]
+  push:
+    branches: [yen-15-v19-s8-integrated-review]
+permissions:
+  contents: read
+jobs:
+  public-integration:
+    name: Sensitive-source and immutable-release review
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Disallow real data and unsafe public paths
+        run: node scripts/ci/audit-public-source.mjs
+      - name: Require one native Agent, Electron, Sender and chat database
+        run: node scripts/ci/check-architecture.mjs
+      - name: Check JavaScript parser on imported sources
+        run: node scripts/ci/check-source-syntax.mjs
+      - name: Validate immutable published v19 reference separately from later fixes
+        run: node scripts/ci/verify-v19-published-receipt.mjs
+      - name: Require v19 historical source references to stay immutable
+        run: node scripts/ci/verify-v18-published-baseline.mjs
+      - name: Verify synthetic message, callback, account, and visible-read regressions without real sends
+        run: |
+          node --test social-adapters/chatwoot-cloud-direct/cloud-wa-recent-sync.test.mjs social-adapters/chatwoot-cloud-direct/cloud-wa-outbound.test.mjs social-adapters/chatwoot-cloud-direct/cloud-webhook-contract.test.mjs social-adapters/chatwoot-cloud-direct/cloud-whatsapp-roster-hydration.test.mjs
+          node --test ui/chatwoot-embed/desktop-integration-candidate/src/client/cloud-visible-read-gate.test.mjs ui/chatwoot-embed/qa/brain-manual-modify-retry-20261116.test.mjs ui/chatwoot-embed/qa/cloud-memory-model-scope-20261116.test.mjs
+      - name: Privacy boundary for the unprovisioned public runner
+        shell: pwsh
+        run: |
+          if (Test-Path 'runtime') { throw 'Private runtime paths must not be checked in' }
+          Write-Output 'Public CI checks reviewed source only. Official NSIS remains unbuilt.'
+
+  locked-plugin-build:
+    name: Locked DSH plugin TypeScript bundle (${{ matrix.os }}, no installer)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check out the exact official DeepSeek Harness source
+        uses: actions/checkout@v4
+        with:
+          repository: deepseek-ai/deepseek-harness
+          ref: b830ec950faba0a46dda564be3e2d854afed94f1
+          path: upstream/official-source
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Reapply only the reviewed 27-file YENRA DSH overlay
+        run: node scripts/ci/apply-owner-dsh-patch.mjs
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.28.5
+      - name: Install pinned DSH build dependencies without lifecycle scripts
+        run: pnpm -C upstream/official-source install --frozen-lockfile --ignore-scripts
+      - name: Install locked Chatwoot UI source dependencies
+        run: pnpm -C ui/chatwoot-embed install --frozen-lockfile --ignore-scripts
+      - name: Bundle latest merged Chatwoot UI source
+        run: pnpm -C ui/chatwoot-embed run bundle
+      - name: Install locked desktop overlay dependencies
+        run: pnpm -C ui/chatwoot-embed/desktop-integration-candidate install --frozen-lockfile --ignore-scripts
+      - name: Bundle latest merged desktop overlay source
+        run: pnpm -C ui/chatwoot-embed/desktop-integration-candidate run bundle
+
+  v22-release-admission:
+    name: v22 source / privacy / license admission (fail closed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify frozen installed v22 Bridge hashes against public source
+        run: node scripts/ci/verify-v22-bridge-source.mjs
+      - name: Report unresolved deployment identifiers without printing values
+        if: always()
+        run: node scripts/ci/check-v22-public-deployment-privacy.mjs
+      - name: Require original-code LICENSE, third-party notices and approval
+        if: always()
+        run: node scripts/ci/check-v22-license-admission.mjs
+
+  v23-private-pilot-admission:
+    name: v23 installed pilot / independent NSIS release gate (fail closed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Require frozen 60-file current Bridge parity
+        run: node scripts/ci/verify-v22-bridge-source.mjs
+      - name: Validate v23 installed hashes and require independent confidential NSIS approval
+        if: always()
+        run: node scripts/ci/check-v23-release-admission.mjs
+
+  v25-installed-public-source-admission:
+    name: Actual installed v25 / public source / privacy admission (fail closed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check public v25 source against owner hash-only receipt and require independent legal/source approval
+        run: node scripts/ci/check-v25-installed-public-source-admission.mjs
+      - name: Reject secrets and private paths in this public review branch
+        if: always()
+        run: node scripts/ci/audit-public-source.mjs
+      - name: Flag public deployment-specific identifiers without displaying matches
+        if: always()
+        run: node scripts/ci/check-v22-public-deployment-privacy.mjs
+
+  yen15-yen17-threephase-review:
+    name: YEN-15/17 owner-only three-phase gate evidence (release fail closed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check hash-only private owner gate receipt and reported phase QA
+        run: node scripts/ci/check-yen15-yen17-threephase-receipt.mjs --review
+      - name: Require actual license, privacy, public source parity and runtime release GO
+        if: always()
+        run: node scripts/ci/check-yen15-yen17-threephase-receipt.mjs --release

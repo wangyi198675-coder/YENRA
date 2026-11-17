@@ -1,0 +1,128 @@
+{
+  "schema": 1,
+  "review": "YEN-15 + YEN-17 owner-private three-phase anti-regression",
+  "currentInstalledVersion": "0.2.1-rc.5.20261117.25",
+  "artifactClassification": "HASH_ONLY_REVIEW_NO_PRIVATE_SOURCE_OR_CREDENTIALS",
+  "newPrivateOwnerScripts": [
+    {
+      "name": "Invoke-YENRA-Owner-Next-ThreePhase-GatedInstall-20261117.ps1",
+      "sha256": "68b01f4d49086ffd039d58ff7e27a3e7707620596ebb1ff8dc69a46477bc3cb6"
+    },
+    {
+      "name": "Assert-YEN15-Private-Whitelist-LicensePrivacy-20261117.mjs",
+      "sha256": "8b3014a7df17e06eb7c47ca5d8d1c8a5f52a70fd2e290006fbb4198adb3b1910"
+    },
+    {
+      "name": "qa-yen15-yen17-threephase-gated-install-20261117.test.mjs",
+      "sha256": "817e0969c2b67e694021c823ca91031399eec9e7fec869bdd8fefdb6e71949a1"
+    }
+  ],
+  "explicitSourcePhaseOrder": [
+    "PREBUILD",
+    "PRIVATE_WHITELIST_LICENSE_PRIVACY",
+    "PREINSTALL",
+    "COMPLETE_NSIS",
+    "AUTHORIZED_PRIVATE_APPLY",
+    "POSTINSTALL"
+  ],
+  "modes": [
+    "PrebuildOnly",
+    "Preview",
+    "Apply",
+    "PostinstallOnly"
+  ],
+  "referenceScripts": [
+    "Admit-YENRA-Next-Official-NSIS-NoRegression-20261117.mjs",
+    "Assert-YEN17-Complete-OfficialNSIS-20261117.mjs",
+    "Assert-YEN17-NextInstalledClient-Postflight-20261117.mjs"
+  ],
+  "validation": {
+    "threePhaseWiringRegression": {
+      "passed": 10,
+      "tested": 10
+    },
+    "originalHostPageHhmmTextButtonsNsisRegression": {
+      "passed": 11,
+      "tested": 11
+    },
+    "phaseSeparationFeatureRegression": {
+      "passed": 8,
+      "tested": 8
+    },
+    "v25PrivateInstalledParity": {
+      "passed": 30,
+      "tested": 30
+    },
+    "v25PrivatePackageIntegrity": {
+      "passed": 76,
+      "tested": 76
+    },
+    "v25RepeatedAsNewerRejected": true,
+    "v24PageHostKnownBugRejected": true,
+    "noLiveInstallPerformedByAudit": true,
+    "noRealMessagesSent": true
+  },
+  "ownerLocalWhitelist": {
+    "pluginArchiveCount": 13,
+    "originalBridgeFileCount": 60,
+    "sourceWhitelistAndArtifactHashChecks": "PASS",
+    "licenseMetadataDeclaredMIT": 7,
+    "licenseMetadataUndeclaredPrivate": 6,
+    "rootPackageNoticeFilesAmongMIT": 6,
+    "privateSdkLicenseUndeclared": true,
+    "privacyPotentialThirdPartyBundledGoogleKeyLikeConstant": 1,
+    "suspectedConstantValueExcluded": true,
+    "privateCandidateReadiness": "BLOCKED_PENDING_TOKEN_ORIGIN_VERIFICATION",
+    "publicSourceDeploymentLikeMatchingFiles": 132,
+    "publicSourceHistoryReviewComplete": false,
+    "publicRedistributionAuthorized": false
+  },
+  "actualNewReleaseInstalled": false,
+  "originalOwnerPrivateInstallerApprovedForNewStage": false,
+  "postinstallRuntimeAllChecksComplete": false,
+  "publicGitHubSourceFullyMatchesV25": false,
+  "formalReleaseGo": false,
+  "friendMachineTouched": false,
+  "pendingPrivateCandidateSourceReview": {
+    "sourceFilesCompared": 5,
+    "expectedSourceShasMatched": 5,
+    "highConfidenceCredentialFileMatches": 0,
+    "ownerHomePathFileMatches": 0,
+    "filesWithDeploymentLikeIdentifiers": 2,
+    "reviewOnlyNumericPatternMatches": 52,
+    "sourceFilesNotApprovedForUnreviewedPublicUpload": true,
+    "sourceMapFilesIncluded": false,
+    "files": [
+      {
+        "role": "yen11-host-filter",
+        "path": "ui/chatwoot-embed/desktop-integration-candidate/src/cloud-translation-batch-isolation.ts",
+        "sha256": "e1f55441ed8d787b1773cb29b07999d8b6a819bdd842f79dd3665f8ec66033fe",
+        "deploymentLikeMatches": 0
+      },
+      {
+        "role": "yen11-client-inbox",
+        "path": "ui/chatwoot-embed/src/client/cloud-native-inbox.tsx",
+        "sha256": "da20bfbe985e1333395a0ab2aec61fce68c20854ac6b108f5b6da1330f90d62a",
+        "deploymentLikeMatches": 42
+      },
+      {
+        "role": "yen11-unseen-selector",
+        "path": "ui/chatwoot-embed/src/client/cloud-preview-unseen-latest.ts",
+        "sha256": "20b6cdded8942c4aa73a8901150f4798c368a80a0367a451297102762503704c",
+        "deploymentLikeMatches": 0
+      },
+      {
+        "role": "yen11-cloud-preview",
+        "path": "social-adapters/chatwoot-cloud-direct/cloud-conversation-preview.mjs",
+        "sha256": "db869b557432bb96234ca668656c9a7fe33a44f08468e1a09d47cbaa16ed735c",
+        "deploymentLikeMatches": 10
+      },
+      {
+        "role": "yen12-css-polish",
+        "path": "ui/chatwoot-embed/desktop-integration-candidate/src/client/yen12-visual-polish.css",
+        "sha256": "3c84135c2752964d6cfb3caa23905ed27c11aca184f608068d9b1a329668c5c6",
+        "deploymentLikeMatches": 0
+      }
+    ]
+  }
+}

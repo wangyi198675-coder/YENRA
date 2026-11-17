@@ -1,0 +1,49 @@
+name: YENRA YEN-6 owner release-source regression
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/Assert-YENRA-Owner-ReleaseGate-20261116.mjs'
+      - 'scripts/Freeze-YENRA-v19-Owner-Source-20261116.mjs'
+      - 'scripts/Compare-YENRA-v19-PR3-20261116.mjs'
+      - 'scripts/tsdown.v19-owner-merged-20261116.config.ts'
+      - 'scripts/Rebase-YENRA-v19-PersonalChrome-20261116.mjs'
+      - 'scripts/Verify-YENRA-v19-Owner-Compiled-20261116.mjs'
+      - 'scripts/qa-owner-*-20261116.test.mjs'
+      - '.github/workflows/yen6-owner-source-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/Assert-YENRA-Owner-ReleaseGate-20261116.mjs'
+      - 'scripts/Freeze-YENRA-v19-Owner-Source-20261116.mjs'
+      - 'scripts/Compare-YENRA-v19-PR3-20261116.mjs'
+      - 'scripts/tsdown.v19-owner-merged-20261116.config.ts'
+      - 'scripts/Rebase-YENRA-v19-PersonalChrome-20261116.mjs'
+      - 'scripts/Verify-YENRA-v19-Owner-Compiled-20261116.mjs'
+      - 'scripts/qa-owner-*-20261116.test.mjs'
+      - '.github/workflows/yen6-owner-source-regression.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  owner-gate-pure-tests:
+    name: YEN-6 owner gate logic (no credentials, no build/install)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check owner release-source syntax
+        run: |
+          node --check scripts/Assert-YENRA-Owner-ReleaseGate-20261116.mjs
+          node --check scripts/Freeze-YENRA-v19-Owner-Source-20261116.mjs
+          node --check scripts/Compare-YENRA-v19-PR3-20261116.mjs
+          node --check scripts/Rebase-YENRA-v19-PersonalChrome-20261116.mjs
+          node --check scripts/Verify-YENRA-v19-Owner-Compiled-20261116.mjs
+      - name: Test baseline protection and v19 source conflict rules
+        run: node --test scripts/qa-owner-release-gate-20261116.test.mjs scripts/qa-owner-v19-source-claims-20261116.test.mjs

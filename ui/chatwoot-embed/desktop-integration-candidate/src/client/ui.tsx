@@ -20,6 +20,8 @@ import { captainActionIds, captainActionLabels, captainActionPrompt, type Captai
 import { installNativeReplyCards } from './native-reply-cards'
 import { createCloudMemoryBindGate } from './cloud-memory-bind-gate'
 import { resolveCloudContextWithRetry } from './cloud-context-retry'
+import { retryableManualModify, type FailedManualModify } from './manual-modify-recovery'
+import { selectVerifiedCloudVisibleRead } from './cloud-visible-read-gate.mjs'
 import { PersonaHeaderMenu } from './persona-header-menu'
 import { ensureNativeYeonheeCore, revalidateNativePersonaBeforeGeneration } from './native-persona-core'
 import { emitBrainTiming } from './brain-timing'
@@ -767,6 +769,105 @@ function makeV2Panel(host:ClientContext){
     // while the Cloud identity request was in flight.
     const selectSocialRoomRef=useRef(selectSocialRoom)
     selectSocialRoomRef.current=selectSocialRoom
+    // The Cloud Guest owns the visible transcript, but does not issue DSH
+    // original-platform read receipts. Do so only for a REAL visible Personal
+    // conversation after BOTH the original room and its newest Cloud inbound
+    // message have been independently verified. Matrix HTTP acceptance is NOT
+    // Meta Messenger read confirmation; never show a false Meta "Seen" badge.
+    const cloudPersonalReadAccepted=useRef(new Set<string>())
+    const cloudPersonalReadPending=useRef(new Set<string>())
+    const cloudPersonalReadRetryAt=useRef(new Map<string,number>())
+    useEffect(()=>{
+      if(!cloudSeat||workspaceMode!=='chat'||!surfaceVisible||
+         cloudContextPhase!=='verified'||!sessionId||
+         !/^session-[a-f0-9-]{36}$/.test(String(sessionId))||
+         !selectedRoom||!selectedSocial||
+         document.visibilityState!=='visible')return
+      const account=socialRoster?.accounts.find(a=>
+        a.accountRef===selectedSocial.accountRef)
+      if(account?.channel!=='Personal'||String(selectedRoom.channel)!=='Personal'||
+         selectedRoom.accountRef!==selectedSocial.accountRef||
+         selectedRoom.roomRef!==selectedSocial.roomRef)return
+      const conversationId=cloudHintRef.current?.conversationId
+      if(!Number.isSafeInteger(conversationId)||!conversationId||conversationId<=0)return
+      const scope={accountRef:selectedSocial.accountRef,roomRef:selectedSocial.roomRef}
+      const epoch=cloudResolveEpoch.current
+      const controller=new AbortController()
+      const current=()=>!controller.signal.aborted&&cloudSeatRef.current&&
+        cloudResolveEpoch.current===epoch&&
+        cloudHintRef.current?.conversationId===conversationId&&
+        selectedSocialRef.current?.accountRef===scope.accountRef&&
+        selectedSocialRef.current?.roomRef===scope.roomRef&&
+        document.visibilityState==='visible'
+      const syncVisibleRead=async()=>{
+        // The original DSH Cloud export is an owner-verified Cloud API reader.
+        // Never guess an original provider MID from a Cloud message ID.
+        if(!current())return
+        const response=await fetch('/api/yenra/cloud-export/page',{
+          method:'POST',credentials:'same-origin',cache:'no-store',
+          headers:{'content-type':'application/json',
+            ...(window.location.origin==='dsh-app://app'
+              ?{'x-yenra-desktop-origin':'dsh-app://app'}:{})},
+          body:JSON.stringify({accountId:196799,conversationId}),
+          signal:controller.signal
+        })
+        if(!response.ok||!current())return
+        const cloud=await response.json()
+        if(!current())return
+        const verified=selectVerifiedCloudVisibleRead({
+          cloud,original:selectedRoom,accountRef:scope.accountRef,
+          roomRef:scope.roomRef,channel:'Personal',conversationId
+        })
+        if(!verified)return
+        const key=conversationId+'|'+verified.mid
+        if(cloudPersonalReadAccepted.current.has(key)||
+           cloudPersonalReadPending.current.has(key)||
+           (cloudPersonalReadRetryAt.current.get(key)??0)>Date.now())return
+        cloudPersonalReadPending.current.add(key)
+        try{
+          if(!current())return
+          const receipt=await fetch('/api/yenra/social-native-read',{
+            method:'POST',credentials:'same-origin',cache:'no-store',
+            headers:{'content-type':'application/json'},
+            body:JSON.stringify({channel:'Personal',
+              accountRef:scope.accountRef,roomRef:scope.roomRef,
+              mid:verified.mid,sessionId}),
+            signal:controller.signal
+          })
+          const result=await receipt.json()
+          if(!receipt.ok||result?.ok!==true||
+             result.channel!=='Personal'||
+             result.accountRef!==scope.accountRef||
+             result.roomRef!==scope.roomRef||
+             result.mid!==verified.mid||
+             result.state!=='MATRIX_RECEIPT_ACCEPTED')
+             throw Error('CLOUD_PERSONAL_MATRIX_READ_UNCONFIRMED')
+          cloudPersonalReadAccepted.current.add(key)
+          if(cloudPersonalReadAccepted.current.size>256)
+            cloudPersonalReadAccepted.current.delete(
+              cloudPersonalReadAccepted.current.values().next().value!)
+          // Deliberately do NOT record Meta read confirmation here. Original
+          // mautrix-meta upstream FB binding may not have acknowledged it.
+        }catch{
+          cloudPersonalReadRetryAt.current.set(key,Date.now()+60000)
+          if(cloudPersonalReadRetryAt.current.size>256)
+            cloudPersonalReadRetryAt.current.delete(
+              cloudPersonalReadRetryAt.current.keys().next().value!)
+        }finally{
+          cloudPersonalReadPending.current.delete(key)
+        }
+      }
+      // The route is emitted only after a real visible Cloud selection; wait
+      // until its own Guest has had two frames to paint the conversation.
+      let second=0
+      const one=requestAnimationFrame(()=>{
+        second=requestAnimationFrame(()=>{
+          if(current())void syncVisibleRead().catch(()=>{})
+        })
+      })
+      return()=>{cancelAnimationFrame(one);cancelAnimationFrame(second);controller.abort()}
+    },[cloudSeat,workspaceMode,surfaceVisible,cloudContextPhase,
+        sessionId,selectedRoom,selectedSocial,socialRoster])
     const sendManualSocial=useCallback(async()=>{
       if(sendingRef.current)return
       if(!selectedSocial||!socialRoster?.accounts.some(a=>a.accountRef===selectedSocial.accountRef&&
@@ -1443,6 +1544,20 @@ function makeV2Panel(host:ClientContext){
     // One DSH Brain Session produces each complete candidate set. A manual
     // Regenerate/Modify action never calls Captain or a second model gateway.
     const [replyBusy,setReplyBusy]=useState(false)
+    const [failedModify,setFailedModify]=useState<FailedManualModify|null>(null)
+    // Match both the ORIGINAL DSH Session and current, authenticated
+    // conversation's latest MID. A -> B -> A or new inbound must never
+    // expose an old person's failed edit as a retryable draft.
+    const latestManualSourceKey=cloudPage?.messages.at(-1)?.id
+      ?'cloud:'+cloudPage.cloudConversationId+':'+cloudPage.messages.at(-1)!.id
+      :selectedSocial&&selectedRoom?.messages.at(-1)?.mid
+        ?'host:'+selectedSocial.accountRef+':'+selectedRoom.messages.at(-1)!.mid
+        :undefined
+    const retryFailedModifySeed=retryableManualModify(failedModify,{
+      sessionId:brainLiveRef?.sessionId,contactKey:brainKey,
+      sourceKey:latestManualSourceKey,
+    },replyBusy)
+    useEffect(()=>setFailedModify(null),[brainKey,latestManualSourceKey])
     // Scoped to the ORIGINAL DSH Session; a queued native reply remains busy
     // until its own turn/end, not merely until queue admission returns.
     const replyInFlight=useRef(new Map<SessionId,{requestId?:string;stop?:()=>void}>())
@@ -1509,6 +1624,9 @@ function makeV2Panel(host:ClientContext){
       if(mode==='modify'&&(!seed.trim()||/[\u3400-\u9fff]/u.test(seed))){
         setCaptainNotice('当前候选不是有效外文草稿，已拒绝修改');return
       }
+      // One explicit action only. Never automatically retry a rejected model
+      // request or reuse a previous failed edit after contact/MID changes.
+      setFailedModify(null)
       replyInFlight.current.set(ref.sessionId,{})
       setReplyBusy(true)
       setCaptainNotice(mode==='regenerate'?'正在用原生 DSH 重新生成三条建议…':'正在用原生 DSH 修改这条建议…')
@@ -1579,8 +1697,16 @@ function makeV2Panel(host:ClientContext){
           replyInFlight.current.delete(ref.sessionId)
           if(stillSelected()){
             setReplyBusy(false)
-            setCaptainNotice(observed.reason==='completed'?''
-              :'原生 DSH 本轮生成未完成，可重新生成')
+            if(observed.reason==='completed'){
+              setFailedModify(null)
+              setCaptainNotice('')
+            }else if(mode==='modify'&&brainKey&&latestManualSourceKey){
+              setFailedModify({sessionId:ref.sessionId,contactKey:brainKey,
+                sourceKey:latestManualSourceKey,seed})
+              setCaptainNotice('原生修改未完成，已保留原草稿；可点击「重试上次修改」。不会自动重试或发送')
+            }else{
+              setCaptainNotice('原生 DSH 本轮生成未完成，可重新生成；未发送')
+            }
           }
         }
         // Subscribe BEFORE queue admission. A very short native turn may
@@ -2245,6 +2371,14 @@ function makeV2Panel(host:ClientContext){
                   disabled={replyBusy}
                   onClick={()=>{void generateReplies('regenerate')}}>
                   {replyBusy?'生成中…':'重新生成三条建议'}
+                </button>:null}
+              {retryFailedModifySeed&&brainLiveRef&&!brainArchived&&workspaceMode==='chat'?
+                <button type="button" className="v2-brain-regenerate"
+                  data-yenra-explicit-modify-retry=""
+                  aria-label="重试上次修改的原草稿，不发送消息"
+                  disabled={replyBusy}
+                  onClick={()=>{void generateReplies('modify',retryFailedModifySeed)}}>
+                  重试上次修改
                 </button>:null}
               {captainNotice&&workspaceMode==='chat'?<p className="v2-brain-captain-notice" role="status">{captainNotice}</p>:null}
               {cloudSeat&&cloudContextPhase==='verified'&&roomPhase==='error'?<p className="v2-brain-captain-notice" role="status">这段聊天暂时读取不了，请稍后重试。</p>:null}

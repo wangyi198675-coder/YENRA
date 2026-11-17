@@ -119,8 +119,24 @@ export const CLOUD_DSH_TRANSLATOR_SCRIPT=String.raw`(()=>{
      label.style.cssText='display:block;font-size:11px;line-height:1.4;opacity:.72;margin:0;color:inherit;';
      body.appendChild(label);
     }
-    label.textContent=String(value??'').slice(0,100);
+    const notice=String(value??'').slice(0,100);
+    label.textContent=notice;
     label.style.color=problem?'#e18484':'inherit';
+    // The original Host now aborts a manual request after 45 seconds.
+    // A lost callback must not pin a permanent busy status in the guest.
+    if(/^正在通过 YENRA 翻译/u.test(notice)){
+     setTimeout(()=>{
+      if(conversation()!==cid||!label?.isConnected||
+         row.querySelector('[data-yenra-manual-translation-status]')!==label||
+         label.textContent!==notice)return;
+      label.textContent='翻译等待超时，请重试';
+      label.style.color='inherit';
+      setTimeout(()=>{if(label.isConnected&&label.textContent==='翻译等待超时，请重试')label.remove()},6000);
+     },48000);
+    }else if(problem){
+     // Failures are transient hints, not permanent red badges.
+     setTimeout(()=>{if(label.isConnected&&label.textContent===notice)label.remove()},6000);
+    }
     return true;
    }
   };

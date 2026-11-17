@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "subject": "YENRA",
+  "installedVersion": "0.2.1-rc.5.20261117.25",
+  "evidenceClass": "read-only owner-installed artifact SHA256 comparison",
+  "disclosure": "public hash-only metadata; no private profiles, identifiers, tokens, contacts, messages, binaries or installers included",
+  "files": {
+    "privateUnsignedNsis": {
+      "bytes": 706571381,
+      "sha256": "aa0b3ac2a660ff43ba6001f3a4741b91673ce2832a6a1de11f2e423c840aed05"
+    },
+    "installedUiArchive": {
+      "bytes": 863051,
+      "sha256": "5ea4d995686236f0b3cb54404f7710297d64967f63d37e9a4bf063a990ea1442"
+    },
+    "installedPageHost": {
+      "bytes": 564100,
+      "sha256": "c6cca8b97d485385082c25433aeb2ca614e7e0b3c9da383f1264f955a2bfb538"
+    },
+    "installedClient": {
+      "bytes": 816994,
+      "sha256": "40029f72258c1d506664f3db4ff23006b297a68bf83733ff7f21e49d75dd95cf"
+    },
+    "installedSeedPackage": {
+      "sha256": "809675924691b7e50651c930bee884fa5e385daf66dc41ffe4b85fd96526f615"
+    },
+    "installedSeedLock": {
+      "sha256": "b6ad8285bb1d31751a991acc24b9108bdc1b0d885965703ad1c4afe523de9fde"
+    },
+    "installedBridgeManifest": {
+      "sha256": "ddfaf629a93333919d9dc2c1639af284ae8323420499e04d7ae0d7bfb8727dca"
+    },
+    "originalImRc14Archive": {
+      "bytes": 10747763,
+      "sha256": "57c8ad8db21c2e4e45c1cc979dc780541a78636fd829d8dbec769f1886cbaa37"
+    }
+  },
+  "localVerified": {
+    "nsisOriginalOwnerPackageIntegrityChecks": "76/76",
+    "readOnlyInstalledParityChecks": "30/30",
+    "exitCode": 0,
+    "seedAndLockMatchInstalled": true,
+    "originalImVersion": "5.10.0-yenra.rc5compat.14",
+    "pluginArchivesCompared": 13,
+    "pluginArchivesExact": 13,
+    "bridgeFilesCompared": 60,
+    "bridgeFilesExact": 60
+  },
+  "publicReview": {
+    "bridgeFilesExact": 55,
+    "bridgeFilesExpected": 60,
+    "bridgeFilesMissing": 1,
+    "bridgeFilesDifferent": 4,
+    "compiledHostAndClientRebuildFromPublicSourceProven": false,
+    "fullPrivateNsisRebuildInPublicCiProven": false,
+    "sourcePublicMergeAuthorized": false
+  },
+  "licenseMetadata": {
+    "originalOfflinePluginArchives": 13,
+    "mitDeclared": 7,
+    "licenseFieldUndeclared": 6,
+    "pageSdkLicenseFieldUndeclared": true,
+    "pageSdkMarkedPrivate": true,
+    "publicRedistributionApproved": false
+  },
+  "privacy": {
+    "existingReviewContainsDeploymentLikeIdentifiers": true,
+    "publicPrivacyAdmissionApproved": false,
+    "privateSourceUploaded": false,
+    "privateArchivesUploaded": false
+  },
+  "formalReleaseGo": false
+}

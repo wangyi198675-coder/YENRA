@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "status": "OWNER_ONLY_NEXT_RELEASE_INPUT_ADMISSION_NO_INSTALLER",
+  "publishedReference": "0.2.1-rc.5.20261116.19",
+  "dshUpstreamCommit": "b830ec950faba0a46dda564be3e2d854afed94f1",
+  "dshOverlayPatch": "patches/deepseek-harness-v18-owner-integration.patch",
+  "publishedArchiveManifest": "docs/v19-nsis-input-provenance.json",
+  "sourceInputs": [
+    "this reviewed post-v19 integration checkout",
+    "official pinned DSH + 27 path overlay"
+  ],
+  "privateInputs": [
+    "13 exact SHA-256/SHA-512 pinned tarballs, 42 bundles, 32 deps",
+    "1317 hashed KT resources",
+    "4 hashed grammar assets",
+    "original Windows Electron NSIS build target"
+  ],
+  "publicCIPrivateInputsAvailable": false,
+  "standaloneNSISReproduced": false,
+  "realProviderAcceptance": false,
+  "instructions": "Run scripts/ci/check-post-v19-build-inputs.mjs on authorized owner Windows environment only; environment variables are the sole private input locators. Never commit private input directories, runtime profiles, data, installed packages or source-build seeds."
+}

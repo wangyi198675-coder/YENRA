@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "issue": "YEN-15",
+  "reviewTarget": "next authorized owner-only private NSIS candidate",
+  "baseInstalledVersion": "0.2.1-rc.5.20261117.23",
+  "releaseStatus": "INPUT_AUDITED_STAGE_NOT_SEALED_NOT_INSTALLED",
+  "privacy": "hash-only metadata; private source/archives/credentials remain owner-local",
+  "installedBaseline": {
+    "host": {
+      "sha256": "ea9020c6d321765ee071fb607343da65dc580f1d302d1a1e9c5bf69b18a4ba7c",
+      "bytes": 559074
+    },
+    "client": {
+      "sha256": "630134e332b93005ecc2578259417abe96f603faadac5600cd428b5220f45a90"
+    },
+    "bridgeManifest": {
+      "sha256": "ddfaf629a93333919d9dc2c1639af284ae8323420499e04d7ae0d7bfb8727dca",
+      "files": 60
+    },
+    "pluginArchives": 13,
+    "compiledBundles": 42,
+    "directDependencies": 32,
+    "imDependency": "file:./packages/xmanrui-dsh-im-5.10.0-yenra.rc5compat.13.tgz"
+  },
+  "nextCandidate": {
+    "mergedFullHost": {
+      "relativePath": "artifacts/YENRA_YEN10_V24_META_MERGED_FULLHOST_20261117/index.mjs",
+      "latestObservedSha256": "c6cca8b97d485385082c25433aeb2ca614e7e0b3c9da383f1264f955a2bfb538",
+      "latestObservedBytes": 564100,
+      "earlierObservedSha256": "a958dc8011bfd3d6c973727e64e5e3a4de3002f919745285508d9e4f01c7f069",
+      "earlierObservedBytes": 564091,
+      "immutable": false,
+      "requiredPreservedAnchors": [
+        "registerOriginalWhatsAppPresenceSubscription",
+        "createNativeMemoryAdoptSingleFlight",
+        "translateCloudBatchIsolated",
+        "markVerifiedPageSeen",
+        "/api/yenra/cloud-page-native-read",
+        "META_GRAPH_MARK_SEEN_ACCEPTED",
+        "PAGE_READ_PROVIDER_READBACK_UNCONFIRMED"
+      ]
+    },
+    "keepInstalledV23ClientUntilExplicitNewUiSourceAdmitted": {
+      "sha256": "630134e332b93005ecc2578259417abe96f603faadac5600cd428b5220f45a90"
+    },
+    "pageOriginalSdk": [
+      {
+        "path": "social-adapters/compat/pancake-page-original-sdk/lib/native-page-inbox.mjs",
+        "sha256": "82096c40488ce052cfbae823cf482d3fd56b35ad3a3e329ba6bfe666ab1257c3"
+      },
+      {
+        "path": "social-adapters/compat/pancake-page-original-sdk/lib/native-page-mark-read.mjs",
+        "sha256": "3b24fec234dcf98f5ed4c972ea536af044277d37ffe4c386807149faa2a987b4"
+      },
+      {
+        "path": "social-adapters/compat/pancake-page-original-sdk/lib/account-store.js",
+        "sha256": "a92d8b4254eafbf330125a7882431be1d14162220365934a5957e1b7ee64cd52"
+      },
+      {
+        "path": "social-adapters/compat/pancake-page-original-sdk/scripts/pancake-accounts-v2.ps1",
+        "sha256": "467072c569fd23d2eec82fce3ff403e89af5329f7e948bd69faecf7e29a68ab0"
+      }
+    ],
+    "rc14": {
+      "relativePath": "artifacts/YENRA_YEN9_ACK_RC14_CANDIDATE_20261117/xmanrui-dsh-im-5.10.0-yenra.rc5compat.14.tgz",
+      "sha256": "57c8ad8db21c2e4e45c1cc979dc780541a78636fd829d8dbec769f1886cbaa37",
+      "bytes": 10747763,
+      "packageName": "@xmanrui/dsh-im",
+      "version": "5.10.0-yenra.rc5compat.14",
+      "declaredLicense": "MIT",
+      "archiveLicensePresent": true,
+      "originalSourceFiles": 283,
+      "changedSourceFiles": [
+        {
+          "path": "src/channels/whatsapp/whatsapp-runtime.mjs",
+          "sha256": "d56d542267b5d7899e10fe62bb1beb46a45cb4d9e7678894e6e4a62d39385174"
+        },
+        {
+          "path": "src/channels/whatsapp/whatsapp-inbox-snapshot.mjs",
+          "sha256": "6d76883a9c69e564d461c719e2bc928e057abc0dfcb6fc2b9913c6fb7b1a661a"
+        }
+      ],
+      "pluginSourceFilesUnchanged": 190,
+      "clientUnchanged": true,
+      "dependenciesUnchanged": true,
+      "targetSeedDependency": "file:./packages/xmanrui-dsh-im-5.10.0-yenra.rc5compat.14.tgz",
+      "targetSeedLockSha256": "PENDING_NEXT_SEALED_STAGE"
+    }
+  },
+  "reviewGates": {
+    "fullHostMustBeFrozenBeforePackaging": true,
+    "pageSDKProvenance": {
+      "packagePrivate": true,
+      "licenseUndeclared": true,
+      "rootLicenseNoticeNotFound": true,
+      "publicRedistributionApproved": false
+    },
+    "neverPublishPrivateBinaryInputs": true,
+    "originalSenderAndCloudOnceOnlyRetained": true,
+    "unreconciledPublicPrSourceParity": true,
+    "hasIndependentConfidentialNsisVerification": false,
+    "realProviderSeenAckVerified": false,
+    "realWhatsappDeliveredReadAckVerified": false,
+    "formalReleaseApproved": false
+  }
+}

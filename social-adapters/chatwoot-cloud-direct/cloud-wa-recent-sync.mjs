@@ -17,7 +17,27 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
     !Array.isArray(roster?.accounts)||!Array.isArray(scopes)||!logger?.warn)
    throw Error('CLOUD_WA_RECENT_SYNC_DEPENDENCIES_INVALID');
  const pending=new Map(),lastRun=new Map();
- const stats={scans:0,missingIncoming:0,missingOutgoing:0,incoming:0,outgoing:0,already:0,correctedSent:0,correctedIncoming:0,matchedSubmitted:0,recoveredPendingMid:0,ambiguousSubmitted:0,errors:0,mediaSkipped:0};
+ const stats={scans:0,missingIncoming:0,missingOutgoing:0,incoming:0,outgoing:0,already:0,correctedSent:0,correctedIncoming:0,matchedSubmitted:0,recoveredPendingMid:0,ambiguousSubmitted:0,errors:0,mediaSkipped:0,statusCorrectionThrottled:0};
+ // When Cloud's API Channel callback cannot connect, it can re-mark a
+ // verified original MID as failed AFTER our successful status PATCH. Without
+ // a per-message cooldown the 12s anti-entropy would continually flip one
+ // Cloud status and call the same API. This is bounded process memory ONLY,
+ // not a second message database, not an ACK, not a platform retry.
+ const STATUS_CORRECTION_COOLDOWN_MS=5*60*1000;
+ const statusCorrectionAttempted=new Map();
+ function allowStatusCorrection(conversationId,messageId){
+   const key=conversationId+'|'+messageId;
+   const time=now(),prior=statusCorrectionAttempted.get(key);
+   if(prior!==undefined&&time-prior<STATUS_CORRECTION_COOLDOWN_MS){
+     stats.statusCorrectionThrottled++;
+     return false;
+   }
+   statusCorrectionAttempted.delete(key);
+   statusCorrectionAttempted.set(key,time);
+   if(statusCorrectionAttempted.size>1024)
+     statusCorrectionAttempted.delete(statusCorrectionAttempted.keys().next().value);
+   return true;
+ }
  // Cloud API-channel messages have no provider MID until original Host readback.
  // A verified durable claim correlates their already-submitted platform MID;
  // importing that Host row again would create a duplicate Cloud bubble.
@@ -145,23 +165,44 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
       // These rows were sent on WhatsApp BEFORE Cloud import. A missing
       // Cloud callback is not evidence of provider failure.
       if(row.direction==='OUTBOUND'&&current.message_type===1&&
+         current.private!==true&&current.source_id===row.mid&&
          current.status==='failed'&&current.content_attributes?.yenra_history_import===true&&
-         current.content===row.text){
-        try{await cloud.updateMessageStatus(cid,current.id,'sent');summary.corrected++;stats.correctedSent++}
-        catch(e){logger.warn('wa.recent_status_not_updated',{code:e?.code??'UNKNOWN'})}
+         current.content_attributes?.yenra_original_platform_mid===row.mid&&
+         current.content===row.text&&allowStatusCorrection(cid,current.id)){
+        try{
+          await cloud.updateMessageStatus(cid,current.id,'sent');
+          const latest=(await listNativeMessages(cid)).filter(m=>m.id===current.id);
+          if(latest.length!==1||!['sent','delivered','read'].includes(latest[0].status))
+            throw Error('CLOUD_WA_IMPORTED_OUTBOUND_SENT_NOT_PERSISTED');
+          summary.corrected++;stats.correctedSent++;
+        }catch(e){logger.warn('wa.recent_status_not_updated',{code:e?.code??'UNKNOWN'})}
       }
-      // Cloud API Channel can mark a previously imported incoming MID as
-      // "failed" if its callback times out. That is not a platform-send
-      // failure: the one original Host already RECEIVED this exact MID.
-      // Correct only a verified, historical, non-private incoming with exact
-      // Host room, MID, direction and content. Never touch pending outbounds.
+      // The original Host really RECEIVED this exact WhatsApp MID. Both
+      // historical and NEW native inbound Cloud messages may later be marked
+      // "failed" by the API-channel callback path. This is not a failed
+      // platform send; never show a red retry button for a received inbound.
+      // Require an original MID marker plus either verified history import,
+      // or a fresh original event matching Cloud creation time.
+      const attrs=current.content_attributes;
+      const verifiedImported=attrs?.yenra_history_import===true;
+      const verifiedLive=attrs?.yenra_history_import===false&&
+        Number.isFinite(current.created_at)&&
+        Math.abs(current.created_at*1000-row.timestamp)<=60000&&
+        Number.isFinite(attrs?.external_created_at)&&
+        Math.abs(attrs.external_created_at*1000-row.timestamp)<=1000;
       if(row.direction==='INBOUND'&&current.message_type===0&&
          current.private!==true&&current.status==='failed'&&
          current.source_id===row.mid&&row.text.trim()&&current.content===row.text&&
-         current.content_attributes?.yenra_history_import===true&&
-         current.content_attributes?.yenra_original_platform_mid===row.mid){
-        try{await cloud.updateMessageStatus(cid,current.id,'sent');summary.corrected++;stats.correctedIncoming++}
-        catch(e){logger.warn('wa.recent_inbound_status_not_updated',{code:e?.code??'UNKNOWN'})}
+         attrs?.yenra_original_platform_mid===row.mid&&
+         (verifiedImported||verifiedLive)&&
+         allowStatusCorrection(cid,current.id)){
+        try{
+          await cloud.updateMessageStatus(cid,current.id,'sent');
+          const latest=(await listNativeMessages(cid)).filter(m=>m.id===current.id);
+          if(latest.length!==1||!['sent','delivered','read'].includes(latest[0].status))
+            throw Error('CLOUD_WA_RECEIVED_INBOUND_STATUS_NOT_PERSISTED');
+          summary.corrected++;stats.correctedIncoming++;
+        }catch(e){logger.warn('wa.recent_inbound_status_not_updated',{code:e?.code??'UNKNOWN'})}
       }
       continue;
     }
@@ -197,7 +238,8 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
           // The original Host has the exact outgoing MID and committed claim.
           // Chatwoot's failed webhook state is not proof of platform failure.
           // Repair at most to 'sent'; never invent delivered/read.
-          if(claimed.message.status==='failed'){
+          if(claimed.message.status==='failed'&&
+             allowStatusCorrection(cid,claimed.message.id)){
             await cloud.updateMessageStatus(cid,claimed.message.id,'sent');
             // A successful PATCH/HTTP 200 alone does not prove durable Cloud
             // status. Re-read the same Cloud message; if it is still red the
@@ -228,7 +270,8 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
           throw Error('CLOUD_WA_HISTORY_MESSAGE_NOT_CONFIRMED');
         // This is a prior original platform outgoing MID; patch the display
         // state to sent, NEVER claim delivered/read or resubmit to the Sender.
-        if(m.status==='failed'){await cloud.updateMessageStatus(cid,m.id,'sent').catch(()=>{})}
+        if(m.status==='failed'&&allowStatusCorrection(cid,m.id))
+          await cloud.updateMessageStatus(cid,m.id,'sent').catch(()=>{})
         stats.outgoing++;summary.outgoing++;
       }
       nativeByMid.set(row.mid,{id:1,source_id:row.mid});
@@ -241,6 +284,69 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
     }
    }
    return {ok:summary.errors===0,...summary};
+ }
+ // Owner-only, exact-MID Cloud STATUS repair. A Cloud API inbox may
+ // report a FAILED callback for a message the original WhatsApp Host has
+ // independently RECEIVED (inbound) or SUBMITTED (historical outbound).
+ // This never invokes a Sender or creates/deletes any Cloud messages.
+ async function repairExactVerifiedSourceBubble({selection,cloudMessageId}={}){
+   const account=authenticated(selection);
+   if(account.channel!=='WhatsApp'||!valid(cloudMessageId)||
+      ![155901,155902].includes(selection.cloudInboxId))
+     throw Error('CLOUD_WA_EXACT_SOURCE_SCOPE_INVALID');
+   const cid=selection.cloudConversationId;
+   const cv=await cloud.getConversation(cid);
+   if(cv?.id!==cid||cv.account_id!==196799||
+      Number(cv.inbox_id??cv.inbox?.id)!==selection.cloudInboxId||
+      Number(cv.meta?.sender?.id??cv.contact_id)!==selection.cloudContactId)
+     throw Error('CLOUD_WA_EXACT_SOURCE_CONVERSATION_CHANGED');
+   const contact=await cloud.getContactById(selection.cloudContactId);
+   const identifier=stableContactIdentifier(selection.accountRef,selection.roomRef);
+   if(contact?.identifier!==identifier||
+      !contact.contact_inboxes?.some(ci=>
+        Number(ci?.inbox?.id??ci?.inbox_id)===selection.cloudInboxId&&
+        ci.source_id===identifier))
+     throw Error('CLOUD_WA_EXACT_SOURCE_CONTACT_CHANGED');
+   const rows=await listNativeMessages(cid);
+   const exact=rows.filter(m=>m.id===cloudMessageId);
+   if(exact.length!==1)throw Error('CLOUD_WA_EXACT_SOURCE_MESSAGE_NOT_UNIQUE');
+   const m=exact[0],direction=m.message_type===0?'INBOUND':m.message_type===1?'OUTBOUND':null;
+   if(!direction||m.private===true||typeof m.source_id!=='string'||
+      !m.source_id||typeof m.content!=='string'||
+      m.content_attributes?.yenra_original_platform_mid!==m.source_id)
+     throw Error('CLOUD_WA_EXACT_SOURCE_MID_NOT_VERIFIED');
+   const imported=m.content_attributes?.yenra_history_import===true;
+   const live=m.content_attributes?.yenra_history_import===false&&
+     Number.isFinite(m.content_attributes?.external_created_at);
+   if(direction==='OUTBOUND'&&!imported||direction==='INBOUND'&&!imported&&!live)
+     throw Error('CLOUD_WA_EXACT_SOURCE_PROJECTION_UNVERIFIED');
+   const original=await host.readRoom({channel:'WhatsApp',
+      accountRef:selection.accountRef,roomRef:selection.roomRef});
+   if(original?.accountRef!==selection.accountRef||
+      original?.roomRef!==selection.roomRef||!Array.isArray(original.messages))
+     throw Error('CLOUD_WA_EXACT_SOURCE_HOST_ROOM_CHANGED');
+   const matches=original.messages.filter(x=>x?.direction===direction&&
+     x.mid===m.source_id&&x.text===m.content&&Number.isFinite(x.timestamp));
+   if(matches.length!==1)throw Error('CLOUD_WA_EXACT_SOURCE_ORIGINAL_MID_AMBIGUOUS');
+   if(live&&(!Number.isFinite(m.created_at)||
+      Math.abs(m.created_at*1000-matches[0].timestamp)>60000||
+      Math.abs(m.content_attributes.external_created_at*1000-matches[0].timestamp)>1000))
+     throw Error('CLOUD_WA_EXACT_SOURCE_LIVE_TIMESTAMP_MISMATCH');
+   if(!['failed','sent','delivered','read'].includes(m.status))
+     throw Error('CLOUD_WA_EXACT_SOURCE_STATUS_INVALID');
+   if(m.status!=='failed')return {ok:true,unchanged:true,status:m.status,
+      platformSenderInvoked:false};
+   await cloud.updateMessageStatus(cid,m.id,'sent');
+   const saved=(await listNativeMessages(cid)).filter(x=>x.id===m.id);
+   if(saved.length!==1||!['sent','delivered','read'].includes(saved[0].status))
+     throw Error('CLOUD_WA_EXACT_SOURCE_STATUS_NOT_PERSISTED');
+   if(direction==='INBOUND')stats.correctedIncoming++;else stats.correctedSent++;
+   // A Cloud API Channel may asynchronously overwrite this status again
+   // when its upstream webhook connection is broken. Immediate readback is
+   // evidence only of "sent now", not proof the callback path is repaired.
+   return {ok:true,statusObservedNow:saved[0].status,
+     asynchronousCloudCallbackUnverified:true,direction,
+     platformSenderInvoked:false,providerReadAckNotAsserted:true};
  }
  // Owner-only status repair for a single proven failed Cloud outbound.
  // Reuses exactly the same original-Host claim binding as live anti-entropy;
@@ -320,6 +426,7 @@ export function createCloudWaRecentSync({host,cloud,roster,scopes,cloudInbound,l
    return reconcile({cloudAccountId:196799,cloudInboxId:binding.cloudInboxId,
      cloudConversationId:matching[0].id,cloudContactId:contact.id,channel:account.channel,accountRef,roomRef});
  }
- return {reconcile,byOriginalRoom,repairExactFailedOutgoing,stats,
+ return {reconcile,byOriginalRoom,repairExactFailedOutgoing,
+   repairExactVerifiedSourceBubble,stats,
    drain:()=>Promise.allSettled([...pending.values()])};
 }
