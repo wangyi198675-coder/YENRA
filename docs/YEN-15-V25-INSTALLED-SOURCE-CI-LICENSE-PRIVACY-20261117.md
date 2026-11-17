@@ -29,7 +29,7 @@ The existing private installer proof reports **76/76** real NSIS package-integri
 
 ## License & attribution findings from the **actual v25 offline archives**
 
-All 13 installed v25 archive `package.json` files were inspected **read-only**. **7 declare MIT**; **6 declare no license field** (the six are private YENRA/local packages). Four of the MIT-declaring archives included a package-root LICENSE/NOTICE/COPYING file; some declared MIT packages have no package-root notice file, which requires attribution review. `@xmanrui/dsh-im` rc14 declares MIT and includes a LICENSE.
+All 13 installed v25 archive `package.json` files were inspected **read-only**. **7 declare MIT**; **6 declare no license field** (the six are private YENRA/local packages). Six of the seven MIT-declaring archives included a package-root LICENSE/NOTICE/COPYING file; the remaining MIT-declaring archive has no package-root notice file, which requires attribution review. `@xmanrui/dsh-im` rc14 declares MIT and includes a LICENSE.
 
 The original compatibility Page SDK package itself has `private:true`, no declared license, and no top-level LICENSE/NOTICE/COPYING. Its exact provenance and permitted distribution need verification. Do not upload its raw source or DPAPI/account-store contents to a public repo without a documented authorization and secret/PII audit.
 
