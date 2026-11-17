@@ -116,6 +116,8 @@
   body:has(.conversations-list-wrap) .conversations-list .conversation {
     min-height:66px;
     margin:3px 7px;
+    width:calc(100% - 14px);
+    box-sizing:border-box;
     padding:8px 10px;
     border:0!important;
     border-radius:12px;
