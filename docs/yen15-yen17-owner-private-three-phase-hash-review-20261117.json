@@ -82,5 +82,47 @@
   "postinstallRuntimeAllChecksComplete": false,
   "publicGitHubSourceFullyMatchesV25": false,
   "formalReleaseGo": false,
-  "friendMachineTouched": false
+  "friendMachineTouched": false,
+  "pendingPrivateCandidateSourceReview": {
+    "sourceFilesCompared": 5,
+    "expectedSourceShasMatched": 5,
+    "highConfidenceCredentialFileMatches": 0,
+    "ownerHomePathFileMatches": 0,
+    "filesWithDeploymentLikeIdentifiers": 2,
+    "reviewOnlyNumericPatternMatches": 52,
+    "sourceFilesNotApprovedForUnreviewedPublicUpload": true,
+    "sourceMapFilesIncluded": false,
+    "files": [
+      {
+        "role": "yen11-host-filter",
+        "path": "ui/chatwoot-embed/desktop-integration-candidate/src/cloud-translation-batch-isolation.ts",
+        "sha256": "e1f55441ed8d787b1773cb29b07999d8b6a819bdd842f79dd3665f8ec66033fe",
+        "deploymentLikeMatches": 0
+      },
+      {
+        "role": "yen11-client-inbox",
+        "path": "ui/chatwoot-embed/src/client/cloud-native-inbox.tsx",
+        "sha256": "da20bfbe985e1333395a0ab2aec61fce68c20854ac6b108f5b6da1330f90d62a",
+        "deploymentLikeMatches": 42
+      },
+      {
+        "role": "yen11-unseen-selector",
+        "path": "ui/chatwoot-embed/src/client/cloud-preview-unseen-latest.ts",
+        "sha256": "20b6cdded8942c4aa73a8901150f4798c368a80a0367a451297102762503704c",
+        "deploymentLikeMatches": 0
+      },
+      {
+        "role": "yen11-cloud-preview",
+        "path": "social-adapters/chatwoot-cloud-direct/cloud-conversation-preview.mjs",
+        "sha256": "db869b557432bb96234ca668656c9a7fe33a44f08468e1a09d47cbaa16ed735c",
+        "deploymentLikeMatches": 10
+      },
+      {
+        "role": "yen12-css-polish",
+        "path": "ui/chatwoot-embed/desktop-integration-candidate/src/client/yen12-visual-polish.css",
+        "sha256": "3c84135c2752964d6cfb3caa23905ed27c11aca184f608068d9b1a329668c5c6",
+        "deploymentLikeMatches": 0
+      }
+    ]
+  }
 }
