@@ -25,11 +25,20 @@ must(receipt.ownerLocalWhitelist?.pluginArchiveCount===13&&receipt.ownerLocalWhi
 must(receipt.ownerLocalWhitelist?.suspectedConstantValueExcluded===true&&
  receipt.ownerLocalWhitelist?.publicRedistributionAuthorized===false,
  'no private credential or unapproved rights publicized');
+must(receipt.pendingPrivateCandidateSourceReview?.sourceFilesCompared===5&&
+ receipt.pendingPrivateCandidateSourceReview?.expectedSourceShasMatched===5&&
+ receipt.pendingPrivateCandidateSourceReview?.highConfidenceCredentialFileMatches===0&&
+ receipt.pendingPrivateCandidateSourceReview?.filesWithDeploymentLikeIdentifiers===2&&
+ receipt.pendingPrivateCandidateSourceReview?.reviewOnlyNumericPatternMatches===52&&
+ receipt.pendingPrivateCandidateSourceReview?.sourceFilesNotApprovedForUnreviewedPublicUpload===true&&
+ receipt.pendingPrivateCandidateSourceReview.files?.every(x=>typeof x.path==='string'&&hash.test(x.sha256||'')),
+ 'five private candidate sources hash-reviewed without publishing code');
 if(scope==='release'){
  must(receipt.actualNewReleaseInstalled===true,'new release actually installed');
  must(receipt.originalOwnerPrivateInstallerApprovedForNewStage===true,'real owner authorization');
  must(receipt.postinstallRuntimeAllChecksComplete===true,'real postinstall acceptance');
  must(receipt.ownerLocalWhitelist.publicSourceHistoryReviewComplete===true,'public privacy/history review');
+ must(receipt.pendingPrivateCandidateSourceReview.filesWithDeploymentLikeIdentifiers===0,'next candidate source identifiers sanitized and reviewed');
  must(receipt.ownerLocalWhitelist.publicRedistributionAuthorized===true,'genuine original-work and third-party license approvals');
  must(receipt.ownerLocalWhitelist.privacyPotentialThirdPartyBundledGoogleKeyLikeConstant===0,'bundle credential-format candidate resolved');
  must(receipt.publicGitHubSourceFullyMatchesV25===true,'source and NSIS reproducibility');
