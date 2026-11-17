@@ -31,3 +31,6 @@ test('no hardcoded credential, local profile, or private contact data in public 
     assert.doesNotMatch(content, /C:\\Users\\|\b\d{6,10}\b|\+[1-9]\d{8,14}\b|@gmail\.com/i);
   }
 });
+
+// Include the separately scoped YEN-12 source-only visual safety checks in CI.
+import './yen12-visible-polish-public-source.test.mjs';
