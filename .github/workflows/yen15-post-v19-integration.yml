@@ -111,3 +111,23 @@ jobs:
       - name: Validate v23 installed hashes and require independent confidential NSIS approval
         if: always()
         run: node scripts/ci/check-v23-release-admission.mjs
+
+  v25-installed-public-source-admission:
+    name: Actual installed v25 / public source / privacy admission (fail closed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Check public v25 source against owner hash-only receipt and require independent legal/source approval
+        run: node scripts/ci/check-v25-installed-public-source-admission.mjs
+      - name: Reject secrets and private paths in this public review branch
+        if: always()
+        run: node scripts/ci/audit-public-source.mjs
+      - name: Flag public deployment-specific identifiers without displaying matches
+        if: always()
+        run: node scripts/ci/check-v22-public-deployment-privacy.mjs
